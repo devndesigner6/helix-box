@@ -2,24 +2,20 @@
 
 /**
  * @author: @dorianbaffier
- * @description: Particle Button
+ * @description: Official KokonutUI Particle Button
  * @version: 1.0.0
- * @date: 2025-06-26
- * @license: MIT
  * @website: https://kokonutui.com
- * @github: https://github.com/kokonut-labs/kokonutui
  */
 
-import { MousePointerClick } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { Smartphone } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { type RefObject, useRef, useState } from "react";
-import type { ButtonProps } from "@/components/ui/button";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-interface ParticleButtonProps extends ButtonProps {
+interface ParticleButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   onSuccess?: () => void;
   successDuration?: number;
+  href?: string;
 }
 
 function SuccessParticles({
@@ -35,14 +31,14 @@ function SuccessParticles({
 
   return (
     <AnimatePresence>
-      {[...Array(6)].map((_, i) => (
+      {[...Array(12)].map((_, i) => (
         <motion.div
           animate={{
-            scale: [0, 1, 0],
-            x: [0, (i % 2 ? 1 : -1) * (Math.random() * 50 + 20)],
-            y: [0, -Math.random() * 50 - 20],
+            scale: [0, 1.5, 0],
+            x: [0, (i % 2 ? 1 : -1) * (Math.random() * 60 + 20)],
+            y: [0, -Math.random() * 60 - 20],
           }}
-          className="fixed h-1 w-1 rounded-full bg-black dark:bg-white"
+          className="fixed h-2 w-2 rounded-full bg-[#A8F1F7] shadow-[0_0_10px_#A8F1F7] z-50 pointer-events-none"
           initial={{
             scale: 0,
             x: 0,
@@ -51,8 +47,8 @@ function SuccessParticles({
           key={i}
           style={{ left: centerX, top: centerY }}
           transition={{
-            duration: 0.6,
-            delay: i * 0.1,
+            duration: 0.7,
+            delay: i * 0.04,
             ease: "easeOut",
           }}
         />
@@ -67,13 +63,22 @@ export default function ParticleButton({
   onSuccess,
   successDuration = 1000,
   className,
+  href,
   ...props
 }: ParticleButtonProps) {
   const [showParticles, setShowParticles] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  const handleClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     setShowParticles(true);
+    if (onClick) onClick(e);
+    if (onSuccess) onSuccess();
+
+    if (href) {
+      setTimeout(() => {
+        window.location.href = href;
+      }, 300);
+    }
 
     setTimeout(() => {
       setShowParticles(false);
@@ -87,20 +92,19 @@ export default function ParticleButton({
           buttonRef={buttonRef as RefObject<HTMLButtonElement>}
         />
       )}
-      <Button
+      <button
         className={cn(
-          "relative",
+          "agenta-primary-btn flex items-center gap-3 text-base font-bold shadow-lg cursor-pointer transition-all hover:scale-105 active:scale-95",
           showParticles && "scale-95",
-          "transition-transform duration-100",
           className
         )}
         onClick={handleClick}
         ref={buttonRef}
         {...props}
       >
-        {children}
-        <MousePointerClick className="h-4 w-4" />
-      </Button>
+        <Smartphone className="w-5 h-5 text-slate-900" />
+        <span>{children}</span>
+      </button>
     </>
   );
 }

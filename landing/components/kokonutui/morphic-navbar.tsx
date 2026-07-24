@@ -1,7 +1,6 @@
 "use client";
 
 import clsx from "clsx";
-import Link from "next/link";
 import { useState } from "react";
 
 interface NavItem {
@@ -15,57 +14,46 @@ interface MorphicNavbarProps {
 }
 
 const DEFAULT_NAV_ITEMS: Record<string, NavItem> = {
-  "/": { name: "home" },
-  "/works": { name: "works" },
-  "/blog": { name: "blog" },
-  "/about": { name: "about" },
+  "#": { name: "Future of Mobile" },
+  "#features": { name: "Capabilities" },
+  "#x402": { name: "x402 Protocol" },
+  "#pricing": { name: "Pricing" },
 };
 
 export function MorphicNavbar({
   items = DEFAULT_NAV_ITEMS,
-  defaultPath = "/",
+  defaultPath = "#",
   className,
 }: MorphicNavbarProps) {
   const [activePath, setActivePath] = useState(defaultPath);
 
   const isActiveLink = (path: string) => {
-    if (path === "/") {
-      return activePath === "/";
-    }
-    return activePath.startsWith(path);
+    return activePath === path;
   };
 
   return (
     <nav className={clsx("mx-auto max-w-4xl px-4 py-2", className)}>
       <div className="flex items-center justify-center">
-        <div className="glass flex items-center justify-between overflow-hidden rounded-xl">
+        <div className="bg-slate-900 border border-slate-800 p-1 flex items-center justify-between overflow-hidden rounded-full shadow-lg">
           {Object.entries(items).map(([path, { name }], index, array) => {
             const isActive = isActiveLink(path);
             const isFirst = index === 0;
             const isLast = index === array.length - 1;
-            const prevPath = index > 0 ? array[index - 1][0] : null;
-            const nextPath =
-              index < array.length - 1 ? array[index + 1][0] : null;
 
             return (
-              <Link
+              <a
                 className={clsx(
-                  "flex items-center justify-center bg-black p-1.5 px-4 text-sm text-white transition-all duration-300 dark:bg-white dark:text-black",
+                  "flex items-center justify-center px-4 py-1.5 text-xs transition-all duration-300 font-semibold cursor-pointer",
                   isActive
-                    ? "mx-2 rounded-xl font-semibold text-sm"
-                    : clsx(
-                        (isActiveLink(prevPath || "") || isFirst) &&
-                          "rounded-l-xl",
-                        (isActiveLink(nextPath || "") || isLast) &&
-                          "rounded-r-xl"
-                      )
+                    ? "bg-[#A8F1F7] text-slate-950 rounded-full font-bold shadow-md"
+                    : "text-slate-400 hover:text-white"
                 )}
-                href="#"
+                href={path}
                 key={path}
                 onClick={() => setActivePath(path)}
               >
                 {name}
-              </Link>
+              </a>
             );
           })}
         </div>

@@ -2,16 +2,12 @@
 
 /**
  * @author: @dorianbaffier
- * @description: Card Stack
+ * @description: Official KokonutUI Card Stack for Helix Box
  * @version: 1.1.0
- * @date: 2025-06-26
- * @license: MIT
  * @website: https://kokonutui.com
- * @github: https://github.com/kokonut-labs/kokonutui
  */
 
-import { motion, useReducedMotion } from "motion/react";
-import Image from "next/image";
+import { motion, useReducedMotion } from "framer-motion";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -31,62 +27,59 @@ interface Product {
 
 const products: Product[] = [
   {
-    id: "instant-pay",
-    title: "Quick Pay",
-    subtitle: "Instant Transfers",
+    id: "pty-engine",
+    title: "Rust PTY Engine",
+    subtitle: "24fps Cell Grid Buffer",
     description:
-      "Move money in seconds with bank-grade security and zero surprises.",
-    image: "/undraw.svg",
+      "Real PTY sessions via WezTerm fork. Incremental screen cell updates delivered over stdin/stdout at sub-second latency.",
+    image: "/helixbox.png",
     specs: [
-      { label: "Speed", value: "Instant" },
-      { label: "Security", value: "256-bit" },
-      { label: "Limit", value: "$50,000" },
-      { label: "Fee", value: "0.5%" },
+      { label: "Rendering", value: "24fps" },
+      { label: "Latency", value: "< 50ms" },
+      { label: "Terminal", value: "xterm-256" },
+      { label: "Engine", value: "Rust" },
     ],
   },
   {
-    id: "crypto-pay",
-    title: "Crypto Pay",
-    subtitle: "Web3 Payments",
+    id: "zero-trust",
+    title: "Zero-Trust Relay",
+    subtitle: "E2E TLS 1.3 WebSockets",
     description:
-      "Accept crypto across every major chain with optimized gas routing.",
-    image:
-      "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=800&auto=format&fit=crop&q=80",
+      "No open firewall ports or static IP setup. Ephemeral 6-character QR nonces pair PC and phone securely.",
+    image: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=800&auto=format&fit=crop&q=80",
     specs: [
-      { label: "Network", value: "Multi-chain" },
-      { label: "Gas", value: "Optimized" },
-      { label: "Support", value: "24/7" },
-      { label: "Security", value: "Top-tier" },
+      { label: "Security", value: "TLS 1.3" },
+      { label: "Pairing", value: "6-Char Nonce" },
+      { label: "Ports", value: "0 Open Ports" },
+      { label: "Tunnel", value: "Bun WebSocket" },
     ],
   },
   {
-    id: "business-pay",
-    title: "Business Pay",
-    subtitle: "Enterprise Solutions",
+    id: "x402-payments",
+    title: "Algorand x402",
+    subtitle: "On-Chain Micropayments",
     description:
-      "Built for high-volume teams with custom APIs and premium support.",
-    image:
-      "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=800&auto=format&fit=crop&q=80",
+      "HTTP 402 payment protocol integration. Pay $0.01 per AI prompt or $0.25 per Docker sandbox settled in <1s.",
+    image: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=800&auto=format&fit=crop&q=80",
     specs: [
-      { label: "Volume", value: "Unlimited" },
-      { label: "API", value: "REST/SDK" },
-      { label: "Support", value: "Premium" },
-      { label: "Features", value: "Custom" },
+      { label: "Settlement", value: "< 1s" },
+      { label: "Cost", value: "$0.01 / prompt" },
+      { label: "Network", value: "Algorand" },
+      { label: "Header", value: "x402" },
     ],
   },
   {
-    id: "global-pay",
-    title: "Global Pay",
-    subtitle: "International Transfers",
+    id: "mobile-editor",
+    title: "Mobile IDE",
+    subtitle: "File Explorer & Git",
     description:
-      "Send to 180+ countries with real-time FX and same-day settlement.",
-    image:
-      "https://images.unsplash.com/photo-1629131726692-1accd0c53ce0?w=800&auto=format&fit=crop&q=80",
+      "Browse repo trees, edit source code with syntax highlighting, search files via ripgrep, and push git commits on mobile.",
+    image: "https://images.unsplash.com/photo-1629131726692-1accd0c53ce0?w=800&auto=format&fit=crop&q=80",
     specs: [
-      { label: "Countries", value: "180+" },
-      { label: "FX Rate", value: "Real-time" },
-      { label: "Speed", value: "Same-day" },
-      { label: "Support", value: "Local" },
+      { label: "Languages", value: "22 Supported" },
+      { label: "Git", value: "Full Commands" },
+      { label: "Editor", value: "CodeMirror" },
+      { label: "Client", value: "Expo / Native" },
     ],
   },
 ];
@@ -109,158 +102,116 @@ const Card = ({
   isExpanded,
   reducedMotion,
 }: CardProps) => {
-  const centerOffset = (totalCards - 1) * 5;
-  const defaultX = index * 10 - centerOffset;
-  const defaultY = index * 2;
-  const defaultRotate = index * 1.5;
+  const reverseIndex = totalCards - 1 - index;
 
-  const totalExpandedWidth =
-    CARD_WIDTH + (totalCards - 1) * (CARD_WIDTH - CARD_OVERLAP);
-  const expandedCenterOffset = totalExpandedWidth / 2;
+  const getVariant = () => {
+    if (reducedMotion) {
+      return {
+        x: 0,
+        y: isExpanded ? index * 320 : reverseIndex * -8,
+        rotate: 0,
+        scale: 1,
+      };
+    }
 
-  const spreadX =
-    index * (CARD_WIDTH - CARD_OVERLAP) - expandedCenterOffset + CARD_WIDTH / 2;
-  const spreadRotate = index * 5 - (totalCards - 1) * 2.5;
+    if (isExpanded) {
+      return {
+        x: (index - (totalCards - 1) / 2) * CARD_WIDTH * 0.95,
+        y: 0,
+        rotate: (index - (totalCards - 1) / 2) * 4,
+        scale: 1,
+      };
+    }
 
-  const collapsedPose = {
-    x: defaultX,
-    y: defaultY,
-    rotate: reducedMotion ? 0 : defaultRotate,
-    scale: 1,
+    return {
+      x: reverseIndex * 12,
+      y: reverseIndex * -6,
+      rotate: reverseIndex * -2,
+      scale: 1 - reverseIndex * 0.03,
+    };
   };
-
-  const expandedPose = {
-    x: spreadX,
-    y: 0,
-    rotate: reducedMotion ? 0 : spreadRotate,
-    scale: 1,
-  };
-
-  const isSvg = product.image.endsWith(".svg");
 
   return (
     <motion.div
-      animate={{
-        ...(isExpanded ? expandedPose : collapsedPose),
-        zIndex: totalCards - index,
-      }}
+      animate={getVariant()}
       className={cn(
-        "absolute inset-0 w-full rounded-2xl p-6",
-        "bg-white/60 dark:bg-neutral-900/60",
-        "border border-white/20 dark:border-neutral-800/40",
-        "backdrop-blur-xl backdrop-saturate-150",
-        "shadow-[0_8px_20px_rgb(0,0,0,0.08)] dark:shadow-[0_8px_20px_rgb(0,0,0,0.3)]",
-        "hover:border-white/30 dark:hover:border-neutral-700/30",
-        "hover:shadow-[0_12px_40px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_12px_40px_rgb(0,0,0,0.4)]",
-        "transition-[border-color,box-shadow] duration-300 ease-out",
-        "transform-gpu overflow-hidden"
+        "absolute rounded-3xl p-6 transition-all duration-300",
+        "w-[300px] sm:w-[320px] bg-slate-900 border border-cyan-500/30 text-white shadow-2xl"
       )}
-      initial={collapsedPose}
+      initial={false}
       style={{
-        maxWidth: `${CARD_WIDTH}px`,
-        left: "50%",
-        marginLeft: `-${CARD_WIDTH / 2}px`,
+        zIndex: isExpanded ? index : reverseIndex,
       }}
-      transition={
-        reducedMotion
-          ? { duration: 0.2, ease: "easeOut" }
-          : {
-              type: "spring",
-              stiffness: 220,
-              damping: 28,
-              mass: 1,
-              delay: isExpanded ? index * 0.04 : 0,
-            }
-      }
+      transition={{
+        duration: 0.4,
+        ease: [0.23, 1, 0.32, 1],
+      }}
     >
-      <div className="relative z-10">
-        <dl className="mb-4 grid grid-cols-4 justify-center gap-2">
-          {product.specs.map((spec) => (
-            <div
-              className="flex flex-col items-start text-left text-[10px]"
-              key={spec.label}
-            >
-              <dd className="w-full text-left font-medium text-gray-500 dark:text-gray-400">
-                {spec.value}
-              </dd>
-              <dt className="mb-0.5 w-full text-left text-gray-900 dark:text-gray-100">
-                {spec.label}
-              </dt>
-            </div>
-          ))}
-        </dl>
-
-        <div
-          className={cn(
-            "relative aspect-[16/11] w-full overflow-hidden rounded-lg",
-            "bg-neutral-100 dark:bg-neutral-900",
-            "border border-neutral-200/50 dark:border-neutral-700/50",
-            "shadow-inner"
-          )}
-        >
-          <Image
-            alt={product.description}
-            className="object-cover"
-            fill
-            sizes="320px"
-            src={product.image}
-            unoptimized={isSvg}
-          />
-        </div>
-
-        <div className="mt-4">
-          <div className="space-y-1">
-            <span className="block text-left font-bold text-3xl text-gray-900 tracking-tight dark:text-white">
-              {product.title}
-            </span>
-            <span className="block text-left font-semibold text-3xl text-gray-500 tracking-tight dark:text-gray-400">
+      <div className="flex flex-col justify-between h-full">
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider">
               {product.subtitle}
             </span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-800 font-mono">
+              0{index + 1}
+            </span>
           </div>
-          <p className="mt-2 text-left text-gray-500 text-sm dark:text-gray-400">
+
+          <h3 className="text-2xl font-extrabold text-white font-heading mb-2 text-left">
+            {product.title}
+          </h3>
+
+          <p className="text-xs text-slate-300 leading-relaxed mb-6 text-left">
             {product.description}
           </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 pt-4 border-t border-slate-800">
+          {product.specs.map((spec, sIdx) => (
+            <div key={sIdx} className="bg-slate-950/60 p-2 rounded-xl text-left">
+              <div className="text-[10px] text-slate-500 uppercase">{spec.label}</div>
+              <div className="text-xs font-bold text-cyan-300 font-mono">{spec.value}</div>
+            </div>
+          ))}
         </div>
       </div>
     </motion.div>
   );
 };
 
-interface CardStackProps {
-  className?: string;
-}
-
-export default function CardStackExample({ className }: CardStackProps) {
+export default function CardStack({ className }: { className?: string }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const reducedMotion = useReducedMotion() ?? false;
 
-  const handleToggle = () => setIsExpanded((prev) => !prev);
-
   return (
-    <button
-      aria-expanded={isExpanded}
-      aria-label={isExpanded ? "Collapse card stack" : "Expand card stack"}
-      className={cn(
-        "relative mx-auto cursor-pointer",
-        "min-h-[440px] w-full max-w-[90vw]",
-        "md:max-w-[1200px]",
-        "appearance-none border-0 bg-transparent p-0",
-        "mb-8 flex items-center justify-center",
-        className
-      )}
-      onClick={handleToggle}
-      type="button"
-    >
-      {products.map((product, index) => (
-        <Card
-          index={index}
-          isExpanded={isExpanded}
-          key={product.id}
-          product={product}
-          reducedMotion={reducedMotion}
-          totalCards={products.length}
-        />
-      ))}
-    </button>
+    <div className="my-16 px-4 max-w-6xl mx-auto">
+      <div className="text-center mb-6">
+        <span className="font-mono text-xs font-bold text-cyan-400 tracking-widest uppercase">KOKONUTUI OFFICIAL CARD STACK</span>
+        <h3 className="text-3xl font-black font-heading text-white mt-1">Interactive Specs Stack</h3>
+        <p className="text-xs text-slate-400 mt-1">Click to expand & inspect Helix Box specs</p>
+      </div>
+
+      <div
+        onClick={() => setIsExpanded(!isExpanded)}
+        className={cn(
+          "relative mx-auto cursor-pointer flex items-center justify-center",
+          isExpanded ? "min-h-[460px]" : "min-h-[380px]",
+          "w-full max-w-[1100px] transition-all duration-300",
+          className
+        )}
+      >
+        {products.map((product, index) => (
+          <Card
+            index={index}
+            isExpanded={isExpanded}
+            key={product.id}
+            product={product}
+            reducedMotion={reducedMotion}
+            totalCards={products.length}
+          />
+        ))}
+      </div>
+    </div>
   );
 }

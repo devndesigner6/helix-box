@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { Navbar } from './components/Navbar';
-import { CardFlip } from './components/CardFlip';
-import { LiquidGlassCard } from './components/LiquidGlassCard';
+import CardStack from '../components/kokonutui/card-stack';
+import ParticleButton from '../components/kokonutui/particle-button';
+import { LiquidGlassCard } from '../components/kokonutui/liquid-glass-card';
 import { TerminalShowcase } from './components/TerminalShowcase';
-import { ParticleButton } from './components/ParticleButton';
-import { CardStack } from './components/CardStack';
 import { 
   Sparkles, 
   Smartphone, 
@@ -243,7 +242,7 @@ export default function App() {
           AI-powered mobile IDE and cloud development platform. Remotely use your local PC environment for coding without dealing with SSH configuration, paired via zero-trust relays and Algorand x402 micro-compute.
         </p>
 
-        {/* KokonutUI Particle Button + Dashed Outline Copy Button */}
+        {/* KokonutUI Official Particle Button */}
         <div className="flex flex-wrap items-center justify-center gap-4 mb-16">
           <ParticleButton href="https://github.com/devndesigner6/helix-box/releases/latest/download/helix-boxv1.apk">
             Download APK
@@ -286,7 +285,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* KokonutUI Card Stack Showcase */}
+        {/* KokonutUI Official Card Stack Showcase */}
         <CardStack />
 
         {/* Agenta Giant Rounded Hero Showcase Frame */}
@@ -331,44 +330,43 @@ export default function App() {
           </a>
         </div>
 
-        {/* Bento Feature Cards */}
+        {/* Bento Feature Cards with Official LiquidGlassCard */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <CardFlip 
-            icon={Lock}
-            title="Zero-Trust E2E Relays"
-            description="No open firewall ports or static IP addresses required. Session pairs securely over encrypted Bun WebSocket relays."
-            backTitle="Security Architecture"
-            features={[
-              "TLS 1.3 End-to-End Encryption",
-              "Ephemeral 6-Character Nonce Tokens",
-              "Zero Port-Forwarding / VPN setup",
-              "Single Active Session Isolation"
-            ]}
-          />
-          <CardFlip 
-            icon={Terminal}
-            title="Rust PTY Engine"
-            description="Real PTY sessions via WezTerm cell grid with 24fps incremental diff rendering and sub-second input latency on mobile."
-            backTitle="Terminal Features"
-            features={[
-              "Multi-tab PTY session execution",
-              "Live stdout / stderr streaming",
-              "Custom mobile hotkeys (Ctrl, Tab, Esc)",
-              "Built-in File Explorer & Editor"
-            ]}
-          />
-          <CardFlip 
-            icon={Coins}
-            title="Algorand x402 Billing"
-            description="HTTP 402 payment protocol integration. Pay pennies for compute, AI prompts, and transient container sandboxes."
-            backTitle="x402 Micro-Transactions"
-            features={[
-              "$0.01 per AI terminal completion",
-              "$0.10 for 1-Hour PTY Session Pass",
-              "Sub-second settlement on MainNet",
-              "Fractional cent gas fees"
-            ]}
-          />
+          <LiquidGlassCard className="p-8">
+            <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 mb-4">
+              <Lock className="w-6 h-6" />
+            </div>
+            <h3 className="text-2xl font-bold font-heading text-slate-900 dark:text-white mb-2">Zero-Trust E2E Relays</h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4">No open firewall ports or static IP addresses required. Session pairs securely over encrypted Bun WebSocket relays.</p>
+            <ul className="space-y-2 text-xs text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-800 pt-4">
+              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500" /> TLS 1.3 End-to-End Encryption</li>
+              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500" /> Ephemeral 6-Character Nonce Auth</li>
+            </ul>
+          </LiquidGlassCard>
+
+          <LiquidGlassCard className="p-8">
+            <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 mb-4">
+              <Terminal className="w-6 h-6" />
+            </div>
+            <h3 className="text-2xl font-bold font-heading text-slate-900 dark:text-white mb-2">Rust PTY Engine</h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4">Real PTY sessions via WezTerm cell grid with 24fps incremental diff rendering and sub-second input latency on mobile.</p>
+            <ul className="space-y-2 text-xs text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-800 pt-4">
+              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500" /> Multi-Tab Session Execution</li>
+              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500" /> Live Stdout/Stderr Stream</li>
+            </ul>
+          </LiquidGlassCard>
+
+          <LiquidGlassCard className="p-8">
+            <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 mb-4">
+              <Coins className="w-6 h-6" />
+            </div>
+            <h3 className="text-2xl font-bold font-heading text-slate-900 dark:text-white mb-2">Algorand x402 Billing</h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4">HTTP 402 payment protocol integration. Pay pennies for compute, AI prompts, and transient container sandboxes.</p>
+            <ul className="space-y-2 text-xs text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-800 pt-4">
+              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500" /> $0.01 per AI Terminal Completion</li>
+              <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500" /> Sub-Second MainNet Finality</li>
+            </ul>
+          </LiquidGlassCard>
         </div>
       </section>
 

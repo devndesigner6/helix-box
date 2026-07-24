@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Navbar } from './components/Navbar';
 import CardStack from '../components/kokonutui/card-stack';
-import ParticleButton from '../components/kokonutui/particle-button';
+import ShimmerButton from '../components/magicui/shimmer-button';
 import { LiquidGlassCard } from '../components/kokonutui/liquid-glass-card';
+import BentoGrid from '../components/kokonutui/bento-grid';
 import { TerminalShowcase } from './components/TerminalShowcase';
 import { 
   Sparkles, 
@@ -204,7 +205,7 @@ export default function App() {
     },
     {
       q: "Where can I download the Android APK?",
-      a: "Click the 'Download APK' particle button in the navigation bar or hero section. It downloads `helix-boxv1.apk` directly from our official GitHub releases."
+      a: "Click the 'Download APK' shimmer button in the navigation bar or hero section. It downloads `helix-boxv1.apk` directly from our official GitHub releases."
     },
     {
       q: "Is Helix Box open source?",
@@ -217,10 +218,10 @@ export default function App() {
       
       <Navbar />
 
-      {/* 1. Hero Section — Agenta Template Layout & Greek Statue Branding */}
-      <section className="pt-36 pb-16 px-6 max-w-6xl mx-auto text-center">
+      {/* 1. Hero Section — Clean Layout & Terminal Showcase */}
+      <section className="pt-36 pb-12 px-6 max-w-6xl mx-auto text-center">
         
-        {/* Agenta Dashed Border Pill Badge */}
+        {/* Dashed Border Pill Badge */}
         <div className="inline-flex items-center gap-2 mb-8">
           <span className="agenta-badge flex items-center gap-2">
             <img src="/helixbox.png" alt="Greek Statue" className="w-4 h-4 object-cover rounded-full" />
@@ -228,7 +229,7 @@ export default function App() {
           </span>
         </div>
 
-        {/* Agenta Dual-Line Heavy Sans Heading */}
+        {/* Dual-Line Heavy Sans Heading */}
         <h1 className="mb-6 max-w-4xl mx-auto">
           <span className="block font-heading font-black text-5xl sm:text-6xl md:text-7xl text-slate-900 dark:text-white tracking-tight leading-none mb-3">
             Code on your phone.
@@ -242,11 +243,16 @@ export default function App() {
           AI-powered mobile IDE and cloud development platform. Remotely use your local PC environment for coding without dealing with SSH configuration, paired via zero-trust relays and Algorand x402 micro-compute.
         </p>
 
-        {/* KokonutUI Official Particle Button */}
+        {/* Magic UI Official Shimmer Button */}
         <div className="flex flex-wrap items-center justify-center gap-4 mb-16">
-          <ParticleButton href="https://github.com/devndesigner6/helix-box/releases/latest/download/helix-boxv1.apk">
-            Download APK
-          </ParticleButton>
+          <ShimmerButton 
+            onClick={() => window.location.href = "https://github.com/devndesigner6/helix-box/releases/latest/download/helix-boxv1.apk"}
+            shimmerColor="#A8F1F7"
+            background="rgba(15, 23, 42, 0.95)"
+          >
+            <Smartphone className="w-4 h-4 text-cyan-300" />
+            <span>Download APK</span>
+          </ShimmerButton>
 
           <button
             onClick={copyCommand}
@@ -258,9 +264,8 @@ export default function App() {
           </button>
         </div>
 
-        {/* 2. Infinite 2-Row Marquee Banner */}
-        <div className="relative w-full overflow-hidden no-scrollbar py-4 border-y border-slate-200/80 dark:border-slate-800/80 mb-20 space-y-3">
-          {/* Marquee Row 1 */}
+        {/* Infinite 2-Row Marquee Banner */}
+        <div className="relative w-full overflow-hidden no-scrollbar py-4 border-y border-slate-200/80 dark:border-slate-800/80 mb-16 space-y-3">
           <div className="flex w-[200%] animate-marquee gap-4">
             {marqueeRow1.concat(marqueeRow1).map((item, idx) => (
               <span 
@@ -272,7 +277,6 @@ export default function App() {
             ))}
           </div>
 
-          {/* Marquee Row 2 */}
           <div className="flex w-[200%] animate-marquee gap-4" style={{ animationDirection: 'reverse' }}>
             {marqueeRow2.concat(marqueeRow2).map((item, idx) => (
               <span 
@@ -285,11 +289,8 @@ export default function App() {
           </div>
         </div>
 
-        {/* KokonutUI Official Card Stack Showcase */}
-        <CardStack />
-
-        {/* Agenta Giant Rounded Hero Showcase Frame */}
-        <div className="relative max-w-5xl mx-auto rounded-3xl overflow-hidden p-3 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl mt-12">
+        {/* Giant Rounded Hero Showcase Frame */}
+        <div className="relative max-w-5xl mx-auto rounded-3xl overflow-hidden p-3 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl">
           <div className="rounded-2xl overflow-hidden border border-slate-200/60 dark:border-slate-800/60">
             <TerminalShowcase />
           </div>
@@ -297,40 +298,24 @@ export default function App() {
 
       </section>
 
-      {/* 4. Bento Grid / Discover Capabilities Section */}
-      <section className="py-24 px-6 max-w-6xl mx-auto" id="features">
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <span className="font-mono text-xs font-bold text-cyan-600 dark:text-cyan-400 tracking-widest uppercase">DISCOVER CAPABILITIES</span>
+      {/* 2. Dedicated Section for Official KokonutUI Card Stack */}
+      <section className="py-20 px-6 max-w-6xl mx-auto border-t border-slate-200 dark:border-slate-800">
+        <CardStack />
+      </section>
+
+      {/* 3. Official KokonutUI Bento Grid Section */}
+      <section className="py-20 px-6 max-w-6xl mx-auto border-t border-slate-200 dark:border-slate-800" id="features">
+        <div className="text-center max-w-2xl mx-auto mb-12">
+          <span className="font-mono text-xs font-bold text-cyan-600 dark:text-cyan-400 tracking-widest uppercase">CAPABILITIES BENTO GRID</span>
           <h2 className="text-4xl font-extrabold font-heading text-slate-900 dark:text-white mt-2 mb-4">Mobile IDE Architecture</h2>
           <p className="text-slate-600 dark:text-slate-400 text-base">Combining zero-trust proxy relays, Rust PTY terminal rendering, and Algorand micro-billing.</p>
         </div>
 
-        {/* Bento Grid Top Widgets */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <a href="https://twitter.com" target="_blank" rel="noreferrer" className="agenta-card p-6 flex items-center justify-between group">
-            <div className="flex items-center gap-3">
-              <Twitter className="w-5 h-5 text-sky-500" />
-              <span className="font-bold text-sm">Twitter</span>
-            </div>
-            <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-          </a>
-          <a href="https://instagram.com" target="_blank" rel="noreferrer" className="agenta-card p-6 flex items-center justify-between group">
-            <div className="flex items-center gap-3">
-              <Instagram className="w-5 h-5 text-pink-500" />
-              <span className="font-bold text-sm">Instagram</span>
-            </div>
-            <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-          </a>
-          <a href="https://helixbox.xyz" target="_blank" rel="noreferrer" className="md:col-span-2 agenta-card p-6 flex items-center justify-between group">
-            <div className="flex items-center gap-3">
-              <Home className="w-5 h-5 text-cyan-500" />
-              <span className="font-bold text-sm">Helix Box Production URL</span>
-            </div>
-            <span className="text-xs font-mono text-cyan-600 dark:text-cyan-400">helixbox.xyz ↗</span>
-          </a>
-        </div>
+        <BentoGrid />
+      </section>
 
-        {/* Bento Feature Cards with Official LiquidGlassCard */}
+      {/* 4. Feature Cards with Official LiquidGlassCard */}
+      <section className="py-20 px-6 max-w-6xl mx-auto border-t border-slate-200 dark:border-slate-800">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <LiquidGlassCard className="p-8">
             <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 mb-4">
@@ -370,7 +355,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* 5. Agenta "How It Works" Section */}
+      {/* 5. How It Works Section */}
       <section className="py-24 px-6 max-w-6xl mx-auto border-t border-slate-200 dark:border-slate-800">
         <div className="text-center max-w-2xl mx-auto mb-16">
           <span className="font-mono text-xs font-bold text-cyan-600 dark:text-cyan-400 tracking-widest uppercase">AUGMENT IN MINUTES</span>
@@ -419,14 +404,19 @@ export default function App() {
           </div>
         </div>
 
-        <div className="text-center mt-12">
-          <a href="https://github.com/devndesigner6/helix-box/releases/latest/download/helix-boxv1.apk" className="agenta-dashed-btn inline-block">
-            Ready to code? Download Helix Box APK
-          </a>
+        <div className="text-center mt-12 flex justify-center">
+          <ShimmerButton 
+            onClick={() => window.location.href = "https://github.com/devndesigner6/helix-box/releases/latest/download/helix-boxv1.apk"}
+            shimmerColor="#A8F1F7"
+            background="rgba(15, 23, 42, 0.95)"
+          >
+            <Smartphone className="w-4 h-4 text-cyan-300" />
+            <span>Ready to code? Download Helix Box APK</span>
+          </ShimmerButton>
         </div>
       </section>
 
-      {/* 6. Agenta Use Cases Grid Section (8 Cards) */}
+      {/* 6. Use Cases Grid Section (8 Cards) */}
       <section className="py-24 px-6 max-w-6xl mx-auto border-t border-slate-200 dark:border-slate-800">
         <div className="text-center max-w-2xl mx-auto mb-12">
           <span className="font-mono text-xs font-bold text-cyan-600 dark:text-cyan-400 tracking-widest uppercase">USE CASES</span>
@@ -483,7 +473,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* 7. Agenta Enhancement Plans / Pricing Section */}
+      {/* 7. Pricing Section */}
       <section className="py-24 px-6 max-w-6xl mx-auto border-t border-slate-200 dark:border-slate-800" id="pricing">
         <div className="text-center max-w-2xl mx-auto mb-16">
           <span className="font-mono text-xs font-bold text-cyan-600 dark:text-cyan-400 tracking-widest uppercase">ENHANCEMENT PLANS</span>
@@ -493,7 +483,7 @@ export default function App() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {pricingTiers.map((tier, idx) => (
-            <div key={idx} className={`agenta-card p-8 flex flex-col justify-between relative ${tier.popular ? 'border-[#A8F1F7] shadow-xl' : ''}`}>
+            <LiquidGlassCard key={idx} className={`p-8 flex flex-col justify-between relative ${tier.popular ? 'border-[#A8F1F7] shadow-xl' : ''}`}>
               {tier.popular && (
                 <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#A8F1F7] text-slate-950 font-bold text-[10px] uppercase tracking-wider px-3 py-1 rounded-full shadow-sm">
                   Most Popular
@@ -515,10 +505,15 @@ export default function App() {
                   ))}
                 </ul>
               </div>
-              <a href="https://github.com/devndesigner6/helix-box/releases/latest/download/helix-boxv1.apk" className={tier.popular ? "agenta-primary-btn text-sm w-full py-3 text-center block" : "agenta-dashed-btn text-sm w-full py-3 text-center block"}>
+              <ShimmerButton 
+                onClick={() => window.location.href = "https://github.com/devndesigner6/helix-box/releases/latest/download/helix-boxv1.apk"}
+                shimmerColor="#A8F1F7"
+                background="rgba(15, 23, 42, 0.95)"
+                className="w-full text-center"
+              >
                 {tier.cta}
-              </a>
-            </div>
+              </ShimmerButton>
+            </LiquidGlassCard>
           ))}
         </div>
 
@@ -528,7 +523,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* 8. Agenta FAQ Accordion Section */}
+      {/* 8. FAQ Accordion Section */}
       <section className="py-24 px-6 max-w-4xl mx-auto border-t border-slate-200 dark:border-slate-800">
         <div className="text-center max-w-2xl mx-auto mb-16">
           <span className="font-mono text-xs font-bold text-cyan-600 dark:text-cyan-400 tracking-widest uppercase">FAQ</span>
@@ -560,7 +555,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* 9. Agenta Footer Section */}
+      {/* 9. Footer Section */}
       <footer className="border-t border-slate-200 dark:border-slate-800 py-16 px-6 bg-white dark:bg-[#07090e] transition-colors duration-300">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
           

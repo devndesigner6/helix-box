@@ -4,6 +4,8 @@ import CardStack from '../components/kokonutui/card-stack';
 import ShimmerButton from '../components/magicui/shimmer-button';
 import { LiquidGlassCard } from '../components/kokonutui/liquid-glass-card';
 import BentoGrid from '../components/kokonutui/bento-grid';
+import BlurText from './components/reactbits/BlurText';
+import ShinyText from './components/reactbits/ShinyText';
 import { TerminalShowcase } from './components/TerminalShowcase';
 import { 
   Sparkles, 
@@ -218,24 +220,24 @@ export default function App() {
       
       <Navbar />
 
-      {/* 1. Hero Section — Clean Layout & Terminal Showcase */}
+      {/* 1. Hero Section — Clean Layout, ReactBits BlurText & Terminal Showcase */}
       <section className="pt-36 pb-12 px-6 max-w-6xl mx-auto text-center">
         
-        {/* Dashed Border Pill Badge */}
+        {/* Dashed Border Pill Badge with ReactBits ShinyText */}
         <div className="inline-flex items-center gap-2 mb-8">
           <span className="agenta-badge flex items-center gap-2">
-            <img src="/helixbox.png" alt="Greek Statue" className="w-4 h-4 object-cover rounded-full" />
-            <span>The Future of Mobile Engineering — <strong>Helix Box Mobile IDE</strong></span>
+            <img src="/helixbox.png" alt="Helix Box Logo" className="w-4 h-4 object-cover rounded-full" />
+            <span>The Future of Mobile Engineering — <ShinyText text="Helix Box Mobile IDE" speed={4} /></span>
           </span>
         </div>
 
-        {/* Dual-Line Heavy Sans Heading */}
+        {/* Dual-Line Heavy Sans Heading with ReactBits BlurText */}
         <h1 className="mb-6 max-w-4xl mx-auto">
           <span className="block font-heading font-black text-5xl sm:text-6xl md:text-7xl text-slate-900 dark:text-white tracking-tight leading-none mb-3">
-            Code on your phone.
+            <BlurText text="Code on your phone." animateBy="words" delay={0.08} />
           </span>
           <span className="block font-heading font-extrabold text-4xl sm:text-5xl md:text-6xl text-slate-600 dark:text-slate-300 tracking-tight leading-tight">
-            Run on your machine.
+            <BlurText text="Run on your machine." animateBy="words" delay={0.1} />
           </span>
         </h1>
 
@@ -561,7 +563,7 @@ export default function App() {
           
           <div className="md:col-span-2">
             <div className="flex items-center gap-3 mb-3">
-              <img src="/helixbox.png" alt="Greek Statue" className="w-8 h-8 object-cover rounded-lg" />
+              <img src="/helixbox.png" alt="Helix Box Logo" className="w-8 h-8 object-cover rounded-lg" />
               <span className="font-heading font-black text-2xl text-slate-900 dark:text-white">
                 Helix<span className="text-cyan-500">Box</span>
               </span>

@@ -8,6 +8,20 @@
   }
 }
 
+/* ReactBits Keyframes */
+@keyframes shiny-text {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.animate-shiny-text {
+  animation: shiny-text 5s linear infinite;
+}
+
 /* Magic UI Shimmer Animations */
 @keyframes shimmer-slide {
   to {

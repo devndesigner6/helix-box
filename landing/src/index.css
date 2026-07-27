@@ -3,140 +3,116 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --auxia-bg: #f0efe3;
+    --auxia-text: #232323;
+    --auxia-blue: #0b4fff;
+    --auxia-orange: #fa6838;
+    --auxia-dark: #080331;
+    --auxia-border: #c3c2b2;
+  }
+
   body {
-    @apply bg-[#ffffff] text-slate-900 font-sans antialiased overflow-x-hidden transition-colors duration-300;
+    background-color: var(--auxia-bg);
+    color: var(--auxia-text);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
   }
 }
 
-/* ReactBits Keyframes */
-@keyframes shiny-text {
-  0% {
-    background-position: 100% 0;
-  }
-  100% {
-    background-position: -100% 0;
-  }
+/* Custom Typography Utilities */
+.font-cabinet {
+  font-family: 'Cabinet Grotesk', 'Inter', sans-serif;
 }
 
-.animate-shiny-text {
-  animation: shiny-text 5s linear infinite;
+.font-serif {
+  font-family: 'Instrument Serif', Georgia, serif;
 }
 
-/* Magic UI Shimmer Animations */
-@keyframes shimmer-slide {
-  to {
-    transform: translate(calc(100cqw - 100%), 0);
-  }
+.font-mono {
+  font-family: 'Space Mono', monospace;
 }
 
-@keyframes spin-around {
-  0% {
-    transform: translateZ(0) rotate(0);
-  }
-  15%, 35% {
-    transform: translateZ(0) rotate(90deg);
-  }
-  65%, 85% {
-    transform: translateZ(0) rotate(270deg);
-  }
-  100% {
-    transform: translateZ(0) rotate(360deg);
-  }
+.font-departure {
+  font-family: 'Departure Mono', 'Space Mono', monospace;
 }
 
-.animate-shimmer-slide {
-  animation: shimmer-slide var(--speed) ease-in-out infinite alternate;
+/* Auxia Pill Badges & Buttons */
+.auxia-badge {
+  background-color: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--auxia-border);
+  color: #333333;
+  padding: 0.35rem 1rem;
+  border-radius: 9999px;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  backdrop-filter: blur(8px);
 }
 
-.animate-spin-around {
-  animation: spin-around calc(var(--speed) * 2) infinite linear;
-}
-
-/* Agenta Exact Color Palette & Buttons */
-.agenta-primary-btn {
-  background-color: #A8F1F7;
-  color: #0f172a;
+.auxia-btn-primary {
+  background-color: var(--auxia-blue);
+  color: #ffffff;
   font-weight: 600;
   border-radius: 9999px;
-  padding: 0.75rem 2rem;
-  box-shadow: 0 4px 14px 0 rgba(168, 241, 247, 0.4);
-  transition: all 0.2s ease;
+  padding: 0.75rem 1.75rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 14px rgba(11, 79, 255, 0.25);
 }
 
-.agenta-primary-btn:hover {
+.auxia-btn-primary:hover {
+  background-color: #003edb;
   transform: translateY(-1px);
-  background-color: #8ce9f2;
-  box-shadow: 0 6px 20px 0 rgba(168, 241, 247, 0.6);
+  box-shadow: 0 8px 24px rgba(11, 79, 255, 0.35);
 }
 
-.agenta-dashed-btn {
-  border: 1px dashed #A8F1F7;
-  color: #0f172a;
-  font-weight: 500;
+.auxia-btn-secondary {
+  background-color: #ffffff;
+  color: #232323;
+  border: 1px solid var(--auxia-border);
+  font-weight: 600;
   border-radius: 9999px;
   padding: 0.75rem 1.75rem;
-  background-color: transparent;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.dark .agenta-dashed-btn {
-  color: #f1f5f9;
+.auxia-btn-secondary:hover {
+  background-color: #f7f6ed;
+  border-color: #999888;
+  transform: translateY(-1px);
 }
 
-.agenta-dashed-btn:hover {
-  border-style: solid;
-  background-color: rgba(168, 241, 247, 0.15);
-}
-
-.agenta-badge {
-  border: 1px dashed #A8F1F7;
-  border-radius: 9999px;
-  padding: 0.35rem 1.25rem;
-  font-size: 0.85rem;
-  color: #334155;
-  background-color: rgba(248, 250, 252, 0.8);
-}
-
-.dark .agenta-badge {
-  color: #cbd5e1;
-  background-color: rgba(15, 23, 42, 0.8);
-}
-
-.agenta-card {
+/* Auxia Card System */
+.auxia-card {
   background-color: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 1.25rem;
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04);
-  transition: all 0.3s ease;
+  border: 1px solid var(--auxia-border);
+  border-radius: 1.5rem;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.dark .agenta-card {
-  background-color: #0f172a;
-  border-color: #1e293b;
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+.auxia-card:hover {
+  border-color: var(--auxia-blue);
+  box-shadow: 0 12px 36px -10px rgba(11, 79, 255, 0.12);
 }
 
-.agenta-card:hover {
-  border-color: #A8F1F7;
-  box-shadow: 0 20px 40px -15px rgba(168, 241, 247, 0.25);
+/* Auxia Dark Section Card */
+.auxia-card-dark {
+  background-color: var(--auxia-dark);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-radius: 1.5rem;
 }
 
-/* 3D Perspective Card Flip */
-.perspective-1000 {
-  perspective: 1000px;
+/* Marquee Keyframes */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
 }
 
-.transform-style-3d {
-  transform-style: preserve-3d;
-}
-
-.backface-hidden {
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-
-.rotate-y-180 {
-  transform: rotateY(180deg);
+.animate-marquee {
+  animation: marquee 25s linear infinite;
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -146,13 +122,4 @@
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
-}
-
-@keyframes marquee {
-  0% { transform: translateX(0%); }
-  100% { transform: translateX(-50%); }
-}
-
-.animate-marquee {
-  animation: marquee 25s linear infinite;
 }

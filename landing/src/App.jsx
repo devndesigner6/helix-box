@@ -5,25 +5,29 @@ import { Hero } from './components/Hero';
 import { LogoMarquee } from './components/LogoMarquee';
 import { MessGridSection } from './components/MessGridSection';
 import { ModernizedStackSection } from './components/ModernizedStackSection';
+import { InteractiveStoryboard } from './components/InteractiveStoryboard';
 import { FeatureTabsSection } from './components/FeatureTabsSection';
 import { EnterpriseTrustSection } from './components/EnterpriseTrustSection';
 import { PricingTiers } from './components/PricingTiers';
 import { FAQAccordion } from './components/FAQAccordion';
 import { CallToAction } from './components/CallToAction';
 import { Footer } from './components/Footer';
+import { DemoModal } from './components/DemoModal';
 
 export default function App() {
   const [showBanner, setShowBanner] = useState(true);
+  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-[#f0efe3] text-[#232323] font-sans antialiased selection:bg-[#0b4fff] selection:text-white transition-colors duration-300">
       {showBanner && <TopAnnouncementBar onDismiss={() => setShowBanner(false)} />}
-      <Navbar />
+      <Navbar onOpenDemoModal={() => setIsDemoModalOpen(true)} />
       <main>
-        <Hero />
+        <Hero onOpenDemoModal={() => setIsDemoModalOpen(true)} />
         <LogoMarquee />
         <MessGridSection />
         <ModernizedStackSection />
+        <InteractiveStoryboard />
         <FeatureTabsSection />
         <EnterpriseTrustSection />
         <PricingTiers />
@@ -31,6 +35,12 @@ export default function App() {
         <CallToAction />
       </main>
       <Footer />
+
+      {/* Interactive Demo Request Modal */}
+      <DemoModal 
+        isOpen={isDemoModalOpen} 
+        onClose={() => setIsDemoModalOpen(false)} 
+      />
     </div>
   );
 }

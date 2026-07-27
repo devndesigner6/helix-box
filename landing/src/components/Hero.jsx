@@ -1,66 +1,93 @@
 import React, { useState } from 'react';
-import { Smartphone, Play, Copy, Check, Terminal, Sparkles, ShieldCheck, Zap } from 'lucide-react';
-import { TerminalShowcase } from './TerminalShowcase';
+import { Smartphone, ArrowUp, Zap, Sparkles, ChevronRight } from 'lucide-react';
 
 export const Hero = () => {
-  const [copied, setCopied] = useState(false);
-
-  const copyCommand = () => {
-    navigator.clipboard.writeText('npx helixbox-cli -n');
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  const [promptText, setPromptText] = useState(
+    "Diagnose build errors in local PTY terminal and initiate zero-trust relay session on phone"
+  );
 
   return (
-    <section className="pt-36 pb-20 px-6 max-w-6xl mx-auto text-center">
+    <section className="pt-12 pb-20 px-6 sm:px-10 max-w-7xl mx-auto">
       
-      {/* Announcement Pill Badge */}
-      <div className="inline-flex items-center gap-2 mb-8">
-        <span className="auxia-badge flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-[#0b4fff] animate-pulse" />
-          <span>v1.0 Release — <strong className="text-[#0b4fff]">OpenAI Build Week Winner</strong></span>
-        </span>
+      {/* 1. Auxia Interactive Pipeline Flow Graphic (Upper Hero) */}
+      <div className="relative w-full mb-16 overflow-x-auto no-scrollbar py-4">
+        
+        {/* Blue SVG Connecting Pipeline Line */}
+        <div className="absolute top-1/2 left-0 right-0 h-[2px] bg-[#0b4fff] -translate-y-1/2 z-0 hidden md:block" />
+
+        <div className="flex items-center justify-between min-w-[760px] relative z-10 gap-4">
+          
+          {/* Node Badge 1: ASK AGENT with Floating Ask Agent Card */}
+          <div className="relative">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ffffff] border border-[#0b4fff] text-[11px] font-mono font-bold text-[#0b4fff] shadow-sm">
+              <Zap className="w-3.5 h-3.5 fill-[#0b4fff]" />
+              <span>ASK AGENT</span>
+            </div>
+
+            {/* Floating White Ask Agent Prompt Card */}
+            <div className="mt-4 w-72 p-4 rounded-2xl bg-white border border-[#c3c2b2] shadow-[0_15px_40px_rgba(0,0,0,0.08)] flex flex-col justify-between min-h-[120px]">
+              <p className="text-xs text-[#232323] font-medium leading-relaxed mb-3">
+                "{promptText}"
+              </p>
+              <div className="flex justify-end">
+                <button 
+                  onClick={() => alert("Initiating PTY Diagnostic Agent...")}
+                  className="w-7 h-7 rounded-lg bg-[#0b4fff] text-white flex items-center justify-center hover:bg-[#003edb] transition-colors"
+                >
+                  <ArrowUp className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Node Badge 2: AGENT WORKFLOW */}
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#e5e4d5] border border-[#c3c2b2] text-[11px] font-mono font-bold text-[#555555]">
+            <Zap className="w-3.5 h-3.5 text-[#777777]" />
+            <span>AGENT WORKFLOW</span>
+          </div>
+
+          {/* Node Badge 3: AI DECISIONING */}
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#e5e4d5] border border-[#c3c2b2] text-[11px] font-mono font-bold text-[#555555]">
+            <Zap className="w-3.5 h-3.5 text-[#777777]" />
+            <span>AI DECISIONING</span>
+          </div>
+
+          {/* Node Badge 4: PERSONALIZED PTY STREAM */}
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#e5e4d5] border border-[#c3c2b2] text-[11px] font-mono font-bold text-[#555555]">
+            <Zap className="w-3.5 h-3.5 text-[#777777]" />
+            <span>PERSONALIZED PTY</span>
+          </div>
+
+        </div>
       </div>
 
-      {/* Main Auxia Split Headline (Cabinet Grotesk + Instrument Serif Italic) */}
-      <h1 className="mb-8 max-w-4xl mx-auto text-[#232323] tracking-tight">
-        <span className="block font-cabinet font-black text-5xl sm:text-6xl md:text-7xl lg:text-8xl leading-[0.95] mb-2">
-          Remote terminal,
-        </span>
-        <span className="block font-cabinet font-extrabold text-5xl sm:text-6xl md:text-7xl lg:text-8xl leading-[0.95]">
-          instant <span className="font-serif italic font-normal text-[#0b4fff]">command.</span>
-        </span>
-      </h1>
+      {/* 2. Massive Auxia Display Title ("The developer, multiplied") */}
+      <div className="max-w-5xl text-left mb-8">
+        <h1 className="font-cabinet font-black text-6xl sm:text-8xl md:text-9xl text-[#232323] tracking-[-0.04em] leading-[0.9] mb-4">
+          The developer,<br />
+          <span className="text-[#232323]">multiplied.</span>
+        </h1>
 
-      {/* Subtitle Copy */}
-      <p className="text-base sm:text-xl text-[#555555] max-w-2xl mx-auto leading-relaxed mb-10 font-normal">
-        Say goodbye to desktop constraints. Stream native PTY terminals, execute git workflows, and trigger AI prompt completions directly on your mobile phone.
-      </p>
+        <p className="text-lg sm:text-2xl text-[#444444] max-w-2xl leading-relaxed font-normal mt-6 mb-10">
+          Helix Box is the mobile IDE platform that runs remote PTY terminals across your workstation and delivers 1:1, real-time control.
+        </p>
 
-      {/* Dual CTA Buttons */}
-      <div className="flex flex-wrap items-center justify-center gap-4 mb-16">
-        <a
-          href="https://github.com/devndesigner6/helix-box/releases/latest/download/helix-boxv1.apk"
-          className="auxia-btn-primary text-sm sm:text-base py-3.5 px-8 flex items-center gap-2.5"
-        >
-          <Smartphone className="w-4 h-4 text-white" />
-          <span>Download Android APK</span>
-        </a>
+        {/* 3. Action Buttons matching Auxia reference image */}
+        <div className="flex flex-wrap items-center gap-4">
+          <a
+            href="https://github.com/devndesigner6/helix-box/releases/latest/download/helix-boxv1.apk"
+            className="auxia-btn-primary text-base py-3.5 px-8 flex items-center gap-2.5 shadow-lg"
+          >
+            <Smartphone className="w-5 h-5 text-white" />
+            <span>Request a Demo</span>
+          </a>
 
-        <button
-          onClick={copyCommand}
-          className="auxia-btn-secondary text-sm sm:text-base py-3.5 px-7 flex items-center gap-2.5 font-departure"
-        >
-          <span className="text-[#0b4fff] font-bold">$</span>
-          <span>npx helixbox-cli -n</span>
-          {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-slate-400" />}
-        </button>
-      </div>
-
-      {/* Auxia Interactive Product Mockup Window Frame */}
-      <div className="relative max-w-5xl mx-auto rounded-3xl overflow-hidden p-3 bg-[#ffffff] border border-[#c3c2b2] shadow-[0_20px_50px_rgba(0,0,0,0.08)]">
-        <div className="rounded-2xl overflow-hidden border border-[#e5e4d5]">
-          <TerminalShowcase />
+          <a
+            href="#features"
+            className="auxia-btn-secondary text-base py-3.5 px-8 flex items-center gap-2"
+          >
+            <span>See how it works</span>
+          </a>
         </div>
       </div>
 

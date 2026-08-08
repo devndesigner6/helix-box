@@ -60,6 +60,8 @@ interface Session {
   code: string | null;
   password: string | null;
   createdAt: number;
+  paidUntil: number | null;
+  paidAccessTimer: Timer | null;
   locked: boolean;
   role: "primary" | "secondary";
   backupGateway: string | null;
@@ -147,6 +149,7 @@ interface ManagerPasswordValidation {
   reason: string;
   proxyUrl: string | null;
   expiresAt: number;
+  paidUntil: number | null;
 }
 
 interface RateLimitPolicy {
@@ -337,15 +340,15 @@ function startGateway(): void {
     password: string,
     role?: Role,
     generation?: number | null
-  ): Promise<{ allowed: boolean; reason: string; proxyUrl: string | null }> => {
-    if (!enforceManagerAuthority) return { allowed: true, reason: "authority_disabled", proxyUrl: publicUrl };
-    if (!managerUrl || !password) return { allowed: false, reason: "invalid_input", proxyUrl: null };
+  ): Promise<{ allowed: boolean; reason: string; proxyUrl: string | null; paidUntil: number | null }> => {
+    if (!enforceManagerAuthority) return { allowed: true, reason: "authority_disabled", proxyUrl: publicUrl, paidUntil: null };
+    if (!managerUrl || !password) return { allowed: false, reason: "invalid_input", proxyUrl: null, paidUntil: null };
 
     const cacheKey = `${password}:${role || "-"}:${typeof generation === "number" && generation > 0 ? generation : 0}`;
     const cached = managerSessionValidationCache.get(cacheKey);
     const now = Date.now();
     if (cached && cached.expiresAt > now) {
-      return { allowed: cached.valid, reason: cached.reason, proxyUrl: cached.proxyUrl };
+      return { allowed: cached.valid, reason: cached.reason, proxyUrl: cached.proxyUrl, paidUntil: cached.paidUntil };
     }
 
     // Read-only mode: serve previously-approved sessions from cache, but only
@@ -353,11 +356,11 @@ function startGateway(): void {
     if (managerReadOnly && cached?.valid) {
       const cacheAge = now - (cached.expiresAt - MANAGER_AUTHORITY_CACHE_MS);
       if (cacheAge < MANAGER_READONLY_CACHE_MAX_MS) {
-        return { allowed: true, reason: "read_only_cache", proxyUrl: cached.proxyUrl };
+        return { allowed: true, reason: "read_only_cache", proxyUrl: cached.proxyUrl, paidUntil: cached.paidUntil };
       }
       // Cache is too stale — reject and let the session re-authenticate once
       // the manager is reachable again.
-      return { allowed: false, reason: "read_only_cache_expired", proxyUrl: null };
+      return { allowed: false, reason: "read_only_cache_expired", proxyUrl: null, paidUntil: null };
     }
 
     try {
@@ -379,50 +382,55 @@ function startGateway(): void {
         if (managerReadOnly && cached?.valid && res.status >= 500) {
           const cacheAge = now - (cached.expiresAt - MANAGER_AUTHORITY_CACHE_MS);
           if (cacheAge < MANAGER_READONLY_CACHE_MAX_MS) {
-            return { allowed: true, reason: "read_only_cache", proxyUrl: cached.proxyUrl };
+            return { allowed: true, reason: "read_only_cache", proxyUrl: cached.proxyUrl, paidUntil: cached.paidUntil };
           }
-          return { allowed: false, reason: "read_only_cache_expired", proxyUrl: null };
+          return { allowed: false, reason: "read_only_cache_expired", proxyUrl: null, paidUntil: null };
         }
         managerSessionValidationCache.set(cacheKey, {
           valid: false,
           reason: `manager_http_${res.status}`,
           proxyUrl: null,
           expiresAt: now + 1000,
+          paidUntil: null,
         });
-        return { allowed: false, reason: `manager_http_${res.status}`, proxyUrl: null };
+        return { allowed: false, reason: `manager_http_${res.status}`, proxyUrl: null, paidUntil: null };
       }
       const payload = (await res.json()) as {
         valid?: boolean;
         reason?: string;
         proxyUrl?: string | null;
+        expiresAt?: number | null;
       };
       const assignedProxyUrl = normalizeGatewayUrl(payload.proxyUrl || null);
       const allowed = payload.valid === true;
       const reason = allowed ? "ok" : payload.reason || "invalid_password";
+      const paidUntil = typeof payload.expiresAt === "number" && payload.expiresAt > now ? payload.expiresAt : null;
       managerSessionValidationCache.set(cacheKey, {
         valid: allowed,
         reason,
         proxyUrl: assignedProxyUrl,
         expiresAt: now + MANAGER_AUTHORITY_CACHE_MS,
+        paidUntil,
       });
-      return { allowed, reason, proxyUrl: assignedProxyUrl };
+      return { allowed, reason, proxyUrl: assignedProxyUrl, paidUntil };
     } catch (err) {
       console.warn("[authority] manager status check failed:", redactSensitive(String(err)));
       // Network error in read-only mode: honour previously-cached approval within the hard cap.
       if (managerReadOnly && cached?.valid) {
         const cacheAge = now - (cached.expiresAt - MANAGER_AUTHORITY_CACHE_MS);
         if (cacheAge < MANAGER_READONLY_CACHE_MAX_MS) {
-          return { allowed: true, reason: "read_only_cache", proxyUrl: cached.proxyUrl };
+          return { allowed: true, reason: "read_only_cache", proxyUrl: cached.proxyUrl, paidUntil: cached.paidUntil };
         }
-        return { allowed: false, reason: "read_only_cache_expired", proxyUrl: null };
+        return { allowed: false, reason: "read_only_cache_expired", proxyUrl: null, paidUntil: null };
       }
       managerSessionValidationCache.set(cacheKey, {
         valid: false,
         reason: "manager_unreachable",
         proxyUrl: null,
         expiresAt: now + 1000,
+        paidUntil: null,
       });
-      return { allowed: false, reason: "manager_unreachable", proxyUrl: null };
+      return { allowed: false, reason: "manager_unreachable", proxyUrl: null, paidUntil: null };
     }
   };
 
@@ -449,6 +457,8 @@ function startGateway(): void {
   const terminateSession = (session: Session, reason: string): void => {
     clearReconnectTimer(session);
     clearCliGraceTimer(session);
+    if (session.paidAccessTimer) clearTimeout(session.paidAccessTimer);
+    session.paidAccessTimer = null;
 
     for (const [, tunnel] of session.tunnels) {
       if (tunnel.gcTimer) {
@@ -564,9 +574,23 @@ function startGateway(): void {
     }
   };
 
-  const getOrCreatePasswordSession = (password: string): Session | null => {
+  const setPaidAccessExpiry = (session: Session, paidUntil: number | null): boolean => {
+    if (!paidUntil) return true;
+    if (paidUntil <= Date.now()) return false;
+    if (session.paidUntil === paidUntil) return true;
+    if (session.paidAccessTimer) clearTimeout(session.paidAccessTimer);
+    session.paidUntil = paidUntil;
+    session.paidAccessTimer = setTimeout(() => terminateSession(session, "paid access expired"), paidUntil - Date.now());
+    return true;
+  };
+
+  const getOrCreatePasswordSession = (password: string, paidUntil: number | null = null): Session | null => {
     const existing = sessionsByPassword.get(password);
-    if (existing) return existing;
+    if (existing) {
+      if (setPaidAccessExpiry(existing, paidUntil)) return existing;
+      sessionsByPassword.delete(password);
+      return null;
+    }
 
     const reg = backupRegistrations.get(password);
     if (!reg) {
@@ -574,6 +598,8 @@ function startGateway(): void {
         code: null,
         password,
         createdAt: Date.now(),
+        paidUntil: null,
+        paidAccessTimer: null,
         locked: false,
         role: "primary",
         backupGateway: ringSuccessorUrl,
@@ -589,6 +615,10 @@ function startGateway(): void {
         tunnels: new Map(),
       };
       sessionsByPassword.set(password, session);
+      if (!setPaidAccessExpiry(session, paidUntil)) {
+        sessionsByPassword.delete(password);
+        return null;
+      }
       sessionHistory24h.set(password, session.createdAt);
       return session;
     }
@@ -597,6 +627,8 @@ function startGateway(): void {
       code: null,
       password,
       createdAt: reg.createdAt,
+      paidUntil: null,
+      paidAccessTimer: null,
       locked: true,
       role: reg.role,
       backupGateway: reg.backupGateway,
@@ -613,6 +645,10 @@ function startGateway(): void {
     };
 
     sessionsByPassword.set(password, session);
+    if (!setPaidAccessExpiry(session, paidUntil)) {
+      sessionsByPassword.delete(password);
+      return null;
+    }
     sessionHistory24h.set(password, reg.createdAt);
     return session;
   };
@@ -1110,7 +1146,7 @@ function startGateway(): void {
           );
         }
 
-        const session = getOrCreatePasswordSession(password);
+        const session = getOrCreatePasswordSession(password, authority.paidUntil);
         if (!session) {
           return Response.json({ error: "invalid or expired session" }, { status: 404, headers: corsHeaders });
         }
@@ -1150,7 +1186,7 @@ function startGateway(): void {
           );
         }
 
-        const session = sessionsByPassword.get(password) || getOrCreatePasswordSession(password);
+        const session = getOrCreatePasswordSession(password, authority.paidUntil);
         if (!session) {
           return Response.json({ error: "invalid or expired session" }, { status: 404, headers: corsHeaders });
         }

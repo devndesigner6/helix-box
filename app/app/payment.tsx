@@ -1,5 +1,6 @@
 import { useConnection } from "@/contexts/ConnectionContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { connectPeraWallet, signWithPera } from "@/lib/pera-wallet";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ArrowLeft, CheckCircle2, Wallet } from "lucide-react-native";
 import { useState } from "react";
@@ -20,7 +21,10 @@ export default function Payment() {
   const connectWallet = async () => {
     setBusy(true); setError(null);
     try {
-      if (Platform.OS !== "web") throw new Error("Pera payment is available in the HelixBox web checkout during Testnet.");
+      if (Platform.OS !== "web") {
+        setAddress(await connectPeraWallet());
+        return;
+      }
       const { PeraWalletConnect } = await import("@perawallet/connect");
       const pera = new PeraWalletConnect({ chainId: 416002, shouldShowSignTxnToast: false });
       const accounts = await pera.reconnectSession().catch(() => [] as string[]);
@@ -44,6 +48,7 @@ export default function Payment() {
       const signer = {
         address,
         signTransactions: async (txns: Uint8Array[], indexesToSign?: number[]) => {
+          if (Platform.OS !== "web") return signWithPera(address, txns, indexesToSign);
           const signed = await pera.signTransaction([txns.map((txn: Uint8Array, index: number) => ({
             txn: algosdk.decodeUnsignedTransaction(txn),
             signers: !indexesToSign || indexesToSign.includes(index) ? [address] : [],

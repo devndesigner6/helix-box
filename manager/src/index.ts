@@ -1641,7 +1641,8 @@ function startManager(): void {
       passwordHash,
       proxyUrl: null,
       issuedAt: now,
-      expiresAt: now + DEFAULT_RESUME_TOKEN_TTL_MS,
+      // The password is the entitlement. It must not outlive the paid plan.
+      expiresAt: session.paidUntil,
     });
 
     const payload = JSON.stringify({
@@ -3229,7 +3230,7 @@ function startManager(): void {
         }
         const assignedProxy = record?.proxyUrl || v1Row?.primary_gateway || process.env.PROXIES || process.env.PROXY_URL || "https://helixbox-proxy.onrender.com";
         const code = record?.code || v1Row?.code || "";
-        return Response.json({ valid: true, proxyUrl: assignedProxy, code }, { headers: corsHeaders });
+        return Response.json({ valid: true, proxyUrl: assignedProxy, code, expiresAt: record?.expiresAt ?? null }, { headers: corsHeaders });
       }
 
       if (path === "/health") {

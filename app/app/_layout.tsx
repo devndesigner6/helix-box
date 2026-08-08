@@ -111,6 +111,7 @@ if (Platform.OS !== "web") {
   }
 }
 import { Stack, usePathname } from "expo-router";
+import { Platform } from "react-native";
 import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
 import * as NavigationBar from "expo-navigation-bar";
 import * as SplashScreen from "expo-splash-screen";

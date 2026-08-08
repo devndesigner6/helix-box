@@ -1,12 +1,14 @@
 import { useConnection } from "@/contexts/ConnectionContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { connectPeraWallet, getPeraChainId, signWithPera } from "@/lib/pera-wallet";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
 import { ArrowLeft, CheckCircle2, Wallet } from "lucide-react-native";
 import { useState } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 
 const MANAGER_URL = process.env.EXPO_PUBLIC_MANAGER_URL || "https://helixbox-manager.onrender.com";
+const CHECKOUT_URL = process.env.EXPO_PUBLIC_CHECKOUT_URL || "https://helixbox.xyz/checkout";
 type Plan = "hour" | "week";
 
 export default function Payment() {
@@ -18,15 +20,21 @@ export default function Payment() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const activatePaidSession = async () => {
+    if (!code) throw new Error("CLI pairing code is missing");
+    const pairedSession = (await getPairedSessions()).find((session) => session.sessionCode === code);
+    if (pairedSession) await resumeSession(pairedSession);
+    else await connect(code);
+    router.replace({ pathname: "/workspace", params: { code } });
+  };
+
   const connectWallet = async () => {
+    if (Platform.OS !== "web") return;
     setBusy(true); setError(null);
     try {
-      if (Platform.OS !== "web") {
-        setAddress(await connectPeraWallet());
-        return;
-      }
       const { PeraWalletConnect } = await import("@perawallet/connect");
-      const pera = new PeraWalletConnect({ chainId: await getPeraChainId(), shouldShowSignTxnToast: false });
+      const health = await fetch(`${MANAGER_URL}/v2/x402/health`).then((response) => response.json() as Promise<{ network?: string }>);
+      const pera = new PeraWalletConnect({ chainId: health.network?.includes("SGO1GKS") ? 416002 : 416001, shouldShowSignTxnToast: false });
       const accounts = await pera.reconnectSession().catch(() => [] as string[]);
       const connected = accounts[0] ? accounts : await pera.connect();
       if (!connected[0]) throw new Error("No Pera account was selected");
@@ -38,17 +46,30 @@ export default function Payment() {
   };
 
   const pay = async (plan: Plan) => {
-    const pera = (globalThis as typeof globalThis & { helixboxPera?: any }).helixboxPera;
-    if (!address || !code || (Platform.OS === "web" && !pera)) return;
+    if (!code) return;
     setBusy(true); setError(null);
     try {
+      if (Platform.OS !== "web") {
+        const checkout = new URL(CHECKOUT_URL);
+        checkout.searchParams.set("code", code);
+        const result = await WebBrowser.openAuthSessionAsync(checkout.toString(), Linking.createURL("payment-complete"));
+        if (result.type !== "success") throw new Error("Pera payment was cancelled");
+        const callback = new URL(result.url);
+        if (callback.protocol !== "helixbox:" || callback.hostname !== "payment-complete" || callback.searchParams.get("status") !== "paid" || callback.searchParams.get("code") !== code) {
+          throw new Error("Invalid payment return from checkout");
+        }
+        await activatePaidSession();
+        return;
+      }
+
+      const pera = (globalThis as typeof globalThis & { helixboxPera?: any }).helixboxPera;
+      if (!address || !pera) throw new Error("Connect Pera Wallet first");
       const [{ x402Client }, { wrapFetchWithPayment }, { ExactAvmScheme }, algosdk] = await Promise.all([
         import("@x402/fetch"), import("@x402/fetch"), import("@x402/avm/exact/client"), import("algosdk"),
       ]);
       const signer = {
         address,
         signTransactions: async (txns: Uint8Array[], indexesToSign?: number[]) => {
-          if (Platform.OS !== "web") return signWithPera(address, txns, indexesToSign);
           const signed = await pera.signTransaction([txns.map((txn: Uint8Array, index: number) => ({
             txn: algosdk.decodeUnsignedTransaction(txn),
             signers: !indexesToSign || indexesToSign.includes(index) ? [address] : [],
@@ -61,15 +82,13 @@ export default function Payment() {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code }),
       });
       if (!response.ok) throw new Error((await response.json().catch(() => null) as { error?: string } | null)?.error || `Payment failed (${response.status})`);
-      const pairedSession = (await getPairedSessions()).find((session) => session.sessionCode === code);
-      if (pairedSession) await resumeSession(pairedSession);
-      else await connect(code);
-      router.replace({ pathname: "/workspace", params: { code } });
+      await activatePaidSession();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Payment failed");
     } finally { setBusy(false); }
   };
 
+  const canPay = Platform.OS !== "web" || Boolean(address);
   return <View style={{ flex: 1, backgroundColor: colors.bg.base, padding: 24, justifyContent: "center", gap: 16 }}>
     <Pressable onPress={() => router.back()} hitSlop={10} style={{ position: "absolute", top: 52, left: 20 }}><ArrowLeft color={colors.fg.default} size={22} /></Pressable>
     <View style={{ gap: 8 }}>
@@ -77,10 +96,10 @@ export default function Payment() {
       <Text style={{ color: colors.fg.default, fontFamily: fonts.sans.semibold, fontSize: 25 }}>Activate HelixBox</Text>
       <Text style={{ color: colors.fg.muted, fontFamily: fonts.sans.regular, fontSize: 14, lineHeight: 21 }}>Choose access for your connected CLI session. Your editor stays free until you start an agent session.</Text>
     </View>
-    {address ? <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}><CheckCircle2 color={colors.fg.default} size={16} /><Text style={{ color: colors.fg.muted, fontFamily: fonts.mono.regular, fontSize: 12 }}>{address}</Text></View> : <Pressable disabled={busy} onPress={connectWallet} style={{ backgroundColor: colors.bg.raised, borderRadius: 12, padding: 15, opacity: busy ? .55 : 1 }}><Text style={{ color: colors.fg.default, fontFamily: fonts.sans.semibold, textAlign: "center" }}>{busy ? "Connecting Pera…" : "Connect Pera Wallet"}</Text></Pressable>}
-    {address && <View style={{ gap: 10 }}>
-      <Pressable disabled={busy} onPress={() => pay("hour")} style={{ backgroundColor: colors.bg.raised, borderRadius: 12, padding: 15, opacity: busy ? .55 : 1 }}><Text style={{ color: colors.fg.default, fontFamily: fonts.sans.semibold }}>Pay $0.25 USDC · 1 hour</Text></Pressable>
-      <Pressable disabled={busy} onPress={() => pay("week")} style={{ backgroundColor: colors.bg.raised, borderRadius: 12, padding: 15, opacity: busy ? .55 : 1 }}><Text style={{ color: colors.fg.default, fontFamily: fonts.sans.semibold }}>Pay $2 USDC · 7 days</Text></Pressable>
+    {Platform.OS === "web" && (address ? <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}><CheckCircle2 color={colors.fg.default} size={16} /><Text style={{ color: colors.fg.muted, fontFamily: fonts.mono.regular, fontSize: 12 }}>{address}</Text></View> : <Pressable disabled={busy} onPress={connectWallet} style={{ backgroundColor: colors.bg.raised, borderRadius: 12, padding: 15, opacity: busy ? .55 : 1 }}><Text style={{ color: colors.fg.default, fontFamily: fonts.sans.semibold, textAlign: "center" }}>{busy ? "Connecting Pera..." : "Connect Pera Wallet"}</Text></Pressable>)}
+    {canPay && <View style={{ gap: 10 }}>
+      <Pressable disabled={busy} onPress={() => pay("hour")} style={{ backgroundColor: colors.bg.raised, borderRadius: 12, padding: 15, opacity: busy ? .55 : 1 }}><Text style={{ color: colors.fg.default, fontFamily: fonts.sans.semibold }}>Pay $0.25 USDC / 1 hour</Text></Pressable>
+      <Pressable disabled={busy} onPress={() => pay("week")} style={{ backgroundColor: colors.bg.raised, borderRadius: 12, padding: 15, opacity: busy ? .55 : 1 }}><Text style={{ color: colors.fg.default, fontFamily: fonts.sans.semibold }}>Pay $2 USDC / 7 days</Text></Pressable>
     </View>}
     {error && <Text style={{ color: colors.fg.muted, fontFamily: fonts.sans.regular, fontSize: 13 }}>{error}</Text>}
   </View>;

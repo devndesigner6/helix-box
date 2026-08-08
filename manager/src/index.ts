@@ -2,6 +2,8 @@ import type { ServerWebSocket } from "bun";
 import { Database } from "bun:sqlite";
 import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from "crypto";
 import { existsSync, rmSync } from "fs";
+import { createX402App } from "./x402-app.js";
+import { createX402Config } from "./x402-payment.js";
 
 const CHARSET = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
 const CODE_LENGTH = 10;
@@ -199,6 +201,7 @@ interface AssembleSession {
   code: string;
   createdAt: number;
   expiresAt: number;
+  paidUntil: number;
   password: string | null;
   appWs: ServerWebSocket<AssembleWebSocketData> | null;
   cliWs: ServerWebSocket<AssembleWebSocketData> | null;
@@ -1597,6 +1600,7 @@ function startManager(): void {
       code,
       createdAt: now,
       expiresAt: now + V2_CODE_TTL_MS,
+      paidUntil: 0,
       password: null,
       appWs: null,
       cliWs: null,
@@ -1625,6 +1629,7 @@ function startManager(): void {
 
   const maybeIssueAssemblePassword = (session: AssembleSession): void => {
     if (session.password) return;
+    if (session.paidUntil <= Date.now()) return;
     if (!session.appWs || !session.cliWs) return;
 
     const password = makeV2Password();
@@ -3035,17 +3040,75 @@ function startManager(): void {
     }
   };
 
+  const redeemAssembleSession = async (code: string, paidUntil: number): Promise<{ code: string; expiresAt: number }> => {
+    const session = assembleSessionsByCode.get(code);
+    if (!session || session.expiresAt <= Date.now()) {
+      throw new Error("CLI pairing code was not found or has expired");
+    }
+    session.paidUntil = Math.max(session.paidUntil, paidUntil);
+    maybeIssueAssemblePassword(session);
+    return { code: session.code, expiresAt: session.paidUntil };
+  };
+
+  let x402App: ReturnType<typeof createX402App> | null = null;
+  let x402PaymentConfig: ReturnType<typeof createX402Config> | null = null;
+  let x402ConfigurationError: string | null = null;
+  try {
+    x402PaymentConfig = createX402Config();
+    x402App = createX402App({
+      config: x402PaymentConfig,
+      redeemSession: redeemAssembleSession,
+    });
+    console.log("[x402] paid CLI relay endpoints enabled");
+  } catch (error) {
+    x402ConfigurationError = error instanceof Error ? error.message : "x402 configuration failed";
+    console.warn(`[x402] paid CLI relay endpoints disabled: ${x402ConfigurationError}`);
+  }
+
   setInterval(cleanupManagerSessions, 60 * 1000);
   setInterval(() => cleanupExpiredV2State(), 30 * 1000);
 
   Bun.serve({
     port: Number(process.env.PORT || 8899),
-    fetch(req, server) {
+    async fetch(req, server) {
       const url = new URL(req.url);
       const path = url.pathname;
 
       if (req.method === "OPTIONS") {
         return new Response(null, { status: 204, headers: corsHeaders });
+      }
+
+      if (path.startsWith("/v2/x402/")) {
+        if (path === "/v2/x402/health" && req.method === "GET") {
+          return Response.json(
+            x402App
+              ? { status: "ok", service: "HelixBox paid CLI relay", network: x402PaymentConfig?.network }
+              : { status: "misconfigured", error: x402ConfigurationError },
+            { status: x402App ? 200 : 503, headers: corsHeaders },
+          );
+        }
+        if (!x402App) {
+          return Response.json({ error: "x402 is not configured", details: x402ConfigurationError }, { status: 503, headers: corsHeaders });
+        }
+        return x402App.fetch(req);
+      }
+
+      if (path === "/.well-known/x402.json" && req.method === "GET") {
+        if (!x402PaymentConfig) {
+          return Response.json({ error: "x402 is not configured", details: x402ConfigurationError }, { status: 503, headers: corsHeaders });
+        }
+        return Response.json({
+          name: "HelixBox paid CLI relay",
+          description: "Pay in USDC to create a live HelixBox CLI-to-mobile relay session.",
+          category: "developer-tools",
+          projectType: "standard",
+          tags: ["x402-global-challenge", "algorand", "cli", "mobile-ide"],
+          payTo: x402PaymentConfig.payTo,
+          endpoints: [
+            { path: "/v2/x402/cli/hour", method: "POST", priceUsdc: 0.25, description: "One hour of CLI relay access." },
+            { path: "/v2/x402/premium/week", method: "POST", priceUsdc: 2, description: "Seven days of premium CLI relay access." },
+          ],
+        }, { headers: corsHeaders });
       }
 
       if (path === "/" && req.method === "GET") {
@@ -3717,6 +3780,200 @@ function startManager(): void {
             return Response.json({ ok: true }, { headers: corsHeaders });
           })
           .catch(() => Response.json({ error: "invalid body" }, { status: 400, headers: corsHeaders }));
+      }
+
+      // x402 Sandbox Execution - Real Paid Compute Service (Official GoPlausible SDK)
+      if (path === "/v2/x402/sandbox/execute" && req.method === "POST") {
+        return req.json().then(async (body: any) => {
+          const { executeSandbox, x402Config } = await import("./x402-sandbox.js");
+
+          // Check for x402 payment headers (from official x402 client)
+          const xPaymentRequired = req.headers.get("x-payment-required");
+          const xPaymentSignature = req.headers.get("x-payment-signature");
+          const xPaymentPayload = req.headers.get("x-payment-payload");
+
+          // If no payment proof, return official x402 402 response
+          if (!xPaymentRequired && !xPaymentPayload) {
+            return Response.json({
+              // Official x402 v2 payment requirements format
+              scheme: "exact",
+              network: x402Config.network,
+              payTo: x402Config.payTo,
+              amount: x402Config.priceMicroUSDC,
+              asset: x402Config.asset,
+              extra: {
+                description: "Run a short Python or JavaScript program in an isolated HelixBox sandbox; returns stdout, stderr, exit code, and duration.",
+                limits: {
+                  maxSourceSize: "8KB",
+                  executionTimeout: "10 seconds",
+                  memoryLimit: "128MB",
+                  networkAccess: "disabled"
+                }
+              },
+              expiresAt: Date.now() + 300000, // 5 min
+              // Bazaar discovery extension
+              "x-bazaar": {
+                resource: "helixbox-sandbox",
+                version: "1.0.0",
+                category: "compute",
+                inputSchema: {
+                  language: { type: "string", enum: ["python", "javascript"] },
+                  source: { type: "string", maxLength: 8192 }
+                },
+                outputSchema: {
+                  stdout: { type: "string" },
+                  stderr: { type: "string" },
+                  exitCode: { type: "number" },
+                  durationMs: { type: "number" }
+                }
+              },
+              // Challenge tag
+              "x-challenge-tag": "x402-global-challenge"
+            }, {
+              status: 402,
+              headers: {
+                ...corsHeaders,
+                "X-Payment-Required": "true",
+                "WWW-Authenticate": 'x402 scheme="exact"'
+              }
+            });
+          }
+
+          // Payment provided - verify via GoPlausible
+          if (xPaymentPayload) {
+            try {
+              const paymentPayload = JSON.parse(atob(xPaymentPayload));
+
+              // Verify and settle via GoPlausible
+              const verifyResponse = await fetch(`${x402Config.facilitatorUrl}/verify`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  paymentPayload,
+                  paymentRequirements: {
+                    scheme: "exact",
+                    network: x402Config.network,
+                    payTo: x402Config.payTo,
+                    amount: x402Config.priceMicroUSDC,
+                    asset: x402Config.asset
+                  }
+                })
+              });
+
+              if (!verifyResponse.ok) {
+                return Response.json({
+                  error: "Payment verification failed",
+                  details: await verifyResponse.text()
+                }, { status: 402, headers: corsHeaders });
+              }
+
+              const verification = await verifyResponse.json();
+
+              // Settle the payment
+              const settleResponse = await fetch(`${x402Config.facilitatorUrl}/settle`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  paymentPayload,
+                  paymentRequirements: {
+                    scheme: "exact",
+                    network: x402Config.network,
+                    payTo: x402Config.payTo,
+                    amount: x402Config.priceMicroUSDC,
+                    asset: x402Config.asset
+                  },
+                  verifierData: verification
+                })
+              });
+
+              if (!settleResponse.ok) {
+                return Response.json({
+                  error: "Payment settlement failed"
+                }, { status: 402, headers: corsHeaders });
+              }
+
+              // Payment verified and settled - execute sandbox
+              const result = await executeSandbox({
+                language: body.language,
+                source: body.source
+              });
+
+              return Response.json({
+                language: body.language,
+                stdout: result.stdout,
+                stderr: result.stderr,
+                exitCode: result.exitCode,
+                durationMs: result.durationMs,
+                paymentSettled: true,
+                settlement: {
+                  amount: x402Config.priceMicroUSDC,
+                  asset: x402Config.asset,
+                  network: x402Config.network
+                }
+              }, { headers: corsHeaders });
+
+            } catch (error) {
+              return Response.json({
+                error: "Payment processing failed",
+                details: error instanceof Error ? error.message : "Unknown error"
+              }, { status: 500, headers: corsHeaders });
+            }
+          }
+
+          // No valid payment
+          return Response.json({
+            error: "Payment required"
+          }, { status: 402, headers: corsHeaders });
+
+        }).catch((error) => {
+          return Response.json({
+            error: "Invalid request body",
+            details: error instanceof Error ? error.message : "Parse error"
+          }, { status: 400, headers: corsHeaders });
+        });
+      }
+
+      // Health check for x402 configuration
+      if (path === "/v2/x402/health" && req.method === "GET") {
+        const { x402Config } = await import("./x402-sandbox.js");
+        return Response.json({
+          status: "ok",
+          service: "HelixBox Sandbox Executor",
+          version: "1.0.0",
+          network: x402Config.network,
+          asset: x402Config.asset,
+          price: `${x402Config.priceMicroUSDC / 1000000} USDC`,
+          payTo: x402Config.payTo ? `${x402Config.payTo.slice(0, 10)}...${x402Config.payTo.slice(-4)}` : "NOT_CONFIGURED",
+          facilitator: x402Config.facilitatorUrl,
+          supportedLanguages: ["python", "javascript"],
+          limits: {
+            maxSourceSize: "8KB",
+            executionTimeout: "10 seconds",
+            memoryLimit: "128MB",
+            networkAccess: "disabled"
+          }
+        }, { headers: corsHeaders });
+      }
+
+      // x402 discovery endpoint (for Bazaar)
+      if (path === "/.well-known/x402.json" && req.method === "GET") {
+        const { x402Config } = await import("./x402-sandbox.js");
+        return Response.json({
+          name: "HelixBox Sandbox Execution",
+          description: "Run Python or JavaScript code in an isolated HelixBox sandbox. Real stdout, stderr, exit code, and execution time returned.",
+          category: "developer-tools",
+          projectType: "standard",
+          tags: ["x402-global-challenge", "compute", "sandbox", "code-execution"],
+          payTo: x402Config.payTo,
+          endpoints: [
+            {
+              path: "/v2/x402/sandbox/execute",
+              method: "POST",
+              priceUsdc: 0.05,
+              description: "Execute Python or JavaScript code in isolated sandbox. Returns stdout, stderr, exitCode, durationMs."
+            }
+          ]
+        }, { headers: corsHeaders });
       }
 
       if (path === "/v1/gateway/ws") {

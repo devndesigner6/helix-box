@@ -78,6 +78,7 @@
       "reactCompiler": true
     },
     "extra": {
+      "reownProjectId": "6a728dec2e7e16a2473db067d247a553",
       "router": {
         "unstable_settings": {
           "initialRouteName": "index"

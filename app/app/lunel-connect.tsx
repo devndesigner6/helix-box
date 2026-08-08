@@ -258,20 +258,7 @@ const LunelConnect = () => {
       setToastVisible(true);
       return;
     }
-    hasActiveConnectAttemptRef.current = true;
-    setIsConnecting(true);
-    setError(null);
-    try {
-      await connect(trimmedCode);
-      hasActiveConnectAttemptRef.current = false;
-    } catch (err) {
-      hasActiveConnectAttemptRef.current = false;
-      setError(err instanceof Error ? err.message : t('lunelConnect.errorConnectionFailed'));
-      setToastMessage(t('lunelConnect.errorGeneric'));
-      setToastVisible(true);
-    } finally {
-      setIsConnecting(false);
-    }
+    router.push({ pathname: "/payment", params: { code: trimmedCode } });
   };
 
   const handleConnect = () => {

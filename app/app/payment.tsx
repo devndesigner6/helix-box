@@ -8,7 +8,7 @@ import { useState } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 
 const MANAGER_URL = process.env.EXPO_PUBLIC_MANAGER_URL || "https://helixbox-manager.onrender.com";
-const CHECKOUT_URL = process.env.EXPO_PUBLIC_CHECKOUT_URL || "https://helixbox.xyz/checkout";
+const CHECKOUT_URL = process.env.EXPO_PUBLIC_CHECKOUT_URL || "https://helix-box.vercel.app/checkout";
 type Plan = "hour" | "week";
 
 export default function Payment() {

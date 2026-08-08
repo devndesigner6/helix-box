@@ -129,6 +129,7 @@
     "@hot-updater/standalone": "latest",
     "@types/react": "~19.1.0",
     "dotenv": "^16.4.7",
+    "eas-cli": "^21.7.0",
     "esbuild": "^0.27.4",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",

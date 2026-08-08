@@ -1624,7 +1624,8 @@ function startManager(): void {
     } catch {
       // ignore
     }
-    assembleSessionsByCode.delete(session.code);
+    // Keep the pairing code until its normal expiry so the same CLI can renew
+    // paid access without scanning a new QR code.
   };
 
   const maybeIssueAssemblePassword = (session: AssembleSession): void => {
@@ -3047,6 +3048,10 @@ function startManager(): void {
       throw new Error("CLI pairing code was not found or has expired");
     }
     session.paidUntil = Math.max(session.paidUntil, paidUntil);
+    if (session.password) {
+      const issued = issuedPasswordsByHash.get(hashPassword(session.password));
+      if (issued) issued.expiresAt = session.paidUntil;
+    }
     maybeIssueAssemblePassword(session);
     return { code: session.code, expiresAt: session.paidUntil };
   };
@@ -4412,8 +4417,8 @@ function startManager(): void {
               } catch {
                 // ignore
               }
+              assembleSessionsByCode.delete(assembleData.code);
             }
-            assembleSessionsByCode.delete(assembleData.code);
           });
           return;
         }

@@ -46,7 +46,7 @@ const storage: ISessionStorage = {
   },
 };
 
-async function getChainId() {
+export async function getPeraChainId() {
   const response = await fetch(`${MANAGER_URL}/v2/x402/health`);
   const body = await response.json() as { network?: string };
   if (!response.ok || !body.network) throw new Error("HelixBox payments are unavailable right now");
@@ -83,7 +83,7 @@ async function getConnector() {
 export async function connectPeraWallet() {
   const active = await getConnector();
   if (active.connected && active.accounts[0]) return active.accounts[0];
-  const chainId = await getChainId();
+  const chainId = await getPeraChainId();
   const address = await new Promise<string>((resolve, reject) => {
     active.on("connect", (error, payload) => {
       const account = payload?.params?.[0]?.accounts?.[0];

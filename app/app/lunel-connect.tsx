@@ -258,7 +258,7 @@ const LunelConnect = () => {
       setToastVisible(true);
       return;
     }
-    router.push({ pathname: "/payment", params: { code: trimmedCode } });
+    router.push({ pathname: "/workspace", params: { code: trimmedCode } });
   };
 
   const handleConnect = () => {

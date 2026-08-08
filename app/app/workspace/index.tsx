@@ -6,7 +6,7 @@ import { useSessionRegistry } from "@/contexts/SessionRegistry";
 import { useTheme } from "@/contexts/ThemeContext";
 import { logger } from "@/lib/logger";
 import { usePlugins } from "@/plugins";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useDrawerStatus } from "@react-navigation/drawer";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -14,17 +14,19 @@ import {
   Alert,
   BackHandler,
   Platform,
+  Pressable,
   Text,
   View,
 } from "react-native";
 
 
 export default function WorkspaceScreen() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   const { isLoading, openTab, openTabs, activeTabId, setActiveTab } = usePlugins();
   const { registry } = useSessionRegistry();
   const { status, sessionState, error, isReconnecting, interactionBlockReason, disconnect } = useConnection();
   const router = useRouter();
+  const { code } = useLocalSearchParams<{ code?: string }>();
   const drawerStatus = useDrawerStatus();
   const { t } = useTranslation();
 
@@ -36,6 +38,8 @@ export default function WorkspaceScreen() {
   const shouldRefreshAfterReconnectRef = useRef(false);
   const hasConnectedOnceRef = useRef(false);
   const showConnectionNotice = status === "connecting" || isReconnecting || interactionBlockReason !== null;
+  const pendingCode = typeof code === "string" ? code : null;
+  const needsPaidSession = Boolean(pendingCode) && (status !== "connected" || sessionState === "expired");
 
   const handleGoHome = useCallback(() => {
     logger.info("workspace", "navigating back to auth after disconnect");
@@ -56,6 +60,10 @@ export default function WorkspaceScreen() {
       drawerStatus,
     });
 
+    if (prev !== sessionState && sessionState === "expired" && pendingCode) {
+      return;
+    }
+
     if (prev !== sessionState && (sessionState === "ended" || sessionState === "expired" || sessionState === "cli_offline_grace")) {
       Alert.alert(
         t('workspace.connectionLostTitle'),
@@ -64,7 +72,7 @@ export default function WorkspaceScreen() {
         { cancelable: false }
       );
     }
-  }, [drawerStatus, error, handleGoHome, isLoading, sessionState, status]);
+  }, [drawerStatus, error, handleGoHome, isLoading, pendingCode, sessionState, status]);
 
   useEffect(() => {
     if (isLoading) {
@@ -252,6 +260,37 @@ export default function WorkspaceScreen() {
                 ? t('workspace.waitingConnection')
                 : t('workspace.restoringSession')}
             </Text>
+        </View>
+      ) : null}
+      {needsPaidSession && pendingCode ? (
+        <View
+          style={{
+            position: "absolute",
+            left: 16,
+            right: 16,
+            bottom: bottomBarHeight + 16,
+            backgroundColor: colors.bg.raised,
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: colors.border.main,
+            padding: 16,
+            gap: 10,
+          }}
+        >
+          <Text style={{ color: colors.fg.default, fontFamily: fonts.sans.semibold, fontSize: 16 }}>
+            {sessionState === "expired" ? "Your paid session ended" : "Start your first agent session"}
+          </Text>
+          <Text style={{ color: colors.fg.muted, fontFamily: fonts.sans.regular, fontSize: 13, lineHeight: 19 }}>
+            Connect Pera once, then choose $0.25 USDC for 1 hour or $2 USDC for 7 days.
+          </Text>
+          <Pressable
+            onPress={() => router.push({ pathname: "/payment", params: { code: pendingCode } })}
+            style={{ backgroundColor: colors.accent.default, borderRadius: 10, paddingVertical: 12, paddingHorizontal: 14 }}
+          >
+            <Text style={{ color: colors.fg.default, fontFamily: fonts.sans.semibold, fontSize: 14, textAlign: "center" }}>
+              {sessionState === "expired" ? "Renew access" : "Connect Pera and start"}
+            </Text>
+          </Pressable>
         </View>
       ) : null}
     </View>

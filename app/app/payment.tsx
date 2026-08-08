@@ -1,6 +1,6 @@
 import { useConnection } from "@/contexts/ConnectionContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { connectPeraWallet, signWithPera } from "@/lib/pera-wallet";
+import { connectPeraWallet, getPeraChainId, signWithPera } from "@/lib/pera-wallet";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ArrowLeft, CheckCircle2, Wallet } from "lucide-react-native";
 import { useState } from "react";
@@ -12,7 +12,7 @@ type Plan = "hour" | "week";
 export default function Payment() {
   const router = useRouter();
   const { code } = useLocalSearchParams<{ code: string }>();
-  const { connect } = useConnection();
+  const { connect, getPairedSessions, resumeSession } = useConnection();
   const { colors, fonts } = useTheme();
   const [address, setAddress] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -26,7 +26,7 @@ export default function Payment() {
         return;
       }
       const { PeraWalletConnect } = await import("@perawallet/connect");
-      const pera = new PeraWalletConnect({ chainId: 416002, shouldShowSignTxnToast: false });
+      const pera = new PeraWalletConnect({ chainId: await getPeraChainId(), shouldShowSignTxnToast: false });
       const accounts = await pera.reconnectSession().catch(() => [] as string[]);
       const connected = accounts[0] ? accounts : await pera.connect();
       if (!connected[0]) throw new Error("No Pera account was selected");
@@ -39,7 +39,7 @@ export default function Payment() {
 
   const pay = async (plan: Plan) => {
     const pera = (globalThis as typeof globalThis & { helixboxPera?: any }).helixboxPera;
-    if (!pera || !address || !code) return;
+    if (!address || !code || (Platform.OS === "web" && !pera)) return;
     setBusy(true); setError(null);
     try {
       const [{ x402Client }, { wrapFetchWithPayment }, { ExactAvmScheme }, algosdk] = await Promise.all([
@@ -61,8 +61,10 @@ export default function Payment() {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code }),
       });
       if (!response.ok) throw new Error((await response.json().catch(() => null) as { error?: string } | null)?.error || `Payment failed (${response.status})`);
-      await connect(code);
-      router.replace("/workspace");
+      const pairedSession = (await getPairedSessions()).find((session) => session.sessionCode === code);
+      if (pairedSession) await resumeSession(pairedSession);
+      else await connect(code);
+      router.replace({ pathname: "/workspace", params: { code } });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Payment failed");
     } finally { setBusy(false); }
@@ -73,7 +75,7 @@ export default function Payment() {
     <View style={{ gap: 8 }}>
       <Wallet color={colors.fg.default} size={28} />
       <Text style={{ color: colors.fg.default, fontFamily: fonts.sans.semibold, fontSize: 25 }}>Activate HelixBox</Text>
-      <Text style={{ color: colors.fg.muted, fontFamily: fonts.sans.regular, fontSize: 14, lineHeight: 21 }}>Connect Pera and pay after pairing your CLI. The payment unlocks this exact session.</Text>
+      <Text style={{ color: colors.fg.muted, fontFamily: fonts.sans.regular, fontSize: 14, lineHeight: 21 }}>Choose access for your connected CLI session. Your editor stays free until you start an agent session.</Text>
     </View>
     {address ? <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}><CheckCircle2 color={colors.fg.default} size={16} /><Text style={{ color: colors.fg.muted, fontFamily: fonts.mono.regular, fontSize: 12 }}>{address}</Text></View> : <Pressable disabled={busy} onPress={connectWallet} style={{ backgroundColor: colors.bg.raised, borderRadius: 12, padding: 15, opacity: busy ? .55 : 1 }}><Text style={{ color: colors.fg.default, fontFamily: fonts.sans.semibold, textAlign: "center" }}>{busy ? "Connecting Pera…" : "Connect Pera Wallet"}</Text></Pressable>}
     {address && <View style={{ gap: 10 }}>

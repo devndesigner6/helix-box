@@ -36,6 +36,7 @@ async function pay(plan) {
   const network = await getNetwork();
   const pera = new PeraWalletConnect({ chainId: network.chainId, shouldShowSignTxnToast: false });
   const existing = await pera.reconnectSession().catch(() => []);
+  if (!existing.length) await pera.disconnect().catch(() => undefined);
   const accounts = existing.length ? existing : await pera.connect();
   const address = accounts[0];
   if (!address) throw new Error("No Pera account was selected");

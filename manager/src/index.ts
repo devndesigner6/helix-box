@@ -173,7 +173,8 @@ interface GatewayControlEvent {
   command?: "close_session" | "set_reconnect_grace" | "clear_reconnect_grace" | "set_cli_reconnect_grace" | "ring_update";
   ring?: string[];
   role?: Role;
-  channel?: Channel;
+  channel?: string;
+  password?: string;
   connected?: boolean;
   reason?: string;
   eventId?: string;
@@ -3099,7 +3100,7 @@ function startManager(): void {
   setInterval(cleanupManagerSessions, 60 * 1000);
   setInterval(() => cleanupExpiredV2State(), 30 * 1000);
 
-  Bun.serve({
+  Bun.serve<any>({
     port: Number(process.env.PORT || 8899),
     async fetch(req, server) {
       const url = new URL(req.url);
@@ -3173,7 +3174,7 @@ function startManager(): void {
         if ((role === "app" && session.appWs) || (role === "cli" && session.cliWs)) {
           return Response.json({ error: `${role} already connected for code` }, { status: 409, headers: corsHeaders });
         }
-        const upgraded = server.upgrade(req, {
+        const upgraded = (server as any).upgrade(req, {
           data: { type: "assemble", code, role } as AssembleWebSocketData,
         });
         if (!upgraded) {
@@ -4031,7 +4032,7 @@ function startManager(): void {
           return blocked;
         }
 
-        const upgraded = server.upgrade(req, {
+        const upgraded = (server as any).upgrade(req, {
           data: { type: "manager-control", authed: false } as ManagerControlSocketData,
         });
         if (!upgraded) {
@@ -4098,7 +4099,7 @@ function startManager(): void {
               jti: randomUUID(),
             };
             console.log(`[admin] login success (ip=${sourceIp})`);
-            const token = signJwtToken(claims, managerAdminTokenSecret);
+            const token = signJwtToken(claims as any, managerAdminTokenSecret);
             writeAuditLog({
               actorType: "admin",
               actorId: "admin",
@@ -4427,25 +4428,11 @@ function startManager(): void {
           void assembleMutex.runExclusive(() => {
             const session = assembleSessionsByCode.get(assembleData.code);
             if (!session) return;
-            const completed = session.appAcked && session.cliAcked;
             if (assembleData.role === "app" && session.appWs === ws) {
               session.appWs = null;
             }
             if (assembleData.role === "cli" && session.cliWs === ws) {
               session.cliWs = null;
-            }
-            if (!completed) {
-              try {
-                session.appWs?.close(1000, "assemble cancelled");
-              } catch {
-                // ignore
-              }
-              try {
-                session.cliWs?.close(1000, "assemble cancelled");
-              } catch {
-                // ignore
-              }
-              assembleSessionsByCode.delete(assembleData.code);
             }
           });
           return;
@@ -4472,7 +4459,7 @@ function startManager(): void {
           const socketData = (ws.data || {}) as Partial<WebSocketData | ManagerControlSocketData>;
           if (socketData.type === "assemble") {
             const assembleData = socketData as AssembleWebSocketData;
-            const raw = typeof message === "string" ? message : Buffer.from(message as ArrayBuffer).toString("utf-8");
+            const raw = typeof message === "string" ? message : Buffer.from(message as any).toString("utf-8");
             const parsed = JSON.parse(raw) as { type?: string };
             if (parsed.type !== "ack") {
               ws.close(1008, "ack required");
@@ -4495,7 +4482,7 @@ function startManager(): void {
           }
 
           const controlSocketData = socketData as Partial<ManagerControlSocketData>;
-          const raw = typeof message === "string" ? message : Buffer.from(message as ArrayBuffer).toString("utf-8");
+          const raw = typeof message === "string" ? message : Buffer.from(message as any).toString("utf-8");
           const event = JSON.parse(raw) as GatewayControlEvent;
           if (!controlSocketData.authed) {
             if (event.type === "gateway_auth" && event.password) {

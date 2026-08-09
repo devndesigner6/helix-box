@@ -1,14 +1,13 @@
 import { useConnection } from "@/contexts/ConnectionContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import * as Linking from "expo-linking";
-import * as WebBrowser from "expo-web-browser";
+import { openPeraCheckout } from "@/lib/pera-checkout";
+import { saveWalletStatus } from "@/lib/wallet-status";
 import { ArrowLeft, CheckCircle2, Wallet } from "lucide-react-native";
 import { useState } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 
 const MANAGER_URL = process.env.EXPO_PUBLIC_MANAGER_URL || "https://helixbox-manager.onrender.com";
-const CHECKOUT_URL = process.env.EXPO_PUBLIC_CHECKOUT_URL || "https://helix-box.vercel.app/checkout";
 type Plan = "hour" | "week";
 
 export default function Payment() {
@@ -50,14 +49,7 @@ export default function Payment() {
     setBusy(true); setError(null);
     try {
       if (Platform.OS !== "web") {
-        const checkout = new URL(CHECKOUT_URL);
-        checkout.searchParams.set("code", code);
-        const result = await WebBrowser.openAuthSessionAsync(checkout.toString(), Linking.createURL("payment-complete"));
-        if (result.type !== "success") throw new Error("Pera payment was cancelled");
-        const callback = new URL(result.url);
-        if (callback.protocol !== "helixbox:" || callback.hostname !== "payment-complete" || callback.searchParams.get("status") !== "paid" || callback.searchParams.get("code") !== code) {
-          throw new Error("Invalid payment return from checkout");
-        }
+        await saveWalletStatus(await openPeraCheckout(code));
         await activatePaidSession();
         return;
       }

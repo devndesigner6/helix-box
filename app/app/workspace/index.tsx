@@ -5,6 +5,8 @@ import { useConnection } from "@/contexts/ConnectionContext";
 import { useSessionRegistry } from "@/contexts/SessionRegistry";
 import { useTheme } from "@/contexts/ThemeContext";
 import { logger } from "@/lib/logger";
+import { openPeraCheckout } from "@/lib/pera-checkout";
+import { saveWalletStatus } from "@/lib/wallet-status";
 import { usePlugins } from "@/plugins";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useDrawerStatus } from "@react-navigation/drawer";
@@ -24,7 +26,7 @@ export default function WorkspaceScreen() {
   const { colors, fonts } = useTheme();
   const { isLoading, openTab, openTabs, activeTabId, setActiveTab } = usePlugins();
   const { registry } = useSessionRegistry();
-  const { status, sessionState, error, isReconnecting, interactionBlockReason, disconnect } = useConnection();
+  const { status, sessionState, error, isReconnecting, interactionBlockReason, disconnect, connect, getPairedSessions, resumeSession } = useConnection();
   const router = useRouter();
   const { code } = useLocalSearchParams<{ code?: string }>();
   const drawerStatus = useDrawerStatus();
@@ -40,6 +42,18 @@ export default function WorkspaceScreen() {
   const showConnectionNotice = status === "connecting" || isReconnecting || interactionBlockReason !== null;
   const pendingCode = typeof code === "string" ? code : null;
   const needsPaidSession = Boolean(pendingCode) && (status !== "connected" || sessionState === "expired");
+  const [isPaying, setIsPaying] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const startPaidSession = async () => {
+    if (!pendingCode || isPaying) return;
+    setIsPaying(true); setPaymentError(null);
+    try {
+      await saveWalletStatus(await openPeraCheckout(pendingCode));
+      const session = (await getPairedSessions()).find((item) => item.sessionCode === pendingCode);
+      if (session) await resumeSession(session); else await connect(pendingCode);
+    } catch (cause) { setPaymentError(cause instanceof Error ? cause.message : "Payment failed"); }
+    finally { setIsPaying(false); }
+  };
 
   const handleGoHome = useCallback(() => {
     logger.info("workspace", "navigating back to auth after disconnect");
@@ -284,13 +298,15 @@ export default function WorkspaceScreen() {
             Connect Pera once, then choose $0.25 USDC for 1 hour or $2 USDC for 7 days.
           </Text>
           <Pressable
-            onPress={() => router.push({ pathname: "/payment", params: { code: pendingCode } })}
-            style={{ backgroundColor: colors.accent.default, borderRadius: 10, paddingVertical: 12, paddingHorizontal: 14 }}
+            disabled={isPaying}
+            onPress={startPaidSession}
+            style={{ backgroundColor: colors.accent.default, borderRadius: 10, paddingVertical: 12, paddingHorizontal: 14, opacity: isPaying ? .6 : 1 }}
           >
             <Text style={{ color: colors.fg.default, fontFamily: fonts.sans.semibold, fontSize: 14, textAlign: "center" }}>
-              {sessionState === "expired" ? "Renew access" : "Connect Pera and start"}
+              {isPaying ? "Opening Pera checkout..." : sessionState === "expired" ? "Renew access" : "Connect Pera and start"}
             </Text>
           </Pressable>
+          {paymentError ? <Text style={{ color: colors.fg.muted, fontFamily: fonts.sans.regular, fontSize: 12 }}>{paymentError}</Text> : null}
         </View>
       ) : null}
     </View>

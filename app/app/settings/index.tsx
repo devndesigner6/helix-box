@@ -1,6 +1,6 @@
 import { useTheme } from "@/contexts/ThemeContext";
 import Header, { useHeaderHeight } from "@/components/Header";
-import { ChevronRight, LucideIcon, Palette, Type, Code, Sparkles, MoonStar, Shell, Globe } from "lucide-react-native";
+import { ChevronRight, LucideIcon, Palette, Type, Code, Sparkles, MoonStar, Shell, Globe, Wallet } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 
@@ -97,6 +97,8 @@ export default function SettingsPage() {
             label={t('settings.brainrot')}
             onPress={() => router.push("/settings/brainrot")}
           />
+          <View style={[styles.divider, { backgroundColor: colors.border.tertiary }]} />
+          <SettingsRow icon={Wallet} label="Wallet Connection" onPress={() => router.push("/settings/wallet")} />
         </View>
 
         <Text style={[styles.sectionHeader, { color: colors.fg.muted, fontFamily: fonts.sans.medium, fontSize: typography.caption }]}>

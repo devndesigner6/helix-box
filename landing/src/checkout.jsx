@@ -2,6 +2,7 @@ import { PeraWalletConnect } from "@perawallet/connect";
 import { ExactAvmScheme } from "@x402/avm/exact/client";
 import { wrapFetchWithPayment, x402Client } from "@x402/fetch";
 import algosdk from "algosdk";
+import { alignPeraSignatures } from "./pera-signatures";
 
 const managerUrl = import.meta.env.VITE_MANAGER_URL || "https://helixbox-manager.onrender.com";
 const code = new URLSearchParams(window.location.search).get("code") || "";
@@ -34,7 +35,7 @@ async function pay(plan) {
   setStatus("Approve the payment in Pera Wallet...");
   const signer = { address, signTransactions: async (txns, indexesToSign) => {
     const signed = await pera.signTransaction([txns.map((txn, index) => ({ txn: algosdk.decodeUnsignedTransaction(txn), signers: !indexesToSign || indexesToSign.includes(index) ? [address] : [] }))]);
-    return txns.map((_, index) => !indexesToSign || indexesToSign.includes(index) ? signed[index] : null);
+    return alignPeraSignatures(txns, indexesToSign, signed);
   }};
   const client = new x402Client().register("algorand:*", new ExactAvmScheme(signer));
   const path = plan === "hour" ? "/v2/x402/cli/hour" : "/v2/x402/premium/week";

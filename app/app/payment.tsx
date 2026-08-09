@@ -66,7 +66,8 @@ export default function Payment() {
             txn: algosdk.decodeUnsignedTransaction(txn),
             signers: !indexesToSign || indexesToSign.includes(index) ? [address] : [],
           }))]);
-          return txns.map((_: Uint8Array, index: number) => !indexesToSign || indexesToSign.includes(index) ? signed[index] : null);
+          let signedIndex = 0;
+          return txns.map((_: Uint8Array, index: number) => !indexesToSign || indexesToSign.includes(index) ? signed[signedIndex++] ?? null : null);
         },
       };
       const client = new x402Client().register("algorand:*", new ExactAvmScheme(signer));

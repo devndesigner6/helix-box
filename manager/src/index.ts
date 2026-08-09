@@ -4,6 +4,7 @@ import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from
 import { existsSync, rmSync } from "fs";
 import { createX402App } from "./x402-app.js";
 import { CLI_HOURLY_ROUTE, PREMIUM_WEEKLY_ROUTE, CODEX_AGENT_ROUTE, createX402Config } from "./x402-payment.js";
+import { startCodexAgentTask } from "./codex-agent-task.js";
 
 const CHARSET = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
 const CODE_LENGTH = 10;
@@ -487,6 +488,7 @@ function redactSensitive(input: unknown): unknown {
 // ============================================================================
 
 function startManager(): void {
+  startCodexAgentTask();
   const managerAdminPassword = process.env.MANAGER_ADMIN_PASSWORD || "qkaFPYWNEcwhVyZnOjCQHSoM7AmpDi6U";
   const managerAdminTokenSecret = managerAdminPassword;
   const allowLegacyAdminPassword = process.env.MANAGER_ALLOW_LEGACY_ADMIN_PASSWORD === "1";

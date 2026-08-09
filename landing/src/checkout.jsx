@@ -34,7 +34,8 @@ async function pay(plan) {
     return txns.map((_, index) => !indexesToSign || indexesToSign.includes(index) ? signed[index] : null);
   }};
   const client = new x402Client().register("algorand:*", new ExactAvmScheme(signer));
-  const response = await wrapFetchWithPayment(fetch, client)(`${managerUrl}/v2/x402/cli/${plan}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code }) });
+  const path = plan === "hour" ? "/v2/x402/cli/hour" : "/v2/x402/premium/week";
+  const response = await wrapFetchWithPayment(fetch, client)(`${managerUrl}${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code }) });
   if (!response.ok) {
     const body = await response.json().catch(() => null);
     throw new Error(body?.error || `Payment failed (${response.status})`);

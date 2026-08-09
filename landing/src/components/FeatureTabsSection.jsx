@@ -44,19 +44,19 @@ ws.send(JSON.stringify({ type: "PAIR", nonce: "atte6" }));`
       id: "03",
       title: "Algorand x402 Micropayments",
       subtitle: "Sub-Second Micro-Billing",
-      description: "Native HTTP 402 payment required protocol integration. Pay fractional pennies ($0.01 per AI prompt, $0.25 per Docker container) settled on Algorand in under 1 second.",
+      description: "Native HTTP 402 payment-required access for HelixBox CLI relay sessions: $0.25 for one hour or $2 for seven days.",
       icon: Coins,
       badge: "MainNet Settled",
       metrics: [
         { label: "Payment Protocol", value: "HTTP 402 x402" },
-        { label: "Finality Time", value: "< 0.8 Seconds" },
-        { label: "Transaction Fee", value: "0.001 ALGO" }
+        { label: "Access", value: "$0.25 / hour" },
+        { label: "Premium", value: "$2 / 7 days" }
       ],
-      code: `// Algorand x402 Header Verification
-if (req.headers["x-algorand-txid"]) {
-  const verified = fontchain.verifyTx(req.headers["x-algorand-txid"]);
-  if (verified) return next();
-}`
+      code: `// x402 paid relay request
+await fetch("/v2/x402/cli/hour", {
+  method: "POST",
+  body: JSON.stringify({ code })
+});`
     },
     {
       id: "04",

@@ -20,41 +20,32 @@ export const PricingTiers = () => {
       cta: "Download APK"
     },
     {
-      name: "x402 AI Assist",
-      price: "$0.01",
-      period: "per prompt completion",
-      description: "Pay-per-request AI terminal code assistant settled natively on Algorand.",
+      name: "Agent Session",
+      price: "$0.25",
+      period: "per 1 hour",
+      description: "One hour of paid CLI-to-mobile agent relay access, settled with Algorand x402.",
       features: [
-        "LLM Terminal Code Assistant",
-        "Automatic Stack Trace Analysis",
-        "Terminal Command Generation",
-        "Sub-Second Algorand Settlement",
-        "Priority Relay Bandwidth",
-        "Multi-Tab Session Control",
-        "Custom Shell Shortcuts",
-        "Instant MainNet Verification"
+        "CLI-to-mobile relay access",
+        "Pera Wallet payment",
+        "Algorand x402 settlement",
+        "Resume during valid access"
       ],
       popular: true,
-      cta: "Enable AI Assist"
+      cta: "Start Agent Session"
     },
     {
-      name: "Cloud Sandbox",
-      price: "$0.25",
-      period: "per container instance",
-      description: "On-demand cloud Docker containers for running untrusted code and integration tests.",
+      name: "Weekly Premium",
+      price: "$2.00",
+      period: "per 7 days",
+      description: "Seven days of continuous HelixBox agent relay access.",
       features: [
-        "Isolated Docker Cloud Instance",
-        "Full Root Terminal Access",
-        "Unlimited Bandwidth",
-        "Ephemeral Storage Workspace",
-        "Algorand x402 Header Auth",
-        "Sub-Second Sandbox Provisioning",
-        "Secure TLS Encryption",
-        "Direct CLI Stream",
-        "Lifetime Open Source Access"
+        "Seven days of agent access",
+        "Pera Wallet payment",
+        "Algorand x402 settlement",
+        "Resume during valid access"
       ],
       popular: false,
-      cta: "Spawn Sandbox"
+      cta: "Choose Weekly Premium"
     }
   ];
 

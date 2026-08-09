@@ -70,7 +70,8 @@ export default function Payment() {
         },
       };
       const client = new x402Client().register("algorand:*", new ExactAvmScheme(signer));
-      const response = await wrapFetchWithPayment(fetch, client)(`${MANAGER_URL}/v2/x402/cli/${plan}`, {
+      const path = plan === "hour" ? "/v2/x402/cli/hour" : "/v2/x402/premium/week";
+      const response = await wrapFetchWithPayment(fetch, client)(`${MANAGER_URL}${path}`, {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code }),
       });
       if (!response.ok) throw new Error((await response.json().catch(() => null) as { error?: string } | null)?.error || `Payment failed (${response.status})`);

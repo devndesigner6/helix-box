@@ -7,7 +7,7 @@ export const FAQAccordion = () => {
   const faqs = [
     {
       q: "What is Helix Box?",
-      a: "Helix Box is an AI-powered mobile IDE and cloud development platform. It lets you code on your phone and run workloads on your local machine or in secure cloud sandboxes without dealing with complex SSH configuration."
+      a: "Helix Box is an AI-powered mobile IDE. It pairs your phone with a CLI running on your own computer through encrypted relays."
     },
     {
       q: "How does the CLI bridge connect my PC to my phone?",
@@ -19,7 +19,7 @@ export const FAQAccordion = () => {
     },
     {
       q: "What is Algorand x402 and how does micro-billing work?",
-      a: "x402 is an HTTP 402 Payment Required standard. Instead of paying a $20/month subscription, Helix Box endpoints return payment challenges for $0.01 AI prompts or $0.25 Docker sandboxes settled on Algorand in under 1 second."
+      a: "x402 is an HTTP 402 Payment Required standard. HelixBox uses it for agent relay access: $0.25 USDC for one hour or $2 USDC for seven days. Pera Wallet approves the payment and access begins only after settlement."
     },
     {
       q: "Where can I download the Android APK?",

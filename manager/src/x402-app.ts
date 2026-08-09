@@ -6,7 +6,9 @@ import type { ResourceServerExtension } from "@x402/core/types";
 import { paymentMiddleware } from "@x402/hono";
 import {
   CLI_HOURLY_PRICE_USDC,
+  CLI_HOURLY_ROUTE,
   PREMIUM_WEEKLY_PRICE_USDC,
+  PREMIUM_WEEKLY_ROUTE,
   type X402Config,
 } from "./x402-payment.js";
 
@@ -61,11 +63,11 @@ export function createX402App({ config, redeemSession }: X402AppOptions): Hono {
   app.use(
     paymentMiddleware(
       {
-        "POST /v2/x402/cli/hour": paymentOptions(
+        [`POST ${CLI_HOURLY_ROUTE}`]: paymentOptions(
           CLI_HOURLY_PRICE_USDC,
           "One hour of HelixBox CLI-to-mobile relay access.",
         ),
-        "POST /v2/x402/premium/week": paymentOptions(
+        [`POST ${PREMIUM_WEEKLY_ROUTE}`]: paymentOptions(
           PREMIUM_WEEKLY_PRICE_USDC,
           "Seven days of HelixBox premium CLI-to-mobile relay access.",
         ),
@@ -74,12 +76,12 @@ export function createX402App({ config, redeemSession }: X402AppOptions): Hono {
     ),
   );
   const redeem = (durationMs: number) => async (c: Context) => {
-    const body = await c.req.json<{ code?: string }>().catch(() => ({}));
+    const body = await c.req.json<{ code?: string }>().catch((): { code?: string } => ({}));
     const code = (body.code || "").trim();
     if (!code) return c.json({ error: "CLI pairing code is required" }, 400);
     return c.json(await redeemSession(code, Date.now() + durationMs));
   };
-  app.post("/v2/x402/cli/hour", redeem(60 * 60 * 1000));
-  app.post("/v2/x402/premium/week", redeem(7 * 24 * 60 * 60 * 1000));
+  app.post(CLI_HOURLY_ROUTE, redeem(60 * 60 * 1000));
+  app.post(PREMIUM_WEEKLY_ROUTE, redeem(7 * 24 * 60 * 60 * 1000));
   return app;
 }

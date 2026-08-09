@@ -3,7 +3,7 @@ import { Database } from "bun:sqlite";
 import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from "crypto";
 import { existsSync, rmSync } from "fs";
 import { createX402App } from "./x402-app.js";
-import { createX402Config } from "./x402-payment.js";
+import { CLI_HOURLY_ROUTE, PREMIUM_WEEKLY_ROUTE, createX402Config } from "./x402-payment.js";
 
 const CHARSET = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
 const CODE_LENGTH = 10;
@@ -584,6 +584,14 @@ function startManager(): void {
       ended_at INTEGER
     );
   `);
+  db.run(`
+    CREATE TABLE IF NOT EXISTS x402_entitlements (
+      password_hash TEXT PRIMARY KEY,
+      code TEXT NOT NULL,
+      expires_at INTEGER NOT NULL,
+      created_at INTEGER NOT NULL
+    );
+  `);
   try {
     db.run(`ALTER TABLE sessions ADD COLUMN paired_at INTEGER`);
   } catch {}
@@ -770,6 +778,9 @@ function startManager(): void {
     LIMIT 1
   `);
   const codeExistsStmt = db.query(`SELECT 1 FROM sessions WHERE code = ?1 LIMIT 1`);
+  const getEntitlementStmt = db.query(`SELECT password_hash as passwordHash, code, expires_at as expiresAt, created_at as createdAt FROM x402_entitlements WHERE password_hash = ?1 LIMIT 1`);
+  const upsertEntitlementStmt = db.query(`INSERT INTO x402_entitlements (password_hash, code, expires_at, created_at) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(password_hash) DO UPDATE SET expires_at = excluded.expires_at`);
+  const deleteExpiredEntitlementsStmt = db.query(`DELETE FROM x402_entitlements WHERE expires_at <= ?1`);
   const deleteSessionByCodeStmt = db.query(`DELETE FROM sessions WHERE code = ?1`);
   const cleanupExpiredPendingStmt = db.query(`
     UPDATE sessions
@@ -1558,6 +1569,16 @@ function startManager(): void {
   const proxyAssignmentMutex = new Mutex();
   const reattachMutex = new Mutex();
   const hashPassword = (password: string): string => createHash("sha256").update(password).digest("hex");
+  const getIssuedRecord = (passwordHash: string, now = Date.now()): IssuedPasswordRecord | null => {
+    const cached = issuedPasswordsByHash.get(passwordHash);
+    if (cached && cached.expiresAt > now) return cached;
+    if (cached) issuedPasswordsByHash.delete(passwordHash);
+    const saved = getEntitlementStmt.get(passwordHash) as { code: string; expiresAt: number; createdAt: number } | null;
+    if (!saved || Number(saved.expiresAt) <= now) return null;
+    const restored = { code: saved.code, passwordHash, proxyUrl: null, issuedAt: Number(saved.createdAt), expiresAt: Number(saved.expiresAt) };
+    issuedPasswordsByHash.set(passwordHash, restored);
+    return restored;
+  };
 
   const makeV2Password = (): string => generatePersistentSecret(V2_PASSWORD_LENGTH);
 
@@ -1585,6 +1606,7 @@ function startManager(): void {
         issuedPasswordsByHash.delete(passwordHash);
       }
     }
+    deleteExpiredEntitlementsStmt.run(now);
 
     deleteExpiredReattachSessionsStmt.run(now);
   };
@@ -1645,6 +1667,7 @@ function startManager(): void {
       // The password is the entitlement. It must not outlive the paid plan.
       expiresAt: session.paidUntil,
     });
+    upsertEntitlementStmt.run(passwordHash, session.code, session.paidUntil, now);
 
     const payload = JSON.stringify({
       type: "assembled",
@@ -1659,7 +1682,7 @@ function startManager(): void {
     const passwordHash = hashPassword(password);
     return proxyAssignmentMutex.runExclusive(() => {
       cleanupExpiredV2State();
-      const record = issuedPasswordsByHash.get(passwordHash);
+      const record = getIssuedRecord(passwordHash);
       if (!record) return null;
       if (record.proxyUrl) return record;
 
@@ -1694,8 +1717,8 @@ function startManager(): void {
       return { code: sessionSnapshot.code || "" };
     }
 
-    const issuedRecord = issuedPasswordsByHash.get(hashPassword(resumeToken));
-    if (issuedRecord && issuedRecord.expiresAt > now) {
+    const issuedRecord = getIssuedRecord(hashPassword(resumeToken), now);
+    if (issuedRecord) {
       return { code: issuedRecord.code || "" };
     }
 
@@ -3049,8 +3072,10 @@ function startManager(): void {
     }
     session.paidUntil = Math.max(session.paidUntil, paidUntil);
     if (session.password) {
-      const issued = issuedPasswordsByHash.get(hashPassword(session.password));
+      const passwordHash = hashPassword(session.password);
+      const issued = getIssuedRecord(passwordHash);
       if (issued) issued.expiresAt = session.paidUntil;
+      upsertEntitlementStmt.run(passwordHash, session.code, session.paidUntil, Date.now());
     }
     maybeIssueAssemblePassword(session);
     return { code: session.code, expiresAt: session.paidUntil };
@@ -3111,8 +3136,8 @@ function startManager(): void {
           tags: ["x402-global-challenge", "algorand", "cli", "mobile-ide"],
           payTo: x402PaymentConfig.payTo,
           endpoints: [
-            { path: "/v2/x402/cli/hour", method: "POST", priceUsdc: 0.25, description: "One hour of CLI relay access." },
-            { path: "/v2/x402/premium/week", method: "POST", priceUsdc: 2, description: "Seven days of premium CLI relay access." },
+            { path: CLI_HOURLY_ROUTE, method: "POST", priceUsdc: 0.25, description: "One hour of CLI relay access." },
+            { path: PREMIUM_WEEKLY_ROUTE, method: "POST", priceUsdc: 2, description: "Seven days of premium CLI relay access." },
           ],
         }, { headers: corsHeaders });
       }
@@ -3168,7 +3193,7 @@ function startManager(): void {
           return Response.json({ error: "password revoked", reason: "revoked" }, { status: 403, headers: corsHeaders });
         }
         const passwordHash = hashPassword(password);
-        const record = issuedPasswordsByHash.get(passwordHash);
+        const record = getIssuedRecord(passwordHash);
         if (!record || record.expiresAt <= Date.now()) {
           return Response.json({ error: "password invalid" }, { status: 404, headers: corsHeaders });
         }
@@ -3225,7 +3250,7 @@ function startManager(): void {
           return Response.json({ valid: false, reason: "invalid_role" }, { status: 400, headers: corsHeaders });
         }
         const passwordHash = hashPassword(password);
-        const record = issuedPasswordsByHash.get(passwordHash);
+        const record = getIssuedRecord(passwordHash);
         const v1Row = !record ? (getSessionByTokenStmt.get(password) as any) : null;
         if (!record && !v1Row) {
           return Response.json({ valid: false, reason: "invalid_password" }, { headers: corsHeaders });
@@ -3788,6 +3813,8 @@ function startManager(): void {
           .catch(() => Response.json({ error: "invalid body" }, { status: 400, headers: corsHeaders }));
       }
 
+      /* Retired sandbox route. It remains excluded until HelixBox has a separately deployed isolated runner. */
+      /*
       // x402 Sandbox Execution - Real Paid Compute Service (Official GoPlausible SDK)
       if (path === "/v2/x402/sandbox/execute" && req.method === "POST") {
         return req.json().then(async (body: any) => {
@@ -3982,6 +4009,7 @@ function startManager(): void {
         }, { headers: corsHeaders });
       }
 
+      */
       if (path === "/v1/gateway/ws") {
         const sourceIp = extractClientIp(req);
         const blocked = enforceRateLimit(req, "manager:gateway-ws-upgrade", {

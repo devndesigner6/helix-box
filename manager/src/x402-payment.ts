@@ -9,6 +9,8 @@ import type { Network } from "@x402/core/types";
 
 export const CLI_HOURLY_PRICE_USDC = "$0.25";
 export const PREMIUM_WEEKLY_PRICE_USDC = "$2.00";
+export const CLI_HOURLY_ROUTE = "/v2/x402/cli/hour";
+export const PREMIUM_WEEKLY_ROUTE = "/v2/x402/premium/week";
 
 export interface X402Config {
   network: Network;

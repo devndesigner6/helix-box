@@ -6,7 +6,7 @@ export function startCodexAgentTask() {
   const mnemonic = process.env.X402_AUTO_PAY_MNEMONIC;
   const code = process.env.X402_AUTO_PAY_CODE;
   // Use localhost or manager URL
-  const managerUrl = process.env.X402_MANAGER_URL || `http://localhost:${process.env.PORT || 8899}`;
+  const managerUrl = process.env.X402_MANAGER_URL || `http://127.0.0.1:${process.env.PORT || 8899}`;
 
   if (!mnemonic || !code) {
     console.log("[codex-agent-task] Disabled: X402_AUTO_PAY_MNEMONIC and X402_AUTO_PAY_CODE are not set.");
@@ -54,7 +54,9 @@ export function startCodexAgentTask() {
     }
   }
 
-  // Run task immediately, then repeat every 2 minutes (120000ms)
-  runTask();
-  setInterval(runTask, 120000);
+  // Delay the first execution to allow Bun.serve/Hono to boot
+  setTimeout(() => {
+    runTask();
+    setInterval(runTask, 120000);
+  }, 5000);
 }

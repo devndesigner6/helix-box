@@ -41,7 +41,7 @@ export default function WorkspaceScreen() {
   const hasConnectedOnceRef = useRef(false);
   const showConnectionNotice = status === "connecting" || isReconnecting || interactionBlockReason !== null;
   const pendingCode = typeof code === "string" ? code : null;
-  const needsPaidSession = Boolean(pendingCode) && (status !== "connected" || sessionState === "expired");
+  const needsPaidSession = Boolean(pendingCode) && status === "disconnected" && (sessionState === "idle" || sessionState === "expired");
   const [isPaying, setIsPaying] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [wallet, setWallet] = useState<WalletStatus | null>(null);

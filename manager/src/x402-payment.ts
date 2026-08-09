@@ -15,8 +15,10 @@ const LEGACY_TESTNET_CAIP2 = "algorand:SGO1GKSzyE7IEPItTxCByw9x8FmnrCDe";
 
 export const CLI_HOURLY_PRICE_USDC = "$0.25";
 export const PREMIUM_WEEKLY_PRICE_USDC = "$2.00";
+export const CODEX_AGENT_PRICE_USDC = "$0.25";
 export const CLI_HOURLY_ROUTE = "/v2/x402/cli/hour";
 export const PREMIUM_WEEKLY_ROUTE = "/v2/x402/premium/week";
+export const CODEX_AGENT_ROUTE = "/v2/x402/codex-agent";
 
 export interface X402Config {
   network: Network;

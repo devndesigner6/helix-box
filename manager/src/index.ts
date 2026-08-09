@@ -3,7 +3,7 @@ import { Database } from "bun:sqlite";
 import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from "crypto";
 import { existsSync, rmSync } from "fs";
 import { createX402App } from "./x402-app.js";
-import { CLI_HOURLY_ROUTE, PREMIUM_WEEKLY_ROUTE, createX402Config } from "./x402-payment.js";
+import { CLI_HOURLY_ROUTE, PREMIUM_WEEKLY_ROUTE, CODEX_AGENT_ROUTE, createX402Config } from "./x402-payment.js";
 
 const CHARSET = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
 const CODE_LENGTH = 10;
@@ -3134,11 +3134,14 @@ function startManager(): void {
           description: "Pay in USDC to create a live HelixBox CLI-to-mobile relay session.",
           category: "developer-tools",
           projectType: "standard",
+          logo: "https://helix-box.vercel.app/helixbox.png",
+          image: "https://helix-box.vercel.app/helixbox.png",
           tags: ["x402-global-challenge", "algorand", "cli", "mobile-ide"],
           payTo: x402PaymentConfig.payTo,
           endpoints: [
             { path: CLI_HOURLY_ROUTE, method: "POST", priceUsdc: 0.25, description: "One hour of CLI relay access." },
             { path: PREMIUM_WEEKLY_ROUTE, method: "POST", priceUsdc: 2, description: "Seven days of premium CLI relay access." },
+            { path: CODEX_AGENT_ROUTE, method: "POST", priceUsdc: 0.25, description: "Run Codex Agent code diagnostics and sync workspace." },
           ],
         }, { headers: corsHeaders });
       }

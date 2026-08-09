@@ -58,7 +58,7 @@ export function createX402App({ config, redeemSession }: X402AppOptions): Hono {
   app.use("*", async (c, next) => {
     await next();
     c.header("Access-Control-Allow-Origin", "*");
-    c.header("Access-Control-Expose-Headers", "payment-response, x-payment-response");
+    c.header("Access-Control-Expose-Headers", "payment-required, x-payment-required, payment-response, x-payment-response");
   });
   app.use(
     paymentMiddleware(

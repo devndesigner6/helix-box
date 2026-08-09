@@ -5,10 +5,15 @@ import algosdk from "algosdk";
 import { alignPeraSignatures } from "./pera-signatures";
 
 const managerUrl = import.meta.env.VITE_MANAGER_URL || "https://helixbox-manager.onrender.com";
-const code = new URLSearchParams(window.location.search).get("code") || "";
+const query = new URLSearchParams(window.location.search);
+const code = query.get("code") || "";
+const mode = query.get("mode") === "connect" ? "connect" : "pay";
 const root = document.querySelector("#root");
+const actions = mode === "connect"
+  ? `<button data-connect style="padding:16px;border:0;border-radius:12px;background:#f3f3f3;color:#111;font-size:16px;font-weight:700;cursor:pointer">Connect Pera Wallet</button>`
+  : `<button data-plan="hour" style="padding:16px;border:0;border-radius:12px;background:#f3f3f3;color:#111;font-size:16px;font-weight:700;cursor:pointer">Pay $0.25 USDC &middot; 1 hour</button><button data-plan="week" style="padding:16px;border:0;border-radius:12px;background:#f3f3f3;color:#111;font-size:16px;font-weight:700;cursor:pointer">Pay $2 USDC &middot; 7 days</button>`;
 
-root.innerHTML = `<section style="max-width:420px;margin:0 auto;padding:32px 20px 48px;display:grid;gap:16px;font-family:Inter,system-ui,sans-serif;color:#111"><div style="font-size:13px;color:#666">HELIXBOX</div><h1 style="margin:0;font-size:28px">Start your agent session</h1><p style="margin:0;color:#666;line-height:1.5">Your editor stays free. Pay only when you start an agent session connected to your laptop CLI.</p><div style="padding:16px;border:1px solid #e5e5e5;border-radius:12px;background:#f7f7f7;display:grid;gap:8px"><strong style="font-size:14px">What this unlocks</strong><span style="color:#666;font-size:13px;line-height:1.45">Secure CLI-to-mobile agent access for the selected time. Access begins only after Pera Wallet approves and the x402 payment settles.</span></div><details style="border:1px solid #e5e5e5;border-radius:12px;padding:14px;background:#fff"><summary style="cursor:pointer;font-weight:700;font-size:14px">How your payment works</summary><ol style="margin:12px 0 0;padding-left:20px;color:#666;font-size:13px;line-height:1.6"><li>Choose an access period below.</li><li>Pera Wallet opens so you can approve the USDC transaction.</li><li>HelixBox receives settlement confirmation and activates this paired CLI session.</li></ol></details><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;color:#666">Payment network</span><span id="network" style="font-size:12px;font-weight:700;color:#111">Checking...</span></div><button data-plan="hour" style="padding:16px;border:0;border-radius:12px;background:#f3f3f3;color:#111;font-size:16px;font-weight:700;cursor:pointer">Pay $0.25 USDC &middot; 1 hour</button><button data-plan="week" style="padding:16px;border:0;border-radius:12px;background:#f3f3f3;color:#111;font-size:16px;font-weight:700;cursor:pointer">Pay $2 USDC &middot; 7 days</button><p id="status" role="status" style="margin:0;color:#666;font-size:14px"></p></section>`;
+root.innerHTML = `<section style="max-width:420px;margin:0 auto;padding:32px 20px 48px;display:grid;gap:16px;font-family:Inter,system-ui,sans-serif;color:#111"><div style="font-size:13px;color:#666">HELIXBOX</div><h1 style="margin:0;font-size:28px">${mode === "connect" ? "Connect your Pera Wallet" : "Start your agent session"}</h1><p style="margin:0;color:#666;line-height:1.5">${mode === "connect" ? "Connect once to save your public wallet address in the HelixBox app. You approve payments separately when you start an agent session." : "Your editor stays free. Pay only when you start an agent session connected to your laptop CLI."}</p><div style="padding:16px;border:1px solid #e5e5e5;border-radius:12px;background:#f7f7f7;display:grid;gap:8px"><strong style="font-size:14px">${mode === "connect" ? "What we save" : "What this unlocks"}</strong><span style="color:#666;font-size:13px;line-height:1.45">${mode === "connect" ? "Your public wallet address and selected network only. HelixBox never receives your private key." : "Secure CLI-to-mobile agent access for the selected time. Access begins only after Pera Wallet approves and the x402 payment settles."}</span></div><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;color:#666">Payment network</span><span id="network" style="font-size:12px;font-weight:700;color:#111">Checking...</span></div>${actions}<p id="status" role="status" style="margin:0;color:#666;font-size:14px"></p></section>`;
 
 const status = root.querySelector("#status");
 const networkLabel = root.querySelector("#network");
@@ -30,16 +35,32 @@ async function getNetwork() {
 
 getNetwork().then((network) => { networkLabel.textContent = `Algorand ${network.label}`; }).catch((error) => { networkLabel.textContent = "Unavailable"; setStatus(error instanceof Error ? error.message : "Payments are unavailable"); });
 
+async function connectPera() {
+  let phase = "checking HelixBox payments";
+  try {
+    const network = await getNetwork();
+    phase = "connecting Pera Wallet";
+    const pera = new PeraWalletConnect({ chainId: network.chainId, shouldShowSignTxnToast: false });
+    const existing = await pera.reconnectSession().catch(() => []);
+    if (!existing.length) await pera.disconnect().catch(() => undefined);
+    const accounts = existing.length ? existing : await pera.connect();
+    const address = accounts[0];
+    if (!address) throw new Error("No Pera account was selected");
+    return { address, network, pera };
+  } catch (error) { throw new Error(`${phase}: ${error instanceof Error ? error.message : "failed"}`); }
+}
+
+async function connectWallet() {
+  setStatus("Connecting Pera Wallet...");
+  const { address, network } = await connectPera();
+  setStatus("Wallet connected. Returning to HelixBox...");
+  window.location.assign(`helixbox://wallet-connected?address=${encodeURIComponent(address)}&network=${network.label}`);
+}
+
 async function pay(plan) {
   if (!code) throw new Error("This checkout link is missing its CLI pairing code");
   setStatus("Connecting Pera Wallet...");
-  const network = await getNetwork();
-  const pera = new PeraWalletConnect({ chainId: network.chainId, shouldShowSignTxnToast: false });
-  const existing = await pera.reconnectSession().catch(() => []);
-  if (!existing.length) await pera.disconnect().catch(() => undefined);
-  const accounts = existing.length ? existing : await pera.connect();
-  const address = accounts[0];
-  if (!address) throw new Error("No Pera account was selected");
+  const { address, network, pera } = await connectPera();
   setStatus("Approve the payment in Pera Wallet...");
   const signer = { address, signTransactions: async (txns, indexesToSign) => {
     const signed = await pera.signTransaction([txns.map((txn, index) => ({ txn: algosdk.decodeUnsignedTransaction(txn), signers: !indexesToSign || indexesToSign.includes(index) ? [address] : [] }))]);
@@ -56,6 +77,12 @@ async function pay(plan) {
   window.location.assign(`helixbox://payment-complete?status=paid&code=${encodeURIComponent(code)}&address=${encodeURIComponent(address)}&network=${network.label}`);
 }
 
+const connectButton = root.querySelector("button[data-connect]");
+if (connectButton) connectButton.addEventListener("click", async () => {
+  connectButton.disabled = true; connectButton.style.opacity = "0.6";
+  try { await connectWallet(); }
+  catch (error) { setStatus(error instanceof Error ? error.message : "Wallet connection could not be completed"); connectButton.disabled = false; connectButton.style.opacity = "1"; }
+});
 for (const button of root.querySelectorAll("button[data-plan]")) button.addEventListener("click", async () => {
   root.querySelectorAll("button").forEach((item) => { item.disabled = true; item.style.opacity = "0.6"; });
   try { await pay(button.dataset.plan); }

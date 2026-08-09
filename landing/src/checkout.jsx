@@ -15,10 +15,17 @@ const networkLabel = root.querySelector("#network");
 const setStatus = (message) => { status.textContent = message; };
 
 async function getNetwork() {
-  const response = await fetch(`${managerUrl}/v2/x402/health`);
-  const body = await response.json();
-  if (!response.ok || typeof body.network !== "string") throw new Error("HelixBox payments are unavailable right now");
-  return body.network.includes("SGO1GKS") ? { chainId: 416002, label: "Testnet" } : { chainId: 416001, label: "Mainnet" };
+  let failure;
+  for (let attempt = 0; attempt < 2; attempt += 1) try {
+    const response = await fetch(`${managerUrl}/v2/x402/health`);
+    const body = await response.json();
+    if (!response.ok || typeof body.network !== "string") throw new Error("HelixBox payments are unavailable right now");
+    return body.network.includes("SGO1GKS") ? { chainId: 416002, label: "Testnet" } : { chainId: 416001, label: "Mainnet" };
+  } catch (error) {
+    failure = error;
+    if (attempt === 0) await new Promise((resolve) => setTimeout(resolve, 2000));
+  }
+  throw failure;
 }
 
 getNetwork().then((network) => { networkLabel.textContent = `Algorand ${network.label}`; }).catch((error) => { networkLabel.textContent = "Unavailable"; setStatus(error instanceof Error ? error.message : "Payments are unavailable"); });

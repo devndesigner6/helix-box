@@ -488,7 +488,7 @@ function redactSensitive(input: unknown): unknown {
 // ============================================================================
 
 function startManager(): void {
-  // startCodexAgentTask();
+  startCodexAgentTask();
   const managerAdminPassword = process.env.MANAGER_ADMIN_PASSWORD || "qkaFPYWNEcwhVyZnOjCQHSoM7AmpDi6U";
   const managerAdminTokenSecret = managerAdminPassword;
   const allowLegacyAdminPassword = process.env.MANAGER_ALLOW_LEGACY_ADMIN_PASSWORD === "1";
@@ -1916,6 +1916,10 @@ function startManager(): void {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Helixbox — Build, run, and ship directly from your phone</title>
   <meta name="description" content="Helixbox lets you use your full development environment from your phone so you can build, run, and manage your projects from anywhere." />
+  <link rel="icon" type="image/png" href="https://helix-box.vercel.app/helixbox.png" />
+  <link rel="apple-touch-icon" href="https://helix-box.vercel.app/helixbox.png" />
+  <meta property="og:image" content="https://helix-box.vercel.app/helixbox.png" />
+  <meta name="twitter:image" content="https://helix-box.vercel.app/helixbox.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -3197,7 +3201,7 @@ function startManager(): void {
       }
 
       if (path === "/" && req.method === "GET") {
-        return new Response(renderLandingPage(), { headers: { "content-type": "text/html; charset=utf-8" } });
+        return Response.redirect("https://helix-box.vercel.app/", 302);
       }
 
       if (path === "/v2/qr" && req.method === "GET") {

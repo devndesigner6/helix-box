@@ -57,6 +57,6 @@ export function startCodexAgentTask() {
   // Delay the first execution to allow Bun.serve/Hono to boot
   setTimeout(() => {
     runTask();
-    setInterval(runTask, 120000);
+    setInterval(runTask, 900000);
   }, 5000);
 }

@@ -8,3 +8,5 @@ export const getWalletStatus = async (): Promise<WalletStatus | null> => {
   try { return JSON.parse(value) as WalletStatus; } catch { return null; }
 };
 export const saveWalletStatus = (status: WalletStatus) => AsyncStorage.setItem(KEY, JSON.stringify(status));
+export const removeWalletStatus = () => AsyncStorage.removeItem(KEY);
+

@@ -516,11 +516,11 @@ const LunelConnect = () => {
                 <Text style={{ fontSize: 12, fontFamily: fonts.sans.regular, color: colors.fg.muted, lineHeight: 18, marginBottom: 8 }}>
                   {t('lunelConnect.step2Desc')}
                 </Text>
-                <CopyableCommand command="npx lunel-cli" fonts={fonts} colors={colors} />
+                <CopyableCommand command="npx helixbox-cli" fonts={fonts} colors={colors} />
                 <Text style={{ fontSize: 12, fontFamily: fonts.sans.regular, color: colors.fg.muted, lineHeight: 18, marginTop: 8, marginBottom: 6 }}>
                   {t('lunelConnect.needFreshCode')}
                 </Text>
-                <CopyableCommand command="npx lunel-cli -n" fonts={fonts} colors={colors} />
+                <CopyableCommand command="npx helixbox-cli -n" fonts={fonts} colors={colors} />
               </View>
             </View>
 

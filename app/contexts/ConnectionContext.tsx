@@ -1408,7 +1408,7 @@ export function ConnectionProvider({ children }: { children: React.ReactNode }) 
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Resume failed';
       logger.error('connection', 'manager proxy lookup failed', { error: msg });
-      setSessionState(err instanceof ProxyLookupError && err.status === 404 ? 'expired' : 'ended');
+      setSessionState(err instanceof ProxyLookupError && (err.status === 404 || err.status === 402) ? 'expired' : 'ended');
       setStatus('error');
       setError(msg);
       throw (err instanceof Error ? err : new Error(msg));

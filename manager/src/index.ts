@@ -488,7 +488,7 @@ function redactSensitive(input: unknown): unknown {
 // ============================================================================
 
 function startManager(): void {
-  startCodexAgentTask();
+  // startCodexAgentTask();
   const managerAdminPassword = process.env.MANAGER_ADMIN_PASSWORD || "qkaFPYWNEcwhVyZnOjCQHSoM7AmpDi6U";
   const managerAdminTokenSecret = managerAdminPassword;
   const allowLegacyAdminPassword = process.env.MANAGER_ALLOW_LEGACY_ADMIN_PASSWORD === "1";

@@ -1,60 +1,313 @@
-/* ============================================================================
-   Helix Box Landing Page Interactive Script
-   ============================================================================ */
-
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("Helix Box Landing Page Initialized.");
-});
-
-// Copy CLI command to clipboard
-function copyCliCommand() {
-  const cliText = "npx helixbox-cli -n";
-  navigator.clipboard.writeText(cliText).then(() => {
-    const copyIcon = document.getElementById("copyIcon");
-    if (copyIcon) {
-      copyIcon.className = "fa-solid fa-check";
-      copyIcon.style.color = "#34d399";
-      setTimeout(() => {
-        copyIcon.className = "fa-regular fa-copy";
-        copyIcon.style.color = "";
-      }, 2000);
-    }
-  });
-}
-
-// Interactive CLI Playground Tab Switcher
-function switchPlaygroundTab(tabKey) {
-  const buttons = document.querySelectorAll(".playground-tabs .tab-btn");
-  buttons.forEach(btn => btn.classList.remove("active"));
-  
-  const targetBtn = event.currentTarget;
-  if (targetBtn) targetBtn.classList.add("active");
-
-  const consoleOutput = document.getElementById("playgroundOutput");
-  if (!consoleOutput) return;
-
-  if (tabKey === 'pair') {
-    consoleOutput.innerHTML = `<code>$ npx helixbox-cli -n
-Helixbox CLI v0.1.124
-Generating secure session code...
-
-Code: ettE6SRCHU
-Connecting to gateway https://helixbox-proxy.onrender.com...
-✔ App connected! (single secure E2E session)</code>`;
-  } else if (tabKey === 'ai') {
-    consoleOutput.innerHTML = `<code>$ helixbox-cli --ai "Fix build error in manager/src/index.ts"
-[AI Assistant] Analyzing terminal log traceback...
-Found missing environment variable fallback: MANAGER_ADMIN_PASSWORD
-Applying fix to manager/src/index.ts (Line 483)...
-✔ Build succeeded in 1.2s!</code>`;
-  } else if (tabKey === 'x402') {
-    consoleOutput.innerHTML = `<code>$ fetch https://helixbox-manager.onrender.com/v2/x402/ai/completion
-HTTP/1.1 402 Payment Required
-X-PAYMENT-REQUEST: scheme=algorand-x402, recipient=HELIXBOX...ALGO_ADDR, amount=10000 (0.01 USDC)
-
-Signing transaction on Algorand MainNet...
-Transaction Hash: 2Z7X9K4M8P0Q... Confirmed (< 1s)
-Retrying with X-PAYMENT-RESPONSE proof...
-HTTP/1.1 200 OK (AI completion delivered!)</code>`;
+(function () {
+  var root = document.documentElement;
+  var stored = localStorage.getItem('theme');
+  if (stored) {
+    root.setAttribute('data-theme', stored);
+  } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    root.setAttribute('data-theme', 'dark');
+  } else {
+    root.setAttribute('data-theme', 'light');
   }
-}
+  updateThemeIcon();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    initThemeToggle();
+    populateStats();
+    renderPhases();
+    initModal();
+    initCopyButton();
+    initSmoothScroll();
+    initFadeObserver();
+    initFigureCycle();
+  });
+
+  function updateThemeIcon() {
+    var icon = document.getElementById('themeIcon');
+    if (!icon) return;
+    var theme = root.getAttribute('data-theme');
+    icon.textContent = theme === 'light' ? 'N' : 'D';
+  }
+
+  function initThemeToggle() {
+    var btn = document.getElementById('themeToggle');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var current = root.getAttribute('data-theme');
+      var next = current === 'light' ? 'dark' : 'light';
+      root.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      updateThemeIcon();
+    });
+    updateThemeIcon();
+  }
+
+  function computeStats() {
+    var totalLessons = 0;
+    var completeLessons = 0;
+    for (var i = 0; i < PHASES.length; i++) {
+      var lessons = PHASES[i].lessons;
+      totalLessons += lessons.length;
+      for (var j = 0; j < lessons.length; j++) {
+        if (lessons[j].status === 'complete') completeLessons++;
+      }
+    }
+    var completePhases = 0;
+    for (var p = 0; p < PHASES.length; p++) {
+      if (PHASES[p].status === 'complete') completePhases++;
+    }
+    return {
+      lessons: totalLessons,
+      phases: PHASES.length,
+      complete: completeLessons,
+      completePhases: completePhases
+    };
+  }
+
+  function setBar(selector, pct) {
+    var el = document.querySelector(selector);
+    if (!el) return;
+    var clamped = Math.max(0, Math.min(100, pct));
+    el.style.setProperty('--bar-pct', clamped.toFixed(1) + '%');
+  }
+
+  function populateStats() {
+    var stats = computeStats();
+    var pct = stats.lessons > 0 ? (stats.complete / stats.lessons) * 100 : 0;
+    var phasePct = stats.phases > 0 ? (stats.completePhases / stats.phases) * 100 : 0;
+    var glossaryCount = (typeof GLOSSARY !== 'undefined') ? GLOSSARY.length : 0;
+
+    setText('[data-stat="complete-frac"]', stats.complete + ' / ' + stats.lessons);
+    setText('[data-stat="phases-frac"]', stats.completePhases + ' / ' + stats.phases);
+    setText('[data-stat="glossary-count"]', String(glossaryCount));
+    setBar('[data-bar="complete"]', pct);
+    setBar('[data-bar="phases"]', phasePct);
+    setBar('[data-bar="languages"]', 100);
+    setBar('[data-bar="glossary"]', glossaryCount > 0 ? 100 : 0);
+  }
+
+  function setText(selector, value) {
+    var el = document.querySelector(selector);
+    if (el) el.textContent = value;
+  }
+
+  function renderPhases() {
+    var grid = document.getElementById('phasesGrid');
+    if (!grid) return;
+    var html = '';
+    for (var i = 0; i < PHASES.length; i++) {
+      var p = PHASES[i];
+      var total = p.lessons.length;
+      var done = 0;
+      for (var j = 0; j < p.lessons.length; j++) {
+        if (p.lessons[j].status === 'complete') done++;
+      }
+      var statusClass = p.status.replace(/ /g, '-');
+      var roman = toRoman(p.id);
+      var num = String(p.id).padStart(2, '0');
+      html += '<div class="toc-row" data-phase-index="' + i + '" role="button" tabindex="0" aria-label="Open Phase ' + num + ': ' + escapeHtml(p.name) + '">';
+      html += '<span class="toc-num">' + roman + '.</span>';
+      html += '<div><span class="toc-status ' + statusClass + '"></span><span class="toc-name">' + escapeHtml(p.name) + '</span></div>';
+      html += '<span class="toc-meta">' + done + ' / ' + total + '</span>';
+      html += '<span class="toc-meta">' + num + '</span>';
+      html += '</div>';
+    }
+    grid.innerHTML = html;
+
+    // Attach click events
+    var rows = grid.querySelectorAll('.toc-row');
+    rows.forEach(function (row) {
+      row.addEventListener('click', function () {
+        var phaseIdx = parseInt(this.getAttribute('data-phase-index'), 10);
+        openModalForPhase(phaseIdx);
+      });
+      row.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          var phaseIdx = parseInt(this.getAttribute('data-phase-index'), 10);
+          openModalForPhase(phaseIdx);
+        }
+      });
+    });
+  }
+
+  function toRoman(num) {
+    var lookup = [
+      ['M', 1000], ['CM', 900], ['D', 500], ['CD', 400],
+      ['C', 100], ['XC', 90], ['L', 50], ['XL', 40],
+      ['X', 10], ['IX', 9], ['V', 5], ['IV', 4], ['I', 1]
+    ];
+    var roman = '';
+    for (var i = 0; i < lookup.length; i++) {
+      while (num >= lookup[i][1]) {
+        roman += lookup[i][0];
+        num -= lookup[i][1];
+      }
+    }
+    return roman;
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function initModal() {
+    var overlay = document.getElementById('modalOverlay');
+    var closeBtn = document.getElementById('modalClose');
+    if (!overlay || !closeBtn) return;
+
+    closeBtn.addEventListener('click', function () {
+      overlay.classList.remove('open');
+    });
+
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) {
+        overlay.classList.remove('open');
+      }
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && overlay.classList.contains('open')) {
+        overlay.classList.remove('open');
+      }
+    });
+  }
+
+  function openModalForPhase(idx) {
+    var overlay = document.getElementById('modalOverlay');
+    if (!overlay) return;
+    var p = PHASES[idx];
+    if (!p) return;
+
+    overlay.querySelector('.modal-phase-num').textContent = 'Phase ' + String(p.id).padStart(2, '0');
+    overlay.querySelector('.modal-title').textContent = p.name;
+    
+    var done = 0;
+    var listHtml = '';
+    for (var i = 0; i < p.lessons.length; i++) {
+      var l = p.lessons[i];
+      var isDone = l.status === 'complete';
+      if (isDone) done++;
+      
+      listHtml += '<div class="modal-lesson">';
+      listHtml += '  <div class="modal-lesson-open">';
+      listHtml += '    <div class="modal-lesson-copy">';
+      listHtml += '      <span class="modal-lesson-name">' + escapeHtml(l.name) + '</span>';
+      listHtml += '      <div class="modal-lesson-meta">';
+      listHtml += '        <span class="modal-lesson-type" data-type="' + l.type + '">' + l.type + '</span>';
+      listHtml += '        <span>&middot;</span>';
+      listHtml += '        <span class="modal-lesson-lang">' + l.lang + '</span>';
+      listHtml += '      </div>';
+      listHtml += '    </div>';
+      listHtml += '    <span class="toc-status ' + (isDone ? 'complete' : 'planned') + '"></span>';
+      listHtml += '  </div>';
+      listHtml += '</div>';
+    }
+
+    overlay.querySelector('.modal-lessons').innerHTML = listHtml;
+    
+    var pct = p.lessons.length > 0 ? (done / p.lessons.length) * 100 : 0;
+    overlay.querySelector('.modal-progress-count').textContent = done + ' / ' + p.lessons.length + ' Completed';
+    overlay.querySelector('.modal-progress-pct').textContent = Math.round(pct) + '%';
+    overlay.querySelector('.modal-progress-bar-fill').style.transform = 'scaleX(' + (pct / 100) + ')';
+
+    overlay.classList.add('open');
+  }
+
+  function initCopyButton() {
+    var copyBtn = document.getElementById('copyInstallCmd');
+    if (!copyBtn) return;
+    copyBtn.addEventListener('click', function () {
+      var cmd = "npm install -g helixbox-cli";
+      navigator.clipboard.writeText(cmd).then(function () {
+        copyBtn.classList.add('copied');
+        copyBtn.textContent = 'Copied!';
+        setTimeout(function () {
+          copyBtn.classList.remove('copied');
+          copyBtn.textContent = 'Copy';
+        }, 2000);
+      });
+    });
+  }
+
+  function initSmoothScroll() {
+    var links = document.querySelectorAll('a[href^="#"]');
+    links.forEach(function (link) {
+      link.addEventListener('click', function (e) {
+        var href = this.getAttribute('href');
+        if (href === '#') return;
+        var target = document.querySelector(href);
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+  }
+
+  function initFadeObserver() {
+    if (!window.IntersectionObserver) return;
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in-view', 'visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.toc-row, .section, .manual-title, .manual-tagline').forEach(function (el) {
+      observer.observe(el);
+    });
+  }
+
+  function initFigureCycle() {
+    var panels = document.querySelectorAll('.fig-panel');
+    var dots = document.querySelectorAll('.fig-dot');
+    var caption = document.getElementById('figCaption');
+    if (!panels.length) return;
+
+    var captions = [
+      "FIG. 001 — Remote execution forward pass: Spawns a lightweight connection layer via secure relays to execute tasks in local PTY terminal.",
+      "FIG. 002 — Mobile client pairing code validation: Scans QR code or enters credentials to negotiate an encrypted session password.",
+      "FIG. 003 — Micro-billing sync curve: Auto-settles Testnet USDC transactions in background threads based on compute ticks."
+    ];
+
+    var activeIdx = 0;
+
+    function showPanel(idx) {
+      panels.forEach(function (p, i) {
+        if (i === idx) {
+          p.classList.add('is-active');
+        } else {
+          p.classList.remove('is-active');
+        }
+      });
+      dots.forEach(function (d, i) {
+        if (i === idx) {
+          d.classList.add('is-active');
+        } else {
+          d.classList.remove('is-active');
+        }
+      });
+      if (caption) {
+        caption.textContent = captions[idx];
+      }
+    }
+
+    dots.forEach(function (dot, i) {
+      dot.addEventListener('click', function () {
+        activeIdx = i;
+        showPanel(activeIdx);
+      });
+    });
+
+    setInterval(function () {
+      activeIdx = (activeIdx + 1) % panels.length;
+      showPanel(activeIdx);
+    }, 6000);
+
+    // Initial show
+    showPanel(activeIdx);
+  }
+
+})();

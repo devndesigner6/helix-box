@@ -10,14 +10,50 @@ const code = query.get("code") || "";
 const mode = query.get("mode") === "connect" ? "connect" : "pay";
 const root = document.querySelector("#root");
 const actions = mode === "connect"
-  ? `<button data-connect style="padding:16px;border:0;border-radius:12px;background:#f3f3f3;color:#111;font-size:16px;font-weight:700;cursor:pointer">Connect Pera Wallet</button>`
-  : `<button data-plan="hour" style="padding:16px;border:0;border-radius:12px;background:#f3f3f3;color:#111;font-size:16px;font-weight:700;cursor:pointer">Pay $0.25 USDC &middot; 1 hour</button><button data-plan="week" style="padding:16px;border:0;border-radius:12px;background:#f3f3f3;color:#111;font-size:16px;font-weight:700;cursor:pointer">Pay $2 USDC &middot; 7 days</button>`;
+  ? `<button data-connect class="btn btn-primary" style="width:100%; display:block; margin-top:8px;">Connect Pera Wallet</button>`
+  : `<div style="display:grid; gap:10px; margin-top:8px;"><button data-plan="hour" class="btn btn-primary" style="width:100%;">Pay $0.25 USDC &middot; 1 hour</button><button data-plan="week" class="btn btn-secondary" style="width:100%;">Pay $2 USDC &middot; 7 days</button></div>`;
 
-root.innerHTML = `<section style="max-width:420px;margin:0 auto;padding:32px 20px 48px;display:grid;gap:16px;font-family:Inter,system-ui,sans-serif;color:#111"><div style="font-size:13px;color:#666">HELIXBOX</div><h1 style="margin:0;font-size:28px">${mode === "connect" ? "Connect your Pera Wallet" : "Start your agent session"}</h1><p style="margin:0;color:#666;line-height:1.5">${mode === "connect" ? "Connect once to save your public wallet address in the HelixBox app. You approve payments separately when you start an agent session." : "Your editor stays free. Pay only when you start an agent session connected to your laptop CLI."}</p><div style="padding:16px;border:1px solid #e5e5e5;border-radius:12px;background:#f7f7f7;display:grid;gap:8px"><strong style="font-size:14px">${mode === "connect" ? "What we save" : "What this unlocks"}</strong><span style="color:#666;font-size:13px;line-height:1.45">${mode === "connect" ? "Your public wallet address and selected network only. HelixBox never receives your private key." : "Secure CLI-to-mobile agent access for the selected time. Access begins only after Pera Wallet approves and the x402 payment settles."}</span></div><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;color:#666">Payment network</span><span id="network" style="font-size:12px;font-weight:700;color:#111">Checking...</span></div>${actions}<p id="status" role="status" style="margin:0;color:#666;font-size:14px"></p></section>`;
+root.innerHTML = `
+<div style="max-width:460px; margin: 80px auto; padding:0 24px;">
+  <section style="border: 1px solid var(--ink); box-shadow: var(--shadow-hard-lg); background: var(--bg-surface); padding: 32px 28px; display: grid; gap: 20px;">
+    <div style="font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.16em; color: var(--blueprint); text-transform: uppercase; font-weight: 600;">HELIXBOX // SECURE CHECKOUT</div>
+    
+    <h1 style="margin:0; font-family: var(--font-display); font-size: 2.2rem; line-height: 1.1; color: var(--ink); text-transform: uppercase;">
+      ${mode === "connect" ? "Connect Pera Wallet" : "Start Agent Session"}
+    </h1>
+    
+    <p style="margin:0; font-family: var(--font-body); font-size: 0.98rem; line-height: 1.55; color: var(--ink-soft);">
+      ${mode === "connect" ? "Connect once to save your public wallet address in the HelixBox app. You approve payments separately when you start an agent session." : "Your editor stays free. Pay only when you start an agent session connected to your laptop CLI."}
+    </p>
+    
+    <div style="padding: 16px; border: 1px solid var(--rule-soft); background: var(--bg); display: grid; gap: 6px; font-family: var(--font-body); font-size: 0.88rem; line-height: 1.5; color: var(--ink-soft);">
+      <strong style="font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase; color: var(--ink); letter-spacing: 0.08em;">
+        ${mode === "connect" ? "What we save" : "What this unlocks"}
+      </strong>
+      <span>
+        ${mode === "connect" ? "Your public wallet address and selected network only. HelixBox never receives your private key." : "Secure CLI-to-mobile agent access for the selected time. Access begins only after Pera Wallet approves and the x402 payment settles."}
+      </span>
+    </div>
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; border-top: 1px dashed var(--rule-soft); padding-top: 16px; font-family: var(--font-mono); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-mute);">
+      <span>Payment network</span>
+      <span id="network" style="font-weight:700; color: var(--blueprint);">Checking...</span>
+    </div>
+    
+    ${actions}
+    
+    <p id="status" role="status" style="margin:0; font-family: var(--font-mono); font-size: 0.74rem; letter-spacing: 0.04em; color: var(--ink-soft); line-height: 1.5; padding: 10px; background: var(--code-bg); border-left: 3px solid var(--blueprint); display: none;"></p>
+  </section>
+</div>
+`;
+
 
 const status = root.querySelector("#status");
 const networkLabel = root.querySelector("#network");
-const setStatus = (message) => { status.textContent = message; };
+const setStatus = (message) => {
+  status.textContent = message;
+  status.style.display = message ? "block" : "none";
+};
 
 async function getNetwork() {
   let failure;

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Contents — HelixBox</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23fafaf5'/><rect x='2' y='2' width='28' height='28' fill='none' stroke='%233553ff' stroke-width='1.2'/><text x='5' y='22' font-size='14' font-family='monospace' fill='%233553ff'>HX</text></svg>">
+  <title>{title} — HelixBox</title>
+  <link rel="icon" type="image/png" href="/helixbox.png">
   <meta name="description" content="AI-powered mobile IDE and interactive PTY terminal emulator paired via E2E encrypted relays and Algorand x402 micro-billing.">
   <link rel="stylesheet" href="/style.css">
   <style>
@@ -41,7 +41,7 @@
         <a href="/roadmap.html" >Roadmap</a>
         <a href="/glossary.html" >Glossary</a>
         <a href="/about.html" >About</a>
-        <a href="https://github.com/rohitg00/ai-engineering-from-scratch" target="_blank" rel="noopener" class="header-github">
+        <a href="https://github.com/devndesigner6/helix-box" target="_blank" rel="noopener" class="header-github">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.4 3-.405 1.02.005 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
           <span class="star-count" aria-label="GitHub stars">46.4k</span>
         </a>
@@ -62,21 +62,26 @@
       <p class="manual-tagline reveal">AI-powered mobile editor and interactive PTY terminal emulator paired via E2E encrypted relays and x402 micro-billing.</p>
       <p class="manual-attribution reveal" style="--stagger-delay: 80ms;">Maintained by HelixBox and contributors. Connect your laptop in 2 seconds.</p>
       <div class="masthead-cta reveal" style="--stagger-delay: 140ms;">
-        <a class="masthead-btn masthead-btn--primary" href="https://github.com/rohitg00/ai-engineering-from-scratch" target="_blank" rel="noopener">
+        <a class="masthead-btn masthead-btn--primary" href="https://github.com/devndesigner6/helix-box" target="_blank" rel="noopener">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279L12 19.896l-7.416 3.517 1.48-8.279L0 9.306l8.332-1.151z"/></svg>
           <span>Star on GitHub</span>
           <span class="masthead-btn-count">46.4k</span>
         </a>
-        <a class="checkout-btn" href="/checkout?mode=connect">Connect Wallet</a>
+        <a class="checkout-btn" href="https://github.com/devndesigner6/helix-box/releases" target="_blank" rel="noopener">Download App</a>
       </div>
       <div class="masthead-install reveal" style="--stagger-delay: 200ms;">
         <div class="masthead-install-bar">
           <span>Boot remote CLI</span>
-          <button class="copy-chip" type="button" id="copyInstallCmd">
-            <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
-              <rect x="3.5" y="3.5" width="7" height="7"/>
-              <path d="M8.5 3.5v-2h-7v7h2"/>
-            </svg>
+          <button class="copy-btn" type="button" id="copyInstallCmd" data-copy-value="npm install -g helixbox-cli">
+            <span class="copy-icon-container">
+              <svg class="copy-icon-svg" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9.6 5.1V3.7A1.7 1.7 0 0 0 7.9 2H3.7A1.7 1.7 0 0 0 2 3.7v4.2a1.7 1.7 0 0 0 1.7 1.7h1.4" />
+                <rect x="5.1" y="5.1" width="6.9" height="6.9" rx="1.7" />
+              </svg>
+              <svg class="check-icon-svg" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                <path d="M2.9 7.4 5.6 10.1 11.1 4" />
+              </svg>
+            </span>
             <span>copy</span>
           </button>
         </div>
@@ -166,19 +171,23 @@
     </section>
 
     <section class="learners-strip">
-      <div class="learners-eyebrow">Works seamlessly across all environments</div>
-      <div class="marquee" data-marquee>
-        <div class="marquee-track">
-          <div class="marquee-half">
-            <span class="marquee-item"><span class="tick">■</span> E2E Relays</span>
-            <span class="marquee-item"><span class="tick">■</span> PTY Terminals</span>
-            <span class="marquee-item"><span class="tick">■</span> SQLite Sessions</span>
-            <span class="marquee-item"><span class="tick">■</span> Algorand Testnet</span>
-            <span class="marquee-item"><span class="tick">■</span> USDC Payments</span>
-            <span class="marquee-item"><span class="tick">■</span> Bun Gateways</span>
-            <span class="marquee-item"><span class="tick">■</span> Hono Web Routing</span>
-            <span class="marquee-item"><span class="tick">■</span> Expo Clients</span>
-            <span class="marquee-item"><span class="tick">■</span> Remote Workspace</span>
+      <div class="learners-eyebrow">Works seamlessly with leading AI agents & tools</div>
+      <div class="logo-marquee-container">
+        <div class="logo-marquee-track">
+          <div class="logo-marquee-group">
+            <span class="logo-item"><img src="/logos/claude.png" alt="Claude" /> Claude</span>
+            <span class="logo-item"><img src="/logos/codex.png" alt="OpenAI Codex" /> Codex</span>
+            <span class="logo-item"><img src="/logos/opencode.png" alt="DeepSeek OpenCode" /> OpenCode</span>
+            <span class="logo-item"><img src="/logos/hermes.png" alt="Nous Hermes" /> Nous Hermes</span>
+            <span class="logo-item"><img src="/logos/openclaw.png" alt="OpenClaw" /> OpenClaw</span>
+          </div>
+          <!-- Repeated group to loop seamlessly -->
+          <div class="logo-marquee-group" aria-hidden="true">
+            <span class="logo-item"><img src="/logos/claude.png" alt="Claude" /> Claude</span>
+            <span class="logo-item"><img src="/logos/codex.png" alt="OpenAI Codex" /> Codex</span>
+            <span class="logo-item"><img src="/logos/opencode.png" alt="DeepSeek OpenCode" /> OpenCode</span>
+            <span class="logo-item"><img src="/logos/hermes.png" alt="Nous Hermes" /> Nous Hermes</span>
+            <span class="logo-item"><img src="/logos/openclaw.png" alt="OpenClaw" /> OpenClaw</span>
           </div>
         </div>
       </div>
@@ -260,12 +269,17 @@
         <div>
           <p>Get started with HelixBox in 2 seconds. Install the command-line client, run the bootstrap pairing command, and open the app on your mobile device to begin coding.</p>
           <div class="colophon-cmd">
-            <code>git clone https://github.com/rohitg00/ai-engineering-from-scratch.git</code>
-            <button class="copy-chip" id="installCopy">
-              <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
-                <rect x="3.5" y="3.5" width="7" height="7"/>
-                <path d="M8.5 3.5v-2h-7v7h2"/>
-              </svg>
+            <code>git clone https://github.com/devndesigner6/helix-box.git</code>
+            <button class="copy-btn" id="installCopy" data-copy-value="git clone https://github.com/devndesigner6/helix-box.git">
+              <span class="copy-icon-container">
+                <svg class="copy-icon-svg" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9.6 5.1V3.7A1.7 1.7 0 0 0 7.9 2H3.7A1.7 1.7 0 0 0 2 3.7v4.2a1.7 1.7 0 0 0 1.7 1.7h1.4" />
+                  <rect x="5.1" y="5.1" width="6.9" height="6.9" rx="1.7" />
+                </svg>
+                <svg class="check-icon-svg" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                  <path d="M2.9 7.4 5.6 10.1 11.1 4" />
+                </svg>
+              </span>
               <span>copy</span>
             </button>
           </div>
@@ -278,7 +292,7 @@
     <div class="container footer-inner">
       <p>© 2026 · HelixBox · Open Source · Free Editor</p>
       <div class="footer-links">
-        <a href="https://github.com/rohitg00/ai-engineering-from-scratch" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/devndesigner6/helix-box" target="_blank" rel="noopener">GitHub</a>
         <a href="/about.html">About</a>
         <a href="/catalog.html">Catalog</a>
         <a href="/roadmap.html">Roadmap</a>

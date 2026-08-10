@@ -3699,3 +3699,133 @@ body[data-palette-open] {
       color: var(--ink-soft);
       line-height: 1.5;
     }
+
+/* Custom Overrides for Interactive Elements */
+
+/* 1. Logo Marquee */
+.logo-marquee-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  padding: 14px 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--rule-soft);
+  box-shadow: var(--shadow-hard);
+  margin: 28px 0;
+}
+.logo-marquee-container::before,
+.logo-marquee-container::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 80px;
+  z-index: 2;
+  pointer-events: none;
+}
+.logo-marquee-container::before {
+  left: 0;
+  background: linear-gradient(to right, var(--bg), transparent);
+}
+.logo-marquee-container::after {
+  right: 0;
+  background: linear-gradient(to left, var(--bg), transparent);
+}
+.logo-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll 28s linear infinite;
+  gap: 40px;
+}
+.logo-marquee-track:hover {
+  animation-play-state: paused;
+}
+.logo-marquee-group {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  flex-shrink: 0;
+}
+.logo-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.logo-item img {
+  height: 20px;
+  width: auto;
+  display: block;
+  filter: grayscale(1) opacity(0.7);
+  transition: filter 0.2s, opacity 0.2s;
+}
+.logo-item:hover img {
+  filter: none;
+  opacity: 1;
+}
+@keyframes marquee-scroll {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+/* 2. Streaming Tagline & Caret */
+.streaming-caret {
+  display: inline-block;
+  font-weight: bold;
+  color: var(--blueprint);
+  animation: caret-blink 1.06s step-end infinite;
+  margin-left: 2px;
+  transition: opacity 0.5s ease;
+  vertical-align: bottom;
+}
+@keyframes caret-blink {
+  from, to { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* 3. Re-designed Copy Buttons */
+.copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 6px 12px;
+  border: 1px solid var(--ink);
+  background: var(--bg-surface);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--ink);
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+.copy-btn:hover {
+  background: var(--blueprint);
+  color: var(--bg);
+  box-shadow: 1px 1px 0 var(--ink);
+  transform: translate(1px, 1px);
+}
+.copy-btn.copied {
+  background: var(--ink) !important;
+  color: var(--bg) !important;
+  box-shadow: none !important;
+  transform: translate(2px, 2px) !important;
+}
+.copy-icon-container {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+}
+.copy-icon-container svg {
+  width: 14px;
+  height: 14px;
+}

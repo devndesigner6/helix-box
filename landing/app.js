@@ -15,7 +15,8 @@
     populateStats();
     renderPhases();
     initModal();
-    initCopyButton();
+    initCopyButtons();
+    initStreamingTagline();
     initSmoothScroll();
     initFadeObserver();
     initFigureCycle();
@@ -214,20 +215,78 @@
     overlay.classList.add('open');
   }
 
-  function initCopyButton() {
-    var copyBtn = document.getElementById('copyInstallCmd');
-    if (!copyBtn) return;
-    copyBtn.addEventListener('click', function () {
-      var cmd = "npm install -g helixbox-cli";
-      navigator.clipboard.writeText(cmd).then(function () {
-        copyBtn.classList.add('copied');
-        copyBtn.textContent = 'Copied!';
-        setTimeout(function () {
-          copyBtn.classList.remove('copied');
-          copyBtn.textContent = 'Copy';
-        }, 2000);
+  function initCopyButtons() {
+    var btns = document.querySelectorAll('.copy-btn, .copy-chip, #copyInstallCmd, #installCopy');
+    btns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var val = btn.getAttribute('data-copy-value');
+        if (!val) {
+          if (btn.id === 'copyInstallCmd') val = 'npm install -g helixbox-cli';
+          else if (btn.id === 'installCopy') val = 'git clone https://github.com/devndesigner6/helix-box.git';
+          else val = btn.previousElementSibling ? btn.previousElementSibling.textContent.trim() : '';
+        }
+        
+        navigator.clipboard.writeText(val).then(function () {
+          var copySvg = btn.querySelector('.copy-icon-svg');
+          var checkSvg = btn.querySelector('.check-icon-svg');
+          var label = btn.querySelector('span:not(.copy-icon-container)') || btn;
+          
+          var origWidth = btn.getBoundingClientRect().width;
+          btn.style.width = origWidth + 'px';
+          
+          btn.classList.add('copied');
+          if (label) label.textContent = 'copied';
+          if (copySvg) copySvg.style.display = 'none';
+          if (checkSvg) checkSvg.style.display = 'inline-block';
+          
+          setTimeout(function () {
+            btn.classList.remove('copied');
+            if (label) label.textContent = 'copy';
+            if (copySvg) copySvg.style.display = 'inline-block';
+            if (checkSvg) checkSvg.style.display = 'none';
+            btn.style.width = '';
+          }, 2000);
+        });
       });
     });
+  }
+
+  function initStreamingTagline() {
+    var taglineEl = document.querySelector('.manual-tagline');
+    if (!taglineEl) return;
+    var text = taglineEl.textContent.trim();
+    taglineEl.textContent = '';
+    taglineEl.style.opacity = '1';
+    
+    var words = text.split(/(\s+)/);
+    var currentWordIdx = 0;
+    var currentText = '';
+    
+    var caret = document.createElement('span');
+    caret.className = 'streaming-caret';
+    caret.textContent = '▏';
+    taglineEl.appendChild(caret);
+    
+    function stream() {
+      if (currentWordIdx < words.length) {
+        var nextPart = words[currentWordIdx];
+        currentText += nextPart;
+        
+        taglineEl.innerHTML = '';
+        var textNode = document.createTextNode(currentText);
+        taglineEl.appendChild(textNode);
+        taglineEl.appendChild(caret);
+        
+        currentWordIdx++;
+        setTimeout(stream, 40);
+      } else {
+        setTimeout(function () {
+          caret.style.opacity = '0';
+        }, 1500);
+      }
+    }
+    
+    setTimeout(stream, 400);
   }
 
   function initSmoothScroll() {

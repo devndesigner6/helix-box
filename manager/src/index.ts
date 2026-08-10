@@ -683,6 +683,17 @@ function startManager(): void {
       expires_at INTEGER NOT NULL
     );
   `);
+  db.run(`
+    CREATE TABLE IF NOT EXISTS assemble_sessions (
+      code TEXT PRIMARY KEY,
+      created_at INTEGER NOT NULL,
+      expires_at INTEGER NOT NULL,
+      paid_until INTEGER NOT NULL,
+      password TEXT,
+      app_acked INTEGER NOT NULL DEFAULT 0,
+      cli_acked INTEGER NOT NULL DEFAULT 0
+    );
+  `);
 
   const upsertProxyStmt = db.query(`
     INSERT INTO proxies (
@@ -784,6 +795,23 @@ function startManager(): void {
   const getEntitlementStmt = db.query(`SELECT password_hash as passwordHash, code, expires_at as expiresAt, created_at as createdAt FROM x402_entitlements WHERE password_hash = ?1 LIMIT 1`);
   const upsertEntitlementStmt = db.query(`INSERT INTO x402_entitlements (password_hash, code, expires_at, created_at) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(password_hash) DO UPDATE SET expires_at = excluded.expires_at`);
   const deleteExpiredEntitlementsStmt = db.query(`DELETE FROM x402_entitlements WHERE expires_at <= ?1`);
+  const getAssembleSessionStmt = db.query(`
+    SELECT code, created_at as createdAt, expires_at as expiresAt, paid_until as paidUntil, password, app_acked as appAcked, cli_acked as cliAcked
+    FROM assemble_sessions WHERE code = ?1 LIMIT 1
+  `);
+  const upsertAssembleSessionStmt = db.query(`
+    INSERT INTO assemble_sessions (code, created_at, expires_at, paid_until, password, app_acked, cli_acked)
+    VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
+    ON CONFLICT(code) DO UPDATE SET
+      expires_at = excluded.expires_at,
+      paid_until = excluded.paid_until,
+      password = excluded.password,
+      app_acked = excluded.app_acked,
+      cli_acked = excluded.cli_acked
+  `);
+  const deleteExpiredAssembleSessionsStmt = db.query(`
+    DELETE FROM assemble_sessions WHERE expires_at <= ?1
+  `);
   const deleteSessionByCodeStmt = db.query(`DELETE FROM sessions WHERE code = ?1`);
   const cleanupExpiredPendingStmt = db.query(`
     UPDATE sessions
@@ -1588,6 +1616,7 @@ function startManager(): void {
   const getActiveProxyUrls = (): string[] => getHealthyRing();
 
   const cleanupExpiredV2State = (now = Date.now()): void => {
+    deleteExpiredAssembleSessionsStmt.run(now);
     for (const [code, session] of assembleSessionsByCode) {
       if (session.expiresAt <= now) {
         try {
@@ -1621,6 +1650,22 @@ function startManager(): void {
     if (existing && existing.expiresAt > now) {
       return existing;
     }
+    const row = getAssembleSessionStmt.get(code) as any;
+    if (row && Number(row.expiresAt) > now) {
+      const restored: AssembleSession = {
+        code: row.code,
+        createdAt: Number(row.createdAt),
+        expiresAt: Number(row.expiresAt),
+        paidUntil: Number(row.paidUntil),
+        password: row.password,
+        appWs: null,
+        cliWs: null,
+        appAcked: Boolean(row.appAcked),
+        cliAcked: Boolean(row.cliAcked),
+      };
+      assembleSessionsByCode.set(code, restored);
+      return restored;
+    }
     const created: AssembleSession = {
       code,
       createdAt: now,
@@ -1632,6 +1677,7 @@ function startManager(): void {
       appAcked: false,
       cliAcked: false,
     };
+    upsertAssembleSessionStmt.run(created.code, created.createdAt, created.expiresAt, created.paidUntil, created.password, created.appAcked ? 1 : 0, created.cliAcked ? 1 : 0);
     assembleSessionsByCode.set(code, created);
     return created;
   };
@@ -1662,6 +1708,7 @@ function startManager(): void {
     const now = Date.now();
     const passwordHash = hashPassword(password);
     session.password = password;
+    upsertAssembleSessionStmt.run(session.code, session.createdAt, session.expiresAt, session.paidUntil, session.password, session.appAcked ? 1 : 0, session.cliAcked ? 1 : 0);
     issuedPasswordsByHash.set(passwordHash, {
       code: session.code,
       passwordHash,
@@ -3069,11 +3116,12 @@ function startManager(): void {
   };
 
   const redeemAssembleSession = async (code: string, paidUntil: number): Promise<{ code: string; expiresAt: number }> => {
-    const session = assembleSessionsByCode.get(code);
+    const session = getOrCreateAssembleSession(code);
     if (!session || session.expiresAt <= Date.now()) {
       throw new Error("CLI pairing code was not found or has expired");
     }
     session.paidUntil = Math.max(session.paidUntil, paidUntil);
+    upsertAssembleSessionStmt.run(session.code, session.createdAt, session.expiresAt, session.paidUntil, session.password, session.appAcked ? 1 : 0, session.cliAcked ? 1 : 0);
     if (session.password) {
       const passwordHash = hashPassword(session.password);
       const issued = getIssuedRecord(passwordHash);
@@ -4481,6 +4529,7 @@ function startManager(): void {
               } else {
                 session.cliAcked = true;
               }
+              upsertAssembleSessionStmt.run(session.code, session.createdAt, session.expiresAt, session.paidUntil, session.password, session.appAcked ? 1 : 0, session.cliAcked ? 1 : 0);
               maybeCompleteAssembleSession(session);
             });
             return;

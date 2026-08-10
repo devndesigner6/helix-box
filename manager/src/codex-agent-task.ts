@@ -17,7 +17,7 @@ export function startCodexAgentTask() {
 
   const account = algosdk.mnemonicToSecretKey(mnemonic);
   const signer = {
-    address: account.addr,
+    address: typeof account.addr === "string" ? account.addr : account.addr.toString(),
     signTransactions: async (txns: Uint8Array[], indexesToSign?: number[]) => {
       console.log(`[codex-agent-task] Signing ${txns.length} transaction(s)...`);
       return txns.map((txn, index) => {

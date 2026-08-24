@@ -30,10 +30,10 @@ export default function WalletSettingsPage() {
     <Header title="Wallet Connection" colors={colors} onBack={() => router.back()} />
     <View style={{ margin: 16, padding: 16, gap: 10, backgroundColor: colors.bg.raised, borderRadius: 10 }}>
       <Wallet color={colors.accent.default} size={22} />
-      <Text style={{ color: colors.fg.default, fontFamily: fonts.sans.semibold, fontSize: 16 }}>{wallet ? "Pera Wallet connected" : "No wallet connected"}</Text>
-      <Text style={{ color: colors.fg.muted, fontFamily: fonts.sans.regular, fontSize: 13, lineHeight: 19 }}>{wallet ? `${wallet.network} · ${wallet.address}` : "Connect Pera once before paying for an agent session."}</Text>
-      {!wallet ? <Pressable disabled={busy} onPress={connectWallet} style={{ backgroundColor: colors.accent.default, borderRadius: 10, padding: 12, opacity: busy ? .6 : 1 }}><Text style={{ color: colors.fg.default, fontFamily: fonts.sans.semibold, textAlign: "center" }}>{busy ? "Connecting Pera..." : "Connect Pera Wallet"}</Text></Pressable> : null}
-      {wallet ? <Pressable disabled={busy} onPress={disconnectWallet} style={{ backgroundColor: "#fa6838", borderRadius: 10, padding: 12, opacity: busy ? .6 : 1, marginTop: 10 }}><Text style={{ color: "#ffffff", fontFamily: fonts.sans.semibold, textAlign: "center" }}>{busy ? "Disconnecting..." : "Disconnect Wallet"}</Text></Pressable> : null}
+      <Text style={{ color: colors.fg.default, fontFamily: fonts.sans.semibold, fontSize: 16 }}>{wallet ? "Saved Pera wallet" : "No wallet saved"}</Text>
+      <Text style={{ color: colors.fg.muted, fontFamily: fonts.sans.regular, fontSize: 13, lineHeight: 19 }}>{wallet ? `${wallet.network} · ${wallet.address}. Pera approval is required when you pay.` : "Connect Pera before paying for an agent session."}</Text>
+      <Pressable disabled={busy} onPress={connectWallet} style={{ backgroundColor: colors.accent.default, borderRadius: 10, padding: 12, opacity: busy ? .6 : 1 }}><Text style={{ color: colors.fg.default, fontFamily: fonts.sans.semibold, textAlign: "center" }}>{busy ? "Connecting Pera..." : wallet ? "Reconnect Pera Wallet" : "Connect Pera Wallet"}</Text></Pressable>
+      {wallet ? <Pressable disabled={busy} onPress={disconnectWallet} style={{ backgroundColor: "#fa6838", borderRadius: 10, padding: 12, opacity: busy ? .6 : 1, marginTop: 10 }}><Text style={{ color: "#ffffff", fontFamily: fonts.sans.semibold, textAlign: "center" }}>{busy ? "Removing..." : "Forget Saved Wallet"}</Text></Pressable> : null}
       {error ? <Text style={{ color: colors.fg.muted, fontFamily: fonts.sans.regular, fontSize: 12 }}>{error}</Text> : null}
     </View>
   </View>;

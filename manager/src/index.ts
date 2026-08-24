@@ -3176,7 +3176,11 @@ function startManager(): void {
         if (!x402App) {
           return Response.json({ error: "x402 is not configured", details: x402ConfigurationError }, { status: 503, headers: corsHeaders });
         }
-        return x402App.fetch(req);
+        // Render terminates TLS before Bun, so req.url is HTTP unless we
+        // restore the public origin before x402 builds its payment challenge.
+        const publicUrl = new URL(req.url);
+        if (publicUrl.hostname === "helixbox-manager.onrender.com") publicUrl.protocol = "https:";
+        return x402App.fetch(publicUrl.href === req.url ? req : new Request(publicUrl, req));
       }
 
       if (path === "/.well-known/x402.json" && req.method === "GET") {

@@ -3180,7 +3180,9 @@ function startManager(): void {
         // restore the public origin before x402 builds its payment challenge.
         const publicUrl = new URL(req.url);
         if (publicUrl.hostname === "helixbox-manager.onrender.com") publicUrl.protocol = "https:";
-        return x402App.fetch(publicUrl.href === req.url ? req : new Request(publicUrl, req));
+        const paymentResponse = await x402App.fetch(publicUrl.href === req.url ? req : new Request(publicUrl, req));
+        console.log(`[x402] ${req.method} ${path} status=${paymentResponse.status} signed=${req.headers.has("payment-signature")}`);
+        return paymentResponse;
       }
 
       if (path === "/.well-known/x402.json" && req.method === "GET") {

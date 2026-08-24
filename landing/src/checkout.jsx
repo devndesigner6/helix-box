@@ -234,10 +234,9 @@ async function connectPera() {
     const network = await getNetwork();
     phase = "connecting Pera Wallet";
     const pera = new PeraWalletConnect({ chainId: network.chainId, shouldShowSignTxnToast: false });
-    // A stored WalletConnect session can belong to the prior Testnet/MainNet
-    // selection. Start fresh so Pera always receives this checkout's chainId.
-    await pera.disconnect().catch(() => undefined);
-    const accounts = await pera.connect();
+    const existing = await pera.reconnectSession().catch(() => []);
+    if (!existing.length) await pera.disconnect().catch(() => undefined);
+    const accounts = existing.length ? existing : await pera.connect();
     const address = accounts[0];
     if (!address) throw new Error("No Pera account was selected");
     return { address, network, pera };

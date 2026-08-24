@@ -28,7 +28,7 @@ export default function WorkspaceScreen() {
   const { registry } = useSessionRegistry();
   const { status, sessionState, error, isReconnecting, interactionBlockReason, disconnect, connect, getPairedSessions, resumeSession } = useConnection();
   const router = useRouter();
-  const { code } = useLocalSearchParams<{ code?: string }>();
+  const { code, payment } = useLocalSearchParams<{ code?: string; payment?: string }>();
   const drawerStatus = useDrawerStatus();
   const { t } = useTranslation();
 
@@ -45,25 +45,31 @@ export default function WorkspaceScreen() {
   const [isPaying, setIsPaying] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [wallet, setWallet] = useState<WalletStatus | null>(null);
+  const completedPaymentRef = useRef<string | null>(null);
   useFocusEffect(useCallback(() => { void getWalletStatus().then(setWallet); }, []));
   const startPaidSession = async () => {
     if (!pendingCode || isPaying) return;
     setIsPaying(true); setPaymentError(null);
     try {
       if (!wallet) {
-        const connected = await openPeraWalletConnection();
+        const connected = await openPeraWalletConnection(pendingCode);
         await saveWalletStatus(connected);
         setWallet(connected);
         return;
       }
-      const paidWallet = await openPeraCheckout(pendingCode);
-      await saveWalletStatus(paidWallet);
-      setWallet(paidWallet);
-      const session = (await getPairedSessions()).find((item) => item.sessionCode === pendingCode);
-      if (session) await resumeSession(session); else await connect(pendingCode);
+      await openPeraCheckout(pendingCode);
     } catch (cause) { setPaymentError(cause instanceof Error ? cause.message : "Payment failed"); }
     finally { setIsPaying(false); }
   };
+
+  useEffect(() => {
+    if (payment !== "paid" || !pendingCode || completedPaymentRef.current === pendingCode || status !== "disconnected") return;
+    completedPaymentRef.current = pendingCode;
+    void (async () => {
+      const session = (await getPairedSessions()).find((item) => item.sessionCode === pendingCode);
+      if (session) await resumeSession(session); else await connect(pendingCode);
+    })().catch((cause) => setPaymentError(cause instanceof Error ? cause.message : "Payment was settled, but session activation failed"));
+  }, [connect, getPairedSessions, payment, pendingCode, resumeSession, status]);
 
   const handleGoHome = useCallback(() => {
     logger.info("workspace", "navigating back to auth after disconnect");

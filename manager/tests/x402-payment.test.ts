@@ -17,6 +17,17 @@ test("keeps an explicit Testnet network and Testnet USDC asset", () => {
   assert.equal(config.asset, "10458941");
 });
 
+test("keeps an explicit Mainnet network and Mainnet USDC asset", () => {
+  const config = createX402Config({
+    X402_NETWORK: "algorand:wGHE2Pwdvd7S12BL5FaOP20EGYesN73ktiC1qzkkit8=",
+    X402_ASSET_ID: "31566704",
+    X402_PAY_TO: VALID_ALGORAND_ADDRESS,
+  });
+
+  assert.equal(config.asset, "31566704");
+  assert.match(config.network, /wGHE2Pwdvd7S12BL5FaOP20EGYesN73ktiC1qzkkit8=/);
+});
+
 test("rejects placeholder payment addresses", () => {
   assert.throws(
     () => createX402Config({ X402_PAY_TO: "PLACEHOLDER_ALGO_ADDRESS" }),

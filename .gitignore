@@ -12,5 +12,6 @@ node_modules/
 dist/
 .env
 *.log
+landing/vite.config.js.timestamp-*.mjs
 .expo/
 *.exe

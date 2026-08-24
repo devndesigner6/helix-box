@@ -328,7 +328,7 @@
     var captions = [
       "FIG. 001 — Remote execution forward pass: Spawns a lightweight connection layer via secure relays to execute tasks in local PTY terminal.",
       "FIG. 002 — Mobile client pairing code validation: Scans QR code or enters credentials to negotiate an encrypted session password.",
-      "FIG. 003 — Micro-billing sync curve: Auto-settles Testnet USDC transactions in background threads based on compute ticks."
+      "FIG. 003 — Micro-billing flow: Settles an approved USDC payment before the selected remote session begins."
     ];
 
     var activeIdx = 0;

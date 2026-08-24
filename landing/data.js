@@ -86,7 +86,7 @@ const GLOSSARY = [
   },
   {
     term: "USDC Auto-Pay",
-    definition: "A background synchronization task in the HelixBox manager that periodically settles micro-payment fees in Testnet USDC.",
+    definition: "A payment flow in the HelixBox manager that settles USDC micro-payment fees after Pera Wallet approval.",
     area: "Micro-Payments"
   },
   {

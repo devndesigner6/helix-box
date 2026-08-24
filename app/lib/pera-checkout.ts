@@ -5,24 +5,28 @@ import { parsePeraCallback } from "@/lib/pera-callback";
 
 const CHECKOUT_URL = process.env.EXPO_PUBLIC_CHECKOUT_URL || "https://helix-box.vercel.app/checkout";
 
-function openUrlAndWaitForDeepLink(url: string, expectedEvent: string): Promise<string> {
+function openUrlAndWaitForDeepLink(url: string, expectedEvent: string, expectedCode?: string): Promise<string> {
   return new Promise((resolve, reject) => {
     let sub: any;
+    const cleanup = () => {
+      clearTimeout(timeout);
+      if (typeof sub?.remove === "function") sub.remove();
+      else if (typeof sub === "function") sub();
+    };
     const handleUrl = (event: { url: string }) => {
-      if (event.url.includes(expectedEvent)) {
-        if (sub) {
-          if (typeof sub.remove === "function") sub.remove();
-          else if (typeof sub === "function") (sub as any)();
-        }
+      try {
+        parsePeraCallback(event.url, expectedEvent, expectedCode);
+        cleanup();
         resolve(event.url);
-      }
+      } catch { /* Ignore unrelated deep links. */ }
     };
     sub = Linking.addEventListener("url", handleUrl);
+    const timeout = setTimeout(() => {
+      cleanup();
+      reject(new Error("Pera Wallet did not return to HelixBox. Please try again."));
+    }, 3 * 60 * 1000);
     Linking.openURL(url).catch((err) => {
-      if (sub) {
-        if (typeof sub.remove === "function") sub.remove();
-        else if (typeof sub === "function") (sub as any)();
-      }
+      cleanup();
       reject(err);
     });
   });
@@ -34,9 +38,9 @@ async function openCheckout(mode: "connect" | "pay", code?: string): Promise<Wal
   checkout.searchParams.set("mode", mode);
   if (code) checkout.searchParams.set("code", code);
   const event = mode === "connect" ? "wallet-connected" : "payment-complete";
-  const callbackUrl = await openUrlAndWaitForDeepLink(checkout.toString(), event);
+  const callbackUrl = await openUrlAndWaitForDeepLink(checkout.toString(), event, code);
   return parsePeraCallback(callbackUrl, event, code) as WalletStatus;
 }
 
-export const openPeraWalletConnection = () => openCheckout("connect");
+export const openPeraWalletConnection = (code?: string) => openCheckout("connect", code);
 export const openPeraCheckout = (code: string) => openCheckout("pay", code);

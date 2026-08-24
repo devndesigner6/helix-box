@@ -5,7 +5,7 @@ export function parsePeraCallback(url, expectedEvent, expectedCode) {
   if (
     callback.protocol !== "helixbox:" ||
     callback.hostname !== expectedEvent ||
-    !address ||
+    !/^[A-Z2-7]{58}$/.test(address || "") ||
     (network !== "Testnet" && network !== "Mainnet") ||
     (expectedCode && callback.searchParams.get("status") !== "paid") ||
     (expectedCode && callback.searchParams.get("code") !== expectedCode)

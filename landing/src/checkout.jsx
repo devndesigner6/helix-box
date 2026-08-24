@@ -247,7 +247,7 @@ async function connectWallet() {
   setStatus("Connecting Pera Wallet...");
   const { address, network } = await connectPera();
   setStatus("Wallet connected. Returning to HelixBox...");
-  window.location.assign(`helixbox://wallet-connected?address=${encodeURIComponent(address)}&network=${network.label}`);
+  window.location.assign(`helixbox://wallet-connected?address=${encodeURIComponent(address)}&network=${network.label}${code ? `&code=${encodeURIComponent(code)}` : ""}`);
 }
 
 async function pay(plan) {

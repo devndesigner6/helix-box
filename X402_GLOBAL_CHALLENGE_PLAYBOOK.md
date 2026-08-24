@@ -2,7 +2,9 @@
 
 ## Page 1: Purpose
 
-This is the challenge-specific handoff for HelixBox. It documents how the project demonstrates real Algorand x402 usage, what evidence to gather, and which official resources govern the work. It is not a claim that any unverified payment, leaderboard entry, Bazaar listing, or MainNet deployment is complete.
+This is the challenge-specific handoff for HelixBox. It documents how the project demonstrates real Algorand x402 usage, what evidence to gather, and which official resources govern the work.
+
+Current confirmed milestone: HelixBox completed a MainNet $0.25 USDC x402 payment and the configured `payTo` wallet received it. Keep the transaction ID, manager settlement evidence, and the post-payment access result with the release records. This does not by itself prove Bazaar indexing, leaderboard placement, repeatability, or outside-user demand.
 
 Always re-check the official challenge page before submitting because eligibility, dates, required fields, and judging details can change.
 
@@ -26,7 +28,7 @@ HelixBox currently keeps the scope to two core subscription-like service routes 
 | --- | --- | --- |
 | `POST /v2/x402/cli/hour` | one hour of agent/CLI access | $0.25 USDC |
 | `POST /v2/x402/premium/week` | seven days of agent/CLI access | $2.00 USDC |
-| `POST /v2/x402/codex-agent` | retained Codex agent service | configured paid endpoint |
+| `POST /v2/x402/codex-agent` | retained Codex agent diagnostics and workspace sync | $0.25 USDC / 2-minute entitlement |
 
 Do not advertise routes that are not reachable from deployed code. Adding endpoints only to inflate transaction count weakens the product story.
 
@@ -82,9 +84,9 @@ Use Testnet to validate flow without spending real USDC. Confirm:
 
 Record the transaction ID, manager log correlation, and entitlement result for the demo.
 
-## Page 10: MainNet promotion
+## Page 10: MainNet operation
 
-Promote only after a complete Testnet payment has settled and unlocked access. MainNet requires a separate configuration change, not merely a UI switch:
+HelixBox has completed its first confirmed MainNet settlement. MainNet remains a separate configuration from Testnet, not merely a UI switch:
 
 1. Set the MainNet CAIP-2 network.
 2. Set MainNet USDC asset ID `31566704`.
@@ -92,7 +94,7 @@ Promote only after a complete Testnet payment has settled and unlocked access. M
 4. Deploy Render configuration.
 5. Verify the public health route reflects MainNet.
 6. Test one deliberately small payment from a funded MainNet account.
-7. Confirm both on-chain transaction and service entitlement.
+7. Confirm the on-chain transaction, facilitator settlement, merchant receipt, and service entitlement.
 
 Never put a mainnet address, seed phrase, or USDC balance in the mobile bundle.
 
@@ -198,20 +200,22 @@ Project references:
 - [HelixBox GitHub repository](https://github.com/devndesigner6/helix-box)
 - [Manager x402 health endpoint](https://helixbox-manager.onrender.com/v2/x402/health)
 
-## Page 19: Final Testnet gate
+## Page 19: Final MainNet and challenge gate
 
-Do not submit based solely on code review. Require:
+Do not submit based solely on code review or one self-test. Require:
 
-- a real Testnet wallet connection,
-- a real Testnet transaction approval,
-- a real facilitator verification/settlement result,
+- a reproducible MainNet wallet connection,
+- a real MainNet transaction approval,
+- a real facilitator verification/settlement result and USDC receipt,
 - manager logs showing the correct paid route,
 - a returned deep link to the installed Android app,
 - a session that becomes active only after settlement,
 - an expiry/renewal test,
-- links, video, and repository revision ready for reviewers.
+- deployed Bazaar manifest and actual Bazaar listing verification,
+- actual MainNet leaderboard verification,
+- links, video, transaction evidence, and repository revision ready for reviewers.
 
-If any gate fails, document it honestly and fix that gap before presenting it as complete.
+Do not manufacture volume through circular self-payments. Internal testing is valid; the strongest evidence is independent users paying for real CLI-agent work. If any gate fails, document it honestly and fix that gap before presenting it as complete.
 
 ## Page 20: Post-challenge path
 

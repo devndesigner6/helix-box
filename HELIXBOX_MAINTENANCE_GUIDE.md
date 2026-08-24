@@ -145,9 +145,11 @@ The first request returns HTTP 402 payment requirements. The client signs the re
 
 ## Page 15: Entitlements and time
 
-An entitlement must be linked to the real user/session identity and expiry, not only a frontend flag. The app can display remaining time, but the manager must be the authority that accepts or rejects service use.
+An entitlement is recorded by the manager in its `x402_entitlements` SQLite table and is associated with the CLI pairing code and expiry. It is not merely a frontend flag. The app can display remaining time, but the manager must remain the authority that accepts or rejects service use.
 
 For the hourly plan, start the hour at confirmed settlement. For the weekly plan, calculate seven days from confirmed settlement. The correct expiry logic needs server-side persistence before treating the pricing model as production-ready.
+
+The current persistence is local to the manager deployment. Before public scale, add durable backup/recovery, payment receipt storage, and an idempotency/reconciliation record keyed by the facilitator payment result. Do not issue a second entitlement just because a payer retries after a slow mobile return.
 
 ## Page 16: Network switching
 
@@ -182,6 +184,8 @@ Then manually test on Android:
 6. Verify the wallet address and active entitlement display.
 7. Verify the manager accepts the paid service only after settlement.
 
+For a MainNet release, also retain the transaction ID, route purchased, settlement time, and receiving-wallet confirmation outside the mobile app. These are operational records, not wallet secrets.
+
 ## Page 18: Incident guide
 
 **Literal `{title}` appears:** identify whether the route is served by `landing/` or the root static HTML pages. Search all HTML sources, repair the actual source, deploy, then hard-refresh the browser.
@@ -199,7 +203,7 @@ Then manually test on Android:
 - Validate payment proof server-side through the facilitator.
 - Rate-limit payment and pairing endpoints.
 - Use unique, short-lived pairing codes.
-- Restrict CORS to HelixBox web origins.
+- The current x402 middleware allows `Access-Control-Allow-Origin: *` for checkout compatibility. Restrict it to HelixBox-controlled origins once the deployed custom-tab and Pera return flow has been regression-tested.
 - Review dependencies before upgrades.
 - Do not promote Testnet configuration to MainNet by changing only UI text.
 
@@ -208,9 +212,10 @@ Then manually test on Android:
 The smallest maintainable next steps are:
 
 1. Keep the two paid x402 endpoints stable.
-2. Persist server-side entitlements and expose a read-only entitlement status API.
-3. Add an end-to-end Testnet payment test using a funded test wallet.
+2. Add a read-only entitlement-status API for the paired session.
+3. Add an end-to-end Testnet payment test using a funded test wallet, while retaining a small MainNet smoke-test checklist.
 4. Add application monitoring for manager errors and facilitator settlement failures.
-5. Record a release checklist in GitHub Issues before each APK release.
+5. Back up the entitlement database and record payment receipts/idempotency keys.
+6. Record a release checklist in GitHub Issues before each APK release.
 
 Avoid adding new payment SDKs, extra chains, or additional pricing tiers until the existing QR pairing, wallet return, settlement verification, and entitlement expiry flow is reliably demonstrated end to end.

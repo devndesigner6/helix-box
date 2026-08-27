@@ -177,7 +177,7 @@ root.innerHTML = `
     </h1>
     
     <p class="checkout-desc" style="text-align: center; max-width: 380px; margin: 0 auto;">
-      ${mode === "connect" ? "Save your public wallet address in HelixBox. You approve payments separately in your wallet app." : "Your local editor stays free. Pay only when starting a proxy session connected to your workstation."}
+      ${mode === "connect" ? "Save your public wallet address in HelixBox. You approve payments separately in your wallet app." : "Your local editor stays free. Pay only when starting a time-bound agent session connected to your workstation."}
     </p>
     
     <div class="checkout-info-box">

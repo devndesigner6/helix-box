@@ -3168,7 +3168,7 @@ function startManager(): void {
         if (path === "/v2/x402/health" && req.method === "GET") {
           return Response.json(
             x402App
-              ? { status: "ok", service: "HelixBox paid CLI relay", network: x402PaymentConfig?.network }
+              ? { status: "ok", service: "HelixBox paid agent sessions", network: x402PaymentConfig?.network }
               : { status: "misconfigured", error: x402ConfigurationError },
             { status: x402App ? 200 : 503, headers: corsHeaders },
           );
@@ -3190,17 +3190,17 @@ function startManager(): void {
           return Response.json({ error: "x402 is not configured", details: x402ConfigurationError }, { status: 503, headers: corsHeaders });
         }
         return Response.json({
-          name: "HelixBox paid CLI relay",
-          description: "Pay in USDC to create a live HelixBox CLI-to-mobile relay session.",
+          name: "HelixBox",
+          description: "HelixBox lets you use your full development environment from your phone so you can build, run, and manage your projects from anywhere. Pay micro amounts for time-bound agent sessions when you need them.",
           category: "developer-tools",
           projectType: "standard",
-          logo: "https://helix-box.vercel.app/helixbox.png",
-          image: "https://helix-box.vercel.app/helixbox.png",
-          tags: ["x402-global-challenge", "algorand", "cli", "mobile-ide"],
+          logo: "https://raw.githubusercontent.com/devndesigner6/helix-box/main/landing/public/helixbox.png",
+          image: "https://raw.githubusercontent.com/devndesigner6/helix-box/main/landing/public/helixbox.png",
+          tags: ["x402-global-challenge", "algorand", "cli", "mobile-ide", "agent-sessions"],
           payTo: x402PaymentConfig.payTo,
           endpoints: [
-            { path: CLI_HOURLY_ROUTE, method: "POST", priceUsdc: 0.25, description: "One hour of CLI relay access." },
-            { path: PREMIUM_WEEKLY_ROUTE, method: "POST", priceUsdc: 2, description: "Seven days of premium CLI relay access." },
+            { path: CLI_HOURLY_ROUTE, method: "POST", priceUsdc: 0.25, description: "One hour of HelixBox agent session access." },
+            { path: PREMIUM_WEEKLY_ROUTE, method: "POST", priceUsdc: 2, description: "Seven days of HelixBox premium agent session access." },
             { path: CODEX_AGENT_ROUTE, method: "POST", priceUsdc: 0.25, description: "Run Codex Agent code diagnostics and sync workspace." },
           ],
         }, { headers: corsHeaders });

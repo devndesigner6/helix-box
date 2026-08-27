@@ -67,11 +67,11 @@ export function createX402App({ config, redeemSession }: X402AppOptions): Hono {
       {
         [`POST ${CLI_HOURLY_ROUTE}`]: paymentOptions(
           CLI_HOURLY_PRICE_USDC,
-          "One hour of HelixBox CLI-to-mobile relay access.",
+          "One hour of HelixBox agent session access.",
         ),
         [`POST ${PREMIUM_WEEKLY_ROUTE}`]: paymentOptions(
           PREMIUM_WEEKLY_PRICE_USDC,
-          "Seven days of HelixBox premium CLI-to-mobile relay access.",
+          "Seven days of HelixBox premium agent session access.",
         ),
         [`POST ${CODEX_AGENT_ROUTE}`]: paymentOptions(
           CODEX_AGENT_PRICE_USDC,

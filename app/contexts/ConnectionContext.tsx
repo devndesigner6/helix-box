@@ -279,7 +279,6 @@ function toTerminalSessionState(state?: string, reason?: string): SessionState {
 function isTerminalReconnectMessage(message: string): boolean {
   const normalized = message.toLowerCase();
   return (
-    normalized.includes('reattach unavailable') ||
     normalized.includes('password invalid') ||
     normalized.includes('session not found') ||
     normalized.includes('revoked') ||
@@ -1168,7 +1167,7 @@ export function ConnectionProvider({ children }: { children: React.ReactNode }) 
 
     try {
       const reconnectStartedAt = Date.now();
-      const reconnectWindowMs = 60_000;
+      const reconnectWindowMs = 5 * 60_000;
 
       while (!manualDisconnectRef.current && sessionPasswordRef.current) {
         if (!networkReachableRef.current) {

@@ -5,8 +5,8 @@ import { useConnection } from "@/contexts/ConnectionContext";
 import { useSessionRegistry } from "@/contexts/SessionRegistry";
 import { useTheme } from "@/contexts/ThemeContext";
 import { logger } from "@/lib/logger";
-import { openPeraCheckout, openPeraWalletConnection } from "@/lib/pera-checkout";
-import { getWalletStatus, saveWalletStatus, type WalletStatus } from "@/lib/wallet-status";
+import { openPeraCheckout } from "@/lib/pera-checkout";
+import { saveWalletStatus } from "@/lib/wallet-status";
 import { usePlugins } from "@/plugins";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useDrawerStatus } from "@react-navigation/drawer";
@@ -26,7 +26,7 @@ export default function WorkspaceScreen() {
   const { colors, fonts } = useTheme();
   const { isLoading, openTab, openTabs, activeTabId, setActiveTab } = usePlugins();
   const { registry } = useSessionRegistry();
-  const { status, sessionState, error, isReconnecting, interactionBlockReason, disconnect, connect, getPairedSessions, resumeSession } = useConnection();
+  const { status, sessionState, sessionCode, error, isReconnecting, interactionBlockReason, disconnect, connect, getPairedSessions, resumeSession } = useConnection();
   const router = useRouter();
   const { code, payment } = useLocalSearchParams<{ code?: string; payment?: string }>();
   const drawerStatus = useDrawerStatus();
@@ -41,35 +41,34 @@ export default function WorkspaceScreen() {
   const hasConnectedOnceRef = useRef(false);
   const showConnectionNotice = status === "connecting" || isReconnecting || interactionBlockReason !== null;
   const pendingCode = typeof code === "string" ? code : null;
-  const needsPaidSession = Boolean(pendingCode) && status === "disconnected" && (sessionState === "idle" || sessionState === "expired");
+  const paidCode = pendingCode ?? sessionCode;
+  const needsPaidSession = Boolean(paidCode) && (
+    sessionState === "expired" ||
+    (status === "disconnected" && sessionState === "idle")
+  );
   const [isPaying, setIsPaying] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
-  const [wallet, setWallet] = useState<WalletStatus | null>(null);
   const completedPaymentRef = useRef<string | null>(null);
-  useFocusEffect(useCallback(() => { void getWalletStatus().then(setWallet); }, []));
   const startPaidSession = async () => {
-    if (!pendingCode || isPaying) return;
+    if (!paidCode || isPaying) return;
     setIsPaying(true); setPaymentError(null);
     try {
-      if (!wallet) {
-        const connected = await openPeraWalletConnection(pendingCode);
-        await saveWalletStatus(connected);
-        setWallet(connected);
-        return;
-      }
-      await openPeraCheckout(pendingCode);
+      const settledWallet = await openPeraCheckout(paidCode);
+      await saveWalletStatus(settledWallet);
+      const session = (await getPairedSessions()).find((item) => item.sessionCode === paidCode);
+      if (session) await resumeSession(session); else await connect(paidCode);
     } catch (cause) { setPaymentError(cause instanceof Error ? cause.message : "Payment failed"); }
     finally { setIsPaying(false); }
   };
 
   useEffect(() => {
-    if (payment !== "paid" || !pendingCode || completedPaymentRef.current === pendingCode || status !== "disconnected") return;
-    completedPaymentRef.current = pendingCode;
+    if (payment !== "paid" || !paidCode || completedPaymentRef.current === paidCode || status !== "disconnected") return;
+    completedPaymentRef.current = paidCode;
     void (async () => {
-      const session = (await getPairedSessions()).find((item) => item.sessionCode === pendingCode);
-      if (session) await resumeSession(session); else await connect(pendingCode);
+      const session = (await getPairedSessions()).find((item) => item.sessionCode === paidCode);
+      if (session) await resumeSession(session); else await connect(paidCode);
     })().catch((cause) => setPaymentError(cause instanceof Error ? cause.message : "Payment was settled, but session activation failed"));
-  }, [connect, getPairedSessions, payment, pendingCode, resumeSession, status]);
+  }, [connect, getPairedSessions, paidCode, payment, resumeSession, status]);
 
   const handleGoHome = useCallback(() => {
     logger.info("workspace", "navigating back to auth after disconnect");
@@ -90,7 +89,7 @@ export default function WorkspaceScreen() {
       drawerStatus,
     });
 
-    if (prev !== sessionState && sessionState === "expired" && pendingCode) {
+    if (prev !== sessionState && sessionState === "expired" && paidCode) {
       return;
     }
 
@@ -102,7 +101,7 @@ export default function WorkspaceScreen() {
         { cancelable: false }
       );
     }
-  }, [drawerStatus, error, handleGoHome, isLoading, pendingCode, sessionState, status]);
+  }, [drawerStatus, error, handleGoHome, isLoading, paidCode, sessionState, status]);
 
   useEffect(() => {
     if (isLoading) {
@@ -292,7 +291,7 @@ export default function WorkspaceScreen() {
             </Text>
         </View>
       ) : null}
-      {needsPaidSession && pendingCode ? (
+      {needsPaidSession && paidCode ? (
         <View
           style={{
             position: "absolute",
@@ -308,10 +307,10 @@ export default function WorkspaceScreen() {
           }}
         >
           <Text style={{ color: colors.fg.default, fontFamily: fonts.sans.semibold, fontSize: 16 }}>
-            {sessionState === "expired" ? "Your paid session ended" : wallet ? "Start your first agent session" : "Connect Pera Wallet"}
+            {sessionState === "expired" ? "Your 1-hour agent session ended" : "Start your first agent session"}
           </Text>
           <Text style={{ color: colors.fg.muted, fontFamily: fonts.sans.regular, fontSize: 13, lineHeight: 19 }}>
-            {wallet ? "Choose $0.25 USDC for 1 hour or $2 USDC for 7 days." : "Connect Pera once. Your wallet address is saved in HelixBox before you pay."}
+            {sessionState === "expired" ? "Pay $0.25 USDC to start another 1-hour agent session, or choose $2 USDC for 7 days." : "Pera Wallet opens to approve your session payment. Choose $0.25 USDC for 1 hour or $2 USDC for 7 days."}
           </Text>
           <Pressable
             disabled={isPaying}
@@ -319,7 +318,7 @@ export default function WorkspaceScreen() {
             style={{ backgroundColor: colors.accent.default, borderRadius: 10, paddingVertical: 12, paddingHorizontal: 14, opacity: isPaying ? .6 : 1 }}
           >
             <Text style={{ color: colors.fg.default, fontFamily: fonts.sans.semibold, fontSize: 14, textAlign: "center" }}>
-              {isPaying ? "Opening Pera..." : !wallet ? "Connect Pera Wallet" : sessionState === "expired" ? "Renew access" : "Pay and start agent session"}
+              {isPaying ? "Opening Pera..." : sessionState === "expired" ? "Renew access" : "Pay and start agent session"}
             </Text>
           </Pressable>
           {paymentError ? <Text style={{ color: colors.fg.muted, fontFamily: fonts.sans.regular, fontSize: 12 }}>{paymentError}</Text> : null}

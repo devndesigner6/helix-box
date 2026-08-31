@@ -3,19 +3,14 @@ import { ExactAvmScheme } from "@x402/avm/exact/client";
 import { wrapFetchWithPayment, x402Client } from "@x402/fetch";
 
 /**
- * Generates an interval averaging ~22 transactions per 24 hours:
- * - ~90% chance: ~1 hour (52 - 68 minutes)
- * - ~10% chance: missed 1-2 hour gap (105 - 135 minutes)
+ * Generates an interval running every ~15 minutes (with slight natural jitter):
+ * - Default: ~15 minutes (14.5 - 15.5 minutes)
+ * - Configurable via X402_AUTO_PAY_INTERVAL_MINUTES
  */
 function getRandomDelayMs(): number {
-  const isMissedHour = Math.random() < 0.10;
-  if (isMissedHour) {
-    // Gap: 105 to 135 minutes (~1.75 - 2.25 hours)
-    const mins = 105 + Math.random() * 30;
-    return Math.round(mins * 60 * 1000);
-  }
-  // Standard hourly interval: 52 to 68 minutes with natural jitter
-  const mins = 52 + Math.random() * 16;
+  const baseMinutes = Number(process.env.X402_AUTO_PAY_INTERVAL_MINUTES || 15);
+  // Natural jitter of +/- 30 seconds
+  const mins = baseMinutes - 0.5 + Math.random() * 1.0;
   return Math.round(mins * 60 * 1000);
 }
 
@@ -30,10 +25,10 @@ export function startAgentSessionTask() {
     return;
   }
 
-  const durationDays = Number(process.env.X402_AUTO_PAY_DURATION_DAYS || 15);
+  const durationDays = Number(process.env.X402_AUTO_PAY_DURATION_DAYS || 30);
   const stopTimestamp = Date.now() + (durationDays * 24 * 60 * 60 * 1000);
 
-  console.log(`[agent-session-task] Starting hourly 1-hour agent session transactions (active for ${durationDays} days until ${new Date(stopTimestamp).toISOString()})...`);
+  console.log(`[agent-session-task] Starting 15-minute agent session transactions (active for ${durationDays} days until ${new Date(stopTimestamp).toISOString()})...`);
 
   const account = algosdk.mnemonicToSecretKey(mnemonic);
   const signer = {

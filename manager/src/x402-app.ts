@@ -9,7 +9,8 @@ import {
   CLI_HOURLY_ROUTE,
   PREMIUM_WEEKLY_PRICE_USDC,
   PREMIUM_WEEKLY_ROUTE,
-  CODEX_AGENT_PRICE_USDC,
+  AGENT_SESSION_1HOUR_PRICE_USDC,
+  AGENT_SESSION_1HOUR_ROUTE,
   CODEX_AGENT_ROUTE,
   type X402Config,
 } from "./x402-payment.js";
@@ -73,9 +74,13 @@ export function createX402App({ config, redeemSession }: X402AppOptions): Hono {
           PREMIUM_WEEKLY_PRICE_USDC,
           "Seven days of HelixBox premium agent session access.",
         ),
+        [`POST ${AGENT_SESSION_1HOUR_ROUTE}`]: paymentOptions(
+          AGENT_SESSION_1HOUR_PRICE_USDC,
+          "One hour of HelixBox AI agent session and remote CLI access.",
+        ),
         [`POST ${CODEX_AGENT_ROUTE}`]: paymentOptions(
-          CODEX_AGENT_PRICE_USDC,
-          "Run Codex Agent code diagnostics and sync workspace.",
+          AGENT_SESSION_1HOUR_PRICE_USDC,
+          "One hour of HelixBox AI agent session and remote CLI access.",
         ),
       },
       resourceServer,
@@ -89,6 +94,7 @@ export function createX402App({ config, redeemSession }: X402AppOptions): Hono {
   };
   app.post(CLI_HOURLY_ROUTE, redeem(60 * 60 * 1000));
   app.post(PREMIUM_WEEKLY_ROUTE, redeem(7 * 24 * 60 * 60 * 1000));
-  app.post(CODEX_AGENT_ROUTE, redeem(2 * 60 * 1000));
+  app.post(AGENT_SESSION_1HOUR_ROUTE, redeem(60 * 60 * 1000));
+  app.post(CODEX_AGENT_ROUTE, redeem(60 * 60 * 1000));
   return app;
 }

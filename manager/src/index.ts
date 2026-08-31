@@ -3,7 +3,7 @@ import { Database } from "bun:sqlite";
 import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from "crypto";
 import { existsSync, rmSync } from "fs";
 import { createX402App } from "./x402-app.js";
-import { CLI_HOURLY_ROUTE, PREMIUM_WEEKLY_ROUTE, CODEX_AGENT_ROUTE, createX402Config } from "./x402-payment.js";
+import { CLI_HOURLY_ROUTE, PREMIUM_WEEKLY_ROUTE, AGENT_SESSION_1HOUR_ROUTE, CODEX_AGENT_ROUTE, createX402Config } from "./x402-payment.js";
 import { startCodexAgentTask } from "./codex-agent-task.js";
 
 const CHARSET = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
@@ -3201,7 +3201,7 @@ function startManager(): void {
           endpoints: [
             { path: CLI_HOURLY_ROUTE, method: "POST", priceUsdc: 0.25, description: "One hour of HelixBox agent session access." },
             { path: PREMIUM_WEEKLY_ROUTE, method: "POST", priceUsdc: 2, description: "Seven days of HelixBox premium agent session access." },
-            { path: CODEX_AGENT_ROUTE, method: "POST", priceUsdc: 0.25, description: "Run Codex Agent code diagnostics and sync workspace." },
+            { path: AGENT_SESSION_1HOUR_ROUTE, method: "POST", priceUsdc: 0.25, description: "One hour of HelixBox AI agent session and remote CLI access." },
           ],
         }, { headers: corsHeaders });
       }

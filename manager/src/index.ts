@@ -3179,9 +3179,20 @@ function startManager(): void {
         // Render terminates TLS before Bun, so req.url is HTTP unless we
         // restore the public origin before x402 builds its payment challenge.
         const publicUrl = new URL(req.url);
-        if (publicUrl.hostname === "helixbox-manager.onrender.com") publicUrl.protocol = "https:";
+        if (publicUrl.hostname === "helixbox-manager.onrender.com" || publicUrl.hostname === "127.0.0.1" || publicUrl.hostname === "localhost") {
+          publicUrl.protocol = "https:";
+          publicUrl.host = "helixbox-manager.onrender.com";
+        }
         const paymentResponse = await x402App.fetch(publicUrl.href === req.url ? req : new Request(publicUrl, req));
         console.log(`[x402] ${req.method} ${path} status=${paymentResponse.status} signed=${req.headers.has("payment-signature")}`);
+        if (paymentResponse.status >= 400 && req.headers.has("payment-signature")) {
+          const cloned = paymentResponse.clone();
+          const text = await cloned.text().catch(() => "");
+          console.error(`[x402-debug] Failed signed payment on ${path}: status=${paymentResponse.status}`, {
+            body: text,
+            headers: Object.fromEntries(cloned.headers.entries()),
+          });
+        }
         return paymentResponse;
       }
 

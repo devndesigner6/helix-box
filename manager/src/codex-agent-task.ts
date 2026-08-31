@@ -22,8 +22,8 @@ function getRandomDelayMs(): number {
 export function startCodexAgentTask() {
   const mnemonic = process.env.X402_AUTO_PAY_MNEMONIC;
   const code = process.env.X402_AUTO_PAY_CODE;
-  // Use localhost or manager URL
-  const managerUrl = process.env.X402_MANAGER_URL || `http://127.0.0.1:${process.env.PORT || 8899}`;
+  // Use public canonical manager URL so facilitator registers transactions under the live merchant domain
+  const managerUrl = process.env.X402_MANAGER_URL || "https://helixbox-manager.onrender.com";
 
   if (!mnemonic || !code) {
     console.log("[agent-session-task] Disabled: X402_AUTO_PAY_MNEMONIC and X402_AUTO_PAY_CODE are not set.");
@@ -50,6 +50,23 @@ export function startCodexAgentTask() {
     }
   };
 
+  // Query and log wallet balance on startup for diagnostics
+  (async () => {
+    try {
+      const isMainnet = String(process.env.X402_NETWORK || "").includes("wGHE2Pwd");
+      const algodUrl = isMainnet ? "https://mainnet-api.algonode.cloud" : "https://testnet-api.algonode.cloud";
+      const algod = new algosdk.Algodv2("", algodUrl, "");
+      const info = await algod.accountInformation(signer.address).do();
+      const algoBalance = Number(info.amount || 0) / 1e6;
+      const usdcAssetId = isMainnet ? 31566704 : 10458941;
+      const usdcHolding = (info.assets || []).find((a: any) => Number(a.assetId || a["asset-id"]) === usdcAssetId);
+      const usdcBalance = Number(usdcHolding ? (usdcHolding.amount || 0) : 0) / 1e6;
+      console.log(`[agent-session-task] Payer account ${signer.address}: ${algoBalance} ALGO, ${usdcBalance} USDC (${isMainnet ? "MainNet" : "TestNet"})`);
+    } catch (e) {
+      console.warn(`[agent-session-task] Balance query info:`, e instanceof Error ? e.message : String(e));
+    }
+  })();
+
   const client = new x402Client().register("algorand:*", new ExactAvmScheme(signer));
 
   async function runTask() {
@@ -59,7 +76,7 @@ export function startCodexAgentTask() {
     }
 
     try {
-      console.log(`[agent-session-task] Sending background payment request ($0.25 USDC) to /v2/x402/agent-session-1hour...`);
+      console.log(`[agent-session-task] Sending background payment request ($0.25 USDC) to ${managerUrl}/v2/x402/agent-session-1hour...`);
       const payFetch = wrapFetchWithPayment(fetch, client);
       const response = await payFetch(`${managerUrl}/v2/x402/agent-session-1hour`, {
         method: "POST",
@@ -71,8 +88,11 @@ export function startCodexAgentTask() {
         const data = await response.json();
         console.log(`[agent-session-task] Success: Agent session renewed!`, data);
       } else {
-        const errBody = await response.json().catch(() => null);
-        console.error(`[agent-session-task] Rejected:`, response.status, errBody);
+        const errText = await response.text().catch(() => "");
+        console.error(`[agent-session-task] Rejected: ${response.status} ${response.statusText}`, {
+          body: errText,
+          headers: Object.fromEntries(response.headers.entries()),
+        });
       }
     } catch (error) {
       console.error(`[agent-session-task] Error:`, error instanceof Error ? error.message : String(error));

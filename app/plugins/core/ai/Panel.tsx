@@ -21,7 +21,7 @@ import ToolCall from "./ToolCall";
 import FileChange from "./FileChange";
 import {
   Sparkle, Sparkles, Check, X, Plus,
-  Hammer, Map as MapIcon, Square, AlertTriangle, Key,
+  Hammer, Map as MapIcon, Terminal, Square, AlertTriangle, Key,
   EllipsisVertical, ChevronDown, LoaderCircle, SquaresSubtract, Search, BookOpen, SlidersHorizontal, Mic, PieChart, File,
 } from "lucide-react-native";
 import { Canvas, Circle } from "@shopify/react-native-skia";
@@ -87,7 +87,7 @@ const FILE_MENTION_RESULT_LIMIT = 10;
 // Session tab interface
 interface AITab extends BaseTab {
   sessionId?: string;
-  backend: "opencode" | "codex";
+  backend: AiBackend;
   updatedAt?: number;
 }
 
@@ -98,6 +98,9 @@ const DEFAULT_OPENCODE_AGENTS: { id: string; name: string; icon?: React.Componen
 const DEFAULT_CODEX_AGENTS: { id: string; name: string; icon?: React.ComponentType<any> }[] = [
   { id: "default", name: "Build", icon: Hammer },
   { id: "plan", name: "Plan", icon: MapIcon },
+];
+const DEFAULT_CLI_AGENTS: { id: string; name: string; icon?: React.ComponentType<any> }[] = [
+  { id: "default", name: "Default", icon: Hammer },
 ];
 
 type ComposerSheet = "configure" | "tune" | null;
@@ -172,12 +175,15 @@ function AISkeleton({ colors, paddingTop = 0 }: { colors: any; paddingTop?: numb
 }
 
 function formatBackendSessionTitle(backend: AiBackend, title?: string) {
-  return backend === "codex" ? "Codex" : "OpenCode";
+  if (title?.trim()) return title.trim();
+  if (backend === "codex") return "Codex";
+  if (backend === "opencode") return "OpenCode";
+  return backend === "claude" ? "Claude Code" : "Hermes";
 }
 
 function isBackendUnavailableError(message: string): boolean {
   return (
-    /backend\s+"?(opencode|codex)"?\s+is not available/i.test(message)
+    /backend\s+"?(opencode|codex|claude|hermes)"?\s+is not available/i.test(message)
     || /eunavailable/i.test(message)
     || /no ai backends available/i.test(message)
     || /ai manager not initialized/i.test(message)
@@ -2711,18 +2717,26 @@ export default function AIPanel({ instanceId, isActive, bottomBarHeight }: Plugi
   const [agentsByBackend, setAgentsByBackend] = useState<Record<AiBackend, { id: string; name: string; icon?: React.ComponentType<any> }[]>>({
     opencode: DEFAULT_OPENCODE_AGENTS,
     codex: DEFAULT_CODEX_AGENTS,
+    claude: DEFAULT_CLI_AGENTS,
+    hermes: DEFAULT_CLI_AGENTS,
   });
   const [modelOptionsByBackend, setModelOptionsByBackend] = useState<Record<AiBackend, { id: string; name: string; badges?: string[]; detail?: string }[]>>({
     opencode: [],
     codex: [],
+    claude: [],
+    hermes: [],
   });
   const [selectedAgentByBackend, setSelectedAgentByBackend] = useState<Record<AiBackend, string>>({
     opencode: "build",
     codex: "default",
+    claude: "default",
+    hermes: "default",
   });
   const [selectedModelByBackend, setSelectedModelByBackend] = useState<Record<AiBackend, string>>({
     opencode: "",
     codex: "",
+    claude: "",
+    hermes: "",
   });
   const [codexReasoningEffort, setCodexReasoningEffort] = useState<NonNullable<CodexPromptOptions["reasoningEffort"]>>("medium");
   const [codexSpeed, setCodexSpeed] = useState<string>("default");
@@ -2730,6 +2744,8 @@ export default function AIPanel({ instanceId, isActive, bottomBarHeight }: Plugi
   const [providersByBackend, setProvidersByBackend] = useState<Record<AiBackend, AIProvider[]>>({
     opencode: [],
     codex: [],
+    claude: [],
+    hermes: [],
   });
 
   // UI state
@@ -2776,6 +2792,8 @@ export default function AIPanel({ instanceId, isActive, bottomBarHeight }: Plugi
   const [needsApiKeyByBackend, setNeedsApiKeyByBackend] = useState<Record<AiBackend, boolean>>({
     opencode: false,
     codex: false,
+    claude: false,
+    hermes: false,
   });
   const [isInitialized, setIsInitialized] = useState(false);
   const [isInitialSessionsLoading, setIsInitialSessionsLoading] = useState(false);
@@ -3270,7 +3288,7 @@ export default function AIPanel({ instanceId, isActive, bottomBarHeight }: Plugi
       setIsInitialized(true);
       setIsInitialSessionsLoading(true);
       try {
-        void Promise.allSettled((["opencode", "codex"] as AiBackend[]).map(async (backend) => {
+        void Promise.allSettled((["opencode", "codex", "claude", "hermes"] as AiBackend[]).map(async (backend) => {
           try {
             const agentsList = await ai.getAgents(backend);
             if (Array.isArray(agentsList) && agentsList.length > 0) {
@@ -3290,19 +3308,19 @@ export default function AIPanel({ instanceId, isActive, bottomBarHeight }: Plugi
                 };
               });
               const resolvedAgents = mapped.length === 0
-                ? (backend === "codex" ? DEFAULT_CODEX_AGENTS : DEFAULT_OPENCODE_AGENTS)
+                ? (backend === "codex" ? DEFAULT_CODEX_AGENTS : backend === "opencode" ? DEFAULT_OPENCODE_AGENTS : DEFAULT_CLI_AGENTS)
                 : mapped;
               setAgentsByBackend((prev) => ({ ...prev, [backend]: resolvedAgents }));
               setSelectedAgentByBackend((prev) => ({ ...prev, [backend]: resolvedAgents[0]?.id || "" }));
-            } else if (backend === "codex") {
-              setAgentsByBackend((prev) => ({ ...prev, codex: DEFAULT_CODEX_AGENTS }));
-              setSelectedAgentByBackend((prev) => ({ ...prev, codex: "default" }));
+            } else {
+              const fallback = backend === "codex" ? DEFAULT_CODEX_AGENTS : backend === "opencode" ? DEFAULT_OPENCODE_AGENTS : DEFAULT_CLI_AGENTS;
+              setAgentsByBackend((prev) => ({ ...prev, [backend]: fallback }));
+              setSelectedAgentByBackend((prev) => ({ ...prev, [backend]: fallback[0]?.id || "default" }));
             }
           } catch {
-            if (backend === "codex") {
-              setAgentsByBackend((prev) => ({ ...prev, codex: DEFAULT_CODEX_AGENTS }));
-              setSelectedAgentByBackend((prev) => ({ ...prev, codex: "default" }));
-            }
+            const fallback = backend === "codex" ? DEFAULT_CODEX_AGENTS : backend === "opencode" ? DEFAULT_OPENCODE_AGENTS : DEFAULT_CLI_AGENTS;
+            setAgentsByBackend((prev) => ({ ...prev, [backend]: fallback }));
+            setSelectedAgentByBackend((prev) => ({ ...prev, [backend]: fallback[0]?.id || "default" }));
           }
 
           try {
@@ -3650,7 +3668,7 @@ const selectedModelNameFull = modelOptions.find((m) => m.id === selectedModel)?.
     setBackendPickerVisible(true);
   };
 
-  const createNewTabWithBackend = async (backend: "opencode" | "codex") => {
+  const createNewTabWithBackend = async (backend: AiBackend) => {
     const previousActiveTabId = activeTabId;
     const draftTabId = `draft-${backend}-${Date.now().toString(36)}`;
     const draftTab: AITab = {
@@ -4181,7 +4199,7 @@ const selectedModelNameFull = modelOptions.find((m) => m.id === selectedModel)?.
 
     // Resolve backend + transient draft context
     const activeTab = tabs.find((t) => t.id === activeTabId);
-    const messageBackend: "opencode" | "codex" = activeTab?.backend ?? pendingBackend ?? "opencode";
+    const messageBackend: AiBackend = activeTab?.backend ?? pendingBackend ?? "opencode";
     const selectedAgentForBackend = selectedAgent || undefined;
     let sessId = activeSessionId;
     let localDraftTabId: string | null = activeTab && !activeTab.sessionId ? activeTab.id : null;
@@ -4189,7 +4207,7 @@ const selectedModelNameFull = modelOptions.find((m) => m.id === selectedModel)?.
       localDraftTabId = `draft-send-${Date.now().toString(36)}`;
       const draftTab: AITab = {
         id: localDraftTabId,
-        title: messageBackend === "codex" ? "Codex" : "OpenCode",
+        title: formatBackendSessionTitle(messageBackend),
         backend: messageBackend,
         updatedAt: Date.now(),
       };
@@ -4204,7 +4222,7 @@ const selectedModelNameFull = modelOptions.find((m) => m.id === selectedModel)?.
         const session = await ai.createSession(undefined, messageBackend);
         sessId = session.id;
         const derivedTitle = displayText.replace(/@[\w.\-]+\s*/g, "").trim().slice(0, 40) || displayText.trim().slice(0, 40);
-        const sessionTitle = (session.title || "").trim() || derivedTitle || (messageBackend === "codex" ? "Codex" : "OpenCode");
+        const sessionTitle = (session.title || "").trim() || derivedTitle || formatBackendSessionTitle(messageBackend);
         setSessionTabs((prev) => mergeSessionTabs(prev, [{ ...session, backend: messageBackend } as AISession]));
         setPendingBackend(null);
         const currentActiveTabId = localDraftTabId ?? activeTabId;
@@ -4782,7 +4800,8 @@ const selectedModelNameFull = modelOptions.find((m) => m.id === selectedModel)?.
           {[
             { backend: "codex" as const, label: "Codex", description: t('aiPanel.codexDesc'), Icon: Codex },
             { backend: "opencode" as const, label: "OpenCode", description: t('aiPanel.opencodeDesc'), Icon: OpenCode },
-            { label: "Claude Code", description: t('aiPanel.comingSoon'), disabled: true, Icon: ClaudeCode },
+            { backend: "claude" as const, label: "Claude Code", description: "Use your installed Claude Code CLI.", Icon: ClaudeCode },
+            { backend: "hermes" as const, label: "Hermes", description: "Use your installed Hermes Agent CLI.", Icon: Terminal },
             { label: "Gemini", description: t('aiPanel.comingSoon'), disabled: true, Icon: Gemini },
             { label: "Cursor", description: t('aiPanel.comingSoon'), disabled: true, Icon: Cursor },
           ].map(({ backend, label, description, disabled, Icon }) => (

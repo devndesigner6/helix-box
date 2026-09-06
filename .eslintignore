@@ -1,0 +1,6 @@
+manager/**
+cli/**
+proxy/**
+pty/**
+dist/**
+node_modules/**

@@ -3,7 +3,7 @@
 import { WebSocket } from "ws";
 import qrcode from "qrcode-terminal";
 import shell from "shelljs";
-import { createAiManager } from "./ai/index.js";
+import { createAiManager, isAiBackend } from "./ai/index.js";
 import type { AiManager, AiBackend } from "./ai/index.js";
 import type { Message, Response } from "./transport/protocol.js";
 import { V2SessionTransport } from "./transport/v2.js";
@@ -39,6 +39,8 @@ const PTY_RELEASE_BASE_URL = "https://github.com/devndesigner6/helix-box/release
 const AI_RUNTIME_INSTALL_CANDIDATES: Record<AiBackend, string[]> = {
   opencode: ["opencode-ai", "@opencode-ai/cli", "opencode"],
   codex: ["@openai/codex", "codex"],
+  claude: ["@anthropic-ai/claude-code", "claude"],
+  hermes: ["hermes-agent", "hermes"],
 };
 const PTY_RELEASES: Record<string, { fileName: string; url: string }> = {
   "linux:x64": {
@@ -3066,7 +3068,8 @@ async function processMessage(message: Message): Promise<Response> {
 
       case "ai": {
         if (!aiManager) throw Object.assign(new Error("AI manager not initialized"), { code: "EUNAVAILABLE" });
-        const backend = ((payload.backend as string) === "codex" ? "codex" : "opencode") as AiBackend;
+        const requestedBackend = payload.backend as string | undefined;
+        const backend = isAiBackend(requestedBackend) ? requestedBackend : "opencode";
         switch (action) {
           case "backends":
             result = { backends: aiManager.availableBackends() };
@@ -3437,6 +3440,11 @@ function isCommandAvailable(command: string): boolean {
   return !err;
 }
 
+function isBackendAvailable(backend: AiBackend): boolean {
+  const command = backend === "opencode" ? "opencode" : backend === "codex" ? "codex" : backend;
+  return isCommandAvailable(command);
+}
+
 function askYesNo(question: string, defaultValue = false): Promise<boolean> {
   if (!process.stdin.isTTY || !process.stdout.isTTY) return Promise.resolve(false);
   return new Promise((resolve) => {
@@ -3466,7 +3474,7 @@ function installLatestNpmPackage(pkg: string): boolean {
 
 async function ensureAiCliRuntimes(): Promise<void> {
   const missingBackends = (Object.keys(AI_RUNTIME_INSTALL_CANDIDATES) as AiBackend[])
-    .filter((backend) => !isCommandAvailable(backend));
+    .filter((backend) => !isBackendAvailable(backend));
   if (missingBackends.length === 0) return;
 
   if (!process.stdin.isTTY || !process.stdout.isTTY) {
@@ -3482,13 +3490,13 @@ async function ensureAiCliRuntimes(): Promise<void> {
   }
 
   for (const backend of missingBackends) {
-    if (isCommandAvailable(backend)) continue;
+    if (isBackendAvailable(backend)) continue;
     const candidates = AI_RUNTIME_INSTALL_CANDIDATES[backend];
     let installed = false;
     for (const pkg of candidates) {
       console.log(`[ai] Installing ${backend} via npm package ${pkg}@latest...`);
       if (!installLatestNpmPackage(pkg)) continue;
-      if (isCommandAvailable(backend)) {
+      if (isBackendAvailable(backend)) {
         installed = true;
         console.log(`[ai] ${backend} installed successfully.`);
         break;

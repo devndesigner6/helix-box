@@ -1,3 +1,7 @@
+import { inject } from '@vercel/analytics';
+
+inject();
+
 (function () {
   var root = document.documentElement;
   var stored = localStorage.getItem('theme');

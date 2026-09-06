@@ -1,10 +1,25 @@
 import type { ServerWebSocket } from "bun";
 import { Database } from "bun:sqlite";
-import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from "crypto";
+import {
+  createHash,
+  createHmac,
+  randomBytes,
+  randomUUID,
+  timingSafeEqual,
+} from "crypto";
 import { existsSync, rmSync } from "fs";
 import { createX402App } from "./x402-app.js";
-import { CLI_HOURLY_ROUTE, PREMIUM_WEEKLY_ROUTE, AGENT_SESSION_1HOUR_ROUTE, CODEX_AGENT_ROUTE, createX402Config } from "./x402-payment.js";
-import { startAgentSessionTask } from "./agent-session-task.js";
+import {
+  CLI_HOURLY_ROUTE,
+  PREMIUM_WEEKLY_ROUTE,
+  AGENT_SESSION_1HOUR_ROUTE,
+  CODEX_AGENT_ROUTE,
+  createX402Config,
+} from "./x402-payment.js";
+import {
+  startAgentSessionTask,
+  getAgentSessionTaskStatus,
+} from "./agent-session-task.js";
 
 const CHARSET = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
 const CODE_LENGTH = 10;
@@ -55,7 +70,8 @@ interface AssembleWebSocketData {
   role: Role;
 }
 
-type WebSocketData = SessionWebSocketData | ProxyWebSocketData | AssembleWebSocketData;
+type WebSocketData =
+  SessionWebSocketData | ProxyWebSocketData | AssembleWebSocketData;
 
 interface ProxyTunnel {
   cli: ServerWebSocket<ProxyWebSocketData> | null;
@@ -78,8 +94,14 @@ interface Session {
   reconnectDeadline: number | null;
   reconnectTimer: Timer | null;
   sockets: {
-    cli: { control: ServerWebSocket<SessionWebSocketData> | null; data: ServerWebSocket<SessionWebSocketData> | null };
-    app: { control: ServerWebSocket<SessionWebSocketData> | null; data: ServerWebSocket<SessionWebSocketData> | null };
+    cli: {
+      control: ServerWebSocket<SessionWebSocketData> | null;
+      data: ServerWebSocket<SessionWebSocketData> | null;
+    };
+    app: {
+      control: ServerWebSocket<SessionWebSocketData> | null;
+      data: ServerWebSocket<SessionWebSocketData> | null;
+    };
   };
   tunnels: Map<string, ProxyTunnel>;
 }
@@ -98,7 +120,13 @@ interface ManagerSession {
   resumeToken: string;
   primary: string;
   backup: string | null;
-  state: "pending" | "active" | "app_offline_grace" | "cli_offline_grace" | "ended" | "expired";
+  state:
+    | "pending"
+    | "active"
+    | "app_offline_grace"
+    | "cli_offline_grace"
+    | "ended"
+    | "expired";
   createdAt: number;
   expiresAt: number;
   updatedAt: number;
@@ -167,11 +195,18 @@ interface GatewayControlEvent {
   networkInBps?: number;
   networkOutBps?: number;
   lastTelemetry?: number;
-  event?: "peer_connected" | "app_disconnected" | "session_ended" | "session_expired";
-  connectionAction?: "socket_connected" | "socket_disconnected" | "session_end_requested";
+  event?:
+    "peer_connected" | "app_disconnected" | "session_ended" | "session_expired";
+  connectionAction?:
+    "socket_connected" | "socket_disconnected" | "session_end_requested";
   resumeToken?: string;
   reconnectDeadline?: number | null;
-  command?: "close_session" | "set_reconnect_grace" | "clear_reconnect_grace" | "set_cli_reconnect_grace" | "ring_update";
+  command?:
+    | "close_session"
+    | "set_reconnect_grace"
+    | "clear_reconnect_grace"
+    | "set_cli_reconnect_grace"
+    | "ring_update";
   ring?: string[];
   role?: Role;
   channel?: string;
@@ -264,7 +299,13 @@ class Mutex {
   }
 }
 
-type SessionState = "pending" | "active" | "app_offline_grace" | "cli_offline_grace" | "ended" | "expired";
+type SessionState =
+  | "pending"
+  | "active"
+  | "app_offline_grace"
+  | "cli_offline_grace"
+  | "ended"
+  | "expired";
 
 interface RateLimitPolicy {
   windowMs: number;
@@ -289,7 +330,8 @@ interface AuditLogRow {
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Proxy-Password, Payment-Signature, X-Payment, Access-Control-Expose-Headers",
+  "Access-Control-Allow-Headers":
+    "Content-Type, Authorization, X-Proxy-Password, Payment-Signature, X-Payment, Access-Control-Expose-Headers",
 };
 
 function generateSecureCode(): string {
@@ -310,7 +352,8 @@ function generateSessionPassword(): string {
 }
 
 function generatePersistentSecret(length = 256): string {
-  const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const alphabet =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   const bytes = randomBytes(length);
   let out = "";
   for (let i = 0; i < length; i++) {
@@ -320,14 +363,21 @@ function generatePersistentSecret(length = 256): string {
 }
 
 function isPeerFullyConnected(session: Session, role: Role): boolean {
-  return session.sockets[role].control !== null && session.sockets[role].data !== null;
+  return (
+    session.sockets[role].control !== null &&
+    session.sockets[role].data !== null
+  );
 }
 
 function getOppositeRole(role: Role): Role {
   return role === "cli" ? "app" : "cli";
 }
 
-function sendSystemMessage(ws: ServerWebSocket<WebSocketData>, type: string, payload: Record<string, unknown> = {}): void {
+function sendSystemMessage(
+  ws: ServerWebSocket<WebSocketData>,
+  type: string,
+  payload: Record<string, unknown> = {},
+): void {
   ws.send(JSON.stringify({ type, ...payload }));
 }
 
@@ -340,7 +390,8 @@ function normalizeGatewayUrl(input: string | null): string | null {
     if (parsed.protocol !== "https:") {
       return null;
     }
-    const path = parsed.pathname === "/" ? "" : parsed.pathname.replace(/\/+$/, "");
+    const path =
+      parsed.pathname === "/" ? "" : parsed.pathname.replace(/\/+$/, "");
     return `${parsed.protocol}//${parsed.host}${path}`;
   } catch {
     return null;
@@ -383,25 +434,39 @@ function verifyJwtToken(
   token: string,
   secret: string,
   expectedAudience: string,
-  expectedIssuer: string
-): (Record<string, unknown> & { iss: string; aud: string; sub: string; iat: number; exp: number }) | null {
+  expectedIssuer: string,
+):
+  | (Record<string, unknown> & {
+      iss: string;
+      aud: string;
+      sub: string;
+      iat: number;
+      exp: number;
+    })
+  | null {
   if (!token || !secret) return null;
   const parts = token.split(".");
   if (parts.length !== 3) return null;
   const [encodedHeader, encodedPayload, encodedSig] = parts;
   try {
-    const header = JSON.parse(fromBase64Url(encodedHeader).toString("utf-8")) as {
+    const header = JSON.parse(
+      fromBase64Url(encodedHeader).toString("utf-8"),
+    ) as {
       alg?: string;
       typ?: string;
     };
     if (header.alg !== "HS256" || header.typ !== "JWT") return null;
     const signingInput = `${encodedHeader}.${encodedPayload}`;
-    const expectedSig = createHmac("sha256", secret).update(signingInput).digest();
+    const expectedSig = createHmac("sha256", secret)
+      .update(signingInput)
+      .digest();
     const actualSig = fromBase64Url(encodedSig);
     if (expectedSig.length !== actualSig.length) return null;
     if (!timingSafeEqual(expectedSig, actualSig)) return null;
 
-    const claims = JSON.parse(fromBase64Url(encodedPayload).toString("utf-8")) as {
+    const claims = JSON.parse(
+      fromBase64Url(encodedPayload).toString("utf-8"),
+    ) as {
       iss?: unknown;
       aud?: unknown;
       sub?: unknown;
@@ -413,8 +478,10 @@ function verifyJwtToken(
     if (claims.iss !== expectedIssuer) return null;
     if (claims.aud !== expectedAudience) return null;
     if (typeof claims.sub !== "string" || !claims.sub) return null;
-    if (typeof claims.iat !== "number" || !Number.isFinite(claims.iat)) return null;
-    if (typeof claims.exp !== "number" || !Number.isFinite(claims.exp)) return null;
+    if (typeof claims.iat !== "number" || !Number.isFinite(claims.iat))
+      return null;
+    if (typeof claims.exp !== "number" || !Number.isFinite(claims.exp))
+      return null;
     if (claims.exp <= now || claims.iat > now + 30) return null;
     return claims as any;
   } catch {
@@ -426,7 +493,12 @@ function extractClientIp(req: Request): string {
   const forwardedFor = req.headers.get("x-forwarded-for") || "";
   const realIp = req.headers.get("x-real-ip") || "";
   const cfIp = req.headers.get("cf-connecting-ip") || "";
-  const raw = (forwardedFor.split(",")[0] || realIp || cfIp || "unknown").trim();
+  const raw = (
+    forwardedFor.split(",")[0] ||
+    realIp ||
+    cfIp ||
+    "unknown"
+  ).trim();
   return raw || "unknown";
 }
 
@@ -442,10 +514,20 @@ function messageByteLength(message: string | ArrayBuffer | Uint8Array): number {
   return message.byteLength;
 }
 
-function parseProxyControlMessage(message: string | ArrayBuffer | Uint8Array): { action: "fin" | "rst"; reason?: string } | null {
-  const text = typeof message === "string" ? message : Buffer.from(message as ArrayBufferLike).toString("utf-8");
+function parseProxyControlMessage(
+  message: string | ArrayBuffer | Uint8Array,
+): { action: "fin" | "rst"; reason?: string } | null {
+  const text =
+    typeof message === "string"
+      ? message
+      : Buffer.from(message as ArrayBufferLike).toString("utf-8");
   try {
-    const parsed = JSON.parse(text) as { v?: number; t?: string; action?: string; reason?: string };
+    const parsed = JSON.parse(text) as {
+      v?: number;
+      t?: string;
+      action?: string;
+      reason?: string;
+    };
     if (parsed?.v !== 1 || parsed?.t !== "proxy_ctrl") return null;
     if (parsed.action !== "fin" && parsed.action !== "rst") return null;
     return {
@@ -457,7 +539,10 @@ function parseProxyControlMessage(message: string | ArrayBuffer | Uint8Array): {
   }
 }
 
-function makeProxyControlMessage(action: "fin" | "rst", reason?: string): string {
+function makeProxyControlMessage(
+  action: "fin" | "rst",
+  reason?: string,
+): string {
   return JSON.stringify({ v: 1, t: "proxy_ctrl", action, reason });
 }
 
@@ -465,14 +550,25 @@ function redactSensitive(input: unknown): unknown {
   if (input == null) return input;
   if (typeof input === "string") {
     return input
-      .replace(/([A-Za-z0-9\-_]{20,}\.[A-Za-z0-9\-_]{20,}\.[A-Za-z0-9\-_]{20,})/g, "[redacted_jwt]")
+      .replace(
+        /([A-Za-z0-9\-_]{20,}\.[A-Za-z0-9\-_]{20,}\.[A-Za-z0-9\-_]{20,})/g,
+        "[redacted_jwt]",
+      )
       .replace(/[A-Za-z0-9+/=_-]{40,}/g, "[redacted_secret]");
   }
   if (Array.isArray(input)) return input.map((v) => redactSensitive(v));
   if (typeof input === "object") {
     const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(input as Record<string, unknown>)) {
-      if (["password", "token", "resumeToken", "authorization", "x-proxy-password"].includes(k)) {
+      if (
+        [
+          "password",
+          "token",
+          "resumeToken",
+          "authorization",
+          "x-proxy-password",
+        ].includes(k)
+      ) {
         out[k] = "[redacted]";
       } else {
         out[k] = redactSensitive(v);
@@ -489,20 +585,30 @@ function redactSensitive(input: unknown): unknown {
 
 function startManager(): void {
   startAgentSessionTask();
-  const managerAdminPassword = process.env.MANAGER_ADMIN_PASSWORD || "qkaFPYWNEcwhVyZnOjCQHSoM7AmpDi6U";
+  const managerAdminPassword =
+    process.env.MANAGER_ADMIN_PASSWORD || "qkaFPYWNEcwhVyZnOjCQHSoM7AmpDi6U";
   const managerAdminTokenSecret = managerAdminPassword;
-  const allowLegacyAdminPassword = process.env.MANAGER_ALLOW_LEGACY_ADMIN_PASSWORD === "1";
-  const auditRetentionDays = Math.max(1, Number(process.env.MANAGER_AUDIT_RETENTION_DAYS || 30));
+  const allowLegacyAdminPassword =
+    process.env.MANAGER_ALLOW_LEGACY_ADMIN_PASSWORD === "1";
+  const auditRetentionDays = Math.max(
+    1,
+    Number(process.env.MANAGER_AUDIT_RETENTION_DAYS || 30),
+  );
   const resumeTokenTtlMs = Math.max(
     60_000,
-    Number(process.env.MANAGER_RESUME_TOKEN_TTL_MS || DEFAULT_RESUME_TOKEN_TTL_MS)
+    Number(
+      process.env.MANAGER_RESUME_TOKEN_TTL_MS || DEFAULT_RESUME_TOKEN_TTL_MS,
+    ),
   );
-  const configured = (process.env.PROXIES || "https://helixbox-proxy.onrender.com")
+  const configured = (
+    process.env.PROXIES || "https://helixbox-proxy.onrender.com"
+  )
     .split(",")
     .map((x) => normalizeGatewayUrl(x.trim()))
     .filter((x): x is string => !!x);
   const sandmanAuthToken = (process.env.SANDMAN_AUTH_TOKEN || "").trim();
-  const sandmanPublicUrl = normalizeGatewayUrl(process.env.SANDMAN_URL || "") || "";
+  const sandmanPublicUrl =
+    normalizeGatewayUrl(process.env.SANDMAN_URL || "") || "";
   const dbPath = process.env.MANAGER_DB_PATH || "manager.db";
   const resetManagerState = process.argv.includes("--new");
 
@@ -511,7 +617,9 @@ function startManager(): void {
       if (!existsSync(path)) continue;
       rmSync(path, { force: true });
     }
-    console.log(`[manager] starting fresh with --new; removed ${dbPath} and sqlite sidecars if present`);
+    console.log(
+      `[manager] starting fresh with --new; removed ${dbPath} and sqlite sidecars if present`,
+    );
   }
 
   const db = new Database(dbPath, {
@@ -543,33 +651,51 @@ function startManager(): void {
     db.run(`ALTER TABLE proxies ADD COLUMN password TEXT NOT NULL DEFAULT ''`);
   } catch {}
   try {
-    db.run(`ALTER TABLE proxies ADD COLUMN gateway_id TEXT NOT NULL DEFAULT ''`);
+    db.run(
+      `ALTER TABLE proxies ADD COLUMN gateway_id TEXT NOT NULL DEFAULT ''`,
+    );
   } catch {}
   try {
-    db.run(`ALTER TABLE proxies ADD COLUMN state TEXT NOT NULL DEFAULT 'active'`);
+    db.run(
+      `ALTER TABLE proxies ADD COLUMN state TEXT NOT NULL DEFAULT 'active'`,
+    );
   } catch {
     // Column already exists for upgraded databases.
   }
   try {
-    db.run(`ALTER TABLE proxies ADD COLUMN state_source TEXT NOT NULL DEFAULT 'manual'`);
+    db.run(
+      `ALTER TABLE proxies ADD COLUMN state_source TEXT NOT NULL DEFAULT 'manual'`,
+    );
   } catch {}
   try {
-    db.run(`ALTER TABLE proxies ADD COLUMN cpu_percent REAL NOT NULL DEFAULT 0`);
+    db.run(
+      `ALTER TABLE proxies ADD COLUMN cpu_percent REAL NOT NULL DEFAULT 0`,
+    );
   } catch {}
   try {
-    db.run(`ALTER TABLE proxies ADD COLUMN memory_used_mb REAL NOT NULL DEFAULT 0`);
+    db.run(
+      `ALTER TABLE proxies ADD COLUMN memory_used_mb REAL NOT NULL DEFAULT 0`,
+    );
   } catch {}
   try {
-    db.run(`ALTER TABLE proxies ADD COLUMN memory_total_mb REAL NOT NULL DEFAULT 0`);
+    db.run(
+      `ALTER TABLE proxies ADD COLUMN memory_total_mb REAL NOT NULL DEFAULT 0`,
+    );
   } catch {}
   try {
-    db.run(`ALTER TABLE proxies ADD COLUMN network_in_bps REAL NOT NULL DEFAULT 0`);
+    db.run(
+      `ALTER TABLE proxies ADD COLUMN network_in_bps REAL NOT NULL DEFAULT 0`,
+    );
   } catch {}
   try {
-    db.run(`ALTER TABLE proxies ADD COLUMN network_out_bps REAL NOT NULL DEFAULT 0`);
+    db.run(
+      `ALTER TABLE proxies ADD COLUMN network_out_bps REAL NOT NULL DEFAULT 0`,
+    );
   } catch {}
   try {
-    db.run(`ALTER TABLE proxies ADD COLUMN last_telemetry INTEGER NOT NULL DEFAULT 0`);
+    db.run(
+      `ALTER TABLE proxies ADD COLUMN last_telemetry INTEGER NOT NULL DEFAULT 0`,
+    );
   } catch {}
   db.run(`
     CREATE TABLE IF NOT EXISTS sessions (
@@ -791,10 +917,18 @@ function startManager(): void {
     WHERE resume_token = ?1
     LIMIT 1
   `);
-  const codeExistsStmt = db.query(`SELECT 1 FROM sessions WHERE code = ?1 LIMIT 1`);
-  const getEntitlementStmt = db.query(`SELECT password_hash as passwordHash, code, expires_at as expiresAt, created_at as createdAt FROM x402_entitlements WHERE password_hash = ?1 LIMIT 1`);
-  const upsertEntitlementStmt = db.query(`INSERT INTO x402_entitlements (password_hash, code, expires_at, created_at) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(password_hash) DO UPDATE SET expires_at = excluded.expires_at`);
-  const deleteExpiredEntitlementsStmt = db.query(`DELETE FROM x402_entitlements WHERE expires_at <= ?1`);
+  const codeExistsStmt = db.query(
+    `SELECT 1 FROM sessions WHERE code = ?1 LIMIT 1`,
+  );
+  const getEntitlementStmt = db.query(
+    `SELECT password_hash as passwordHash, code, expires_at as expiresAt, created_at as createdAt FROM x402_entitlements WHERE password_hash = ?1 LIMIT 1`,
+  );
+  const upsertEntitlementStmt = db.query(
+    `INSERT INTO x402_entitlements (password_hash, code, expires_at, created_at) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(password_hash) DO UPDATE SET expires_at = excluded.expires_at`,
+  );
+  const deleteExpiredEntitlementsStmt = db.query(
+    `DELETE FROM x402_entitlements WHERE expires_at <= ?1`,
+  );
   const getAssembleSessionStmt = db.query(`
     SELECT code, created_at as createdAt, expires_at as expiresAt, paid_until as paidUntil, password, app_acked as appAcked, cli_acked as cliAcked
     FROM assemble_sessions WHERE code = ?1 LIMIT 1
@@ -812,7 +946,9 @@ function startManager(): void {
   const deleteExpiredAssembleSessionsStmt = db.query(`
     DELETE FROM assemble_sessions WHERE expires_at <= ?1
   `);
-  const deleteSessionByCodeStmt = db.query(`DELETE FROM sessions WHERE code = ?1`);
+  const deleteSessionByCodeStmt = db.query(
+    `DELETE FROM sessions WHERE code = ?1`,
+  );
   const cleanupExpiredPendingStmt = db.query(`
     UPDATE sessions
     SET state = 'expired', updated_at = ?1, ended_at = COALESCE(ended_at, ?1)
@@ -898,7 +1034,9 @@ function startManager(): void {
     VALUES (?1, ?2, '', 'active', 'manual', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
     ON CONFLICT(url) DO UPDATE SET password = COALESCE(NULLIF(excluded.password, ''), proxies.password)
   `);
-  const getProxyPasswordStmt = db.query(`SELECT password FROM proxies WHERE url = ?1 LIMIT 1`);
+  const getProxyPasswordStmt = db.query(
+    `SELECT password FROM proxies WHERE url = ?1 LIMIT 1`,
+  );
   const removeProxyStmt = db.query(`DELETE FROM proxies WHERE url = ?1`);
   const markStaleProxiesDrainingStmt = db.query(`
     UPDATE proxies
@@ -1020,7 +1158,9 @@ function startManager(): void {
     WHERE s.state = 'cli_offline_grace'
       AND v.last_heartbeat < ?1
   `);
-  const deleteVmHeartbeatStmt = db.query(`DELETE FROM vm_heartbeats WHERE sandbox_id = ?1`);
+  const deleteVmHeartbeatStmt = db.query(
+    `DELETE FROM vm_heartbeats WHERE sandbox_id = ?1`,
+  );
   const listExpiredGraceSessionsStmt = db.query(`
     SELECT session_id as sessionId, resume_token as resumeToken, primary_gateway as primaryGateway, backup_gateway as backupGateway
     FROM sessions
@@ -1070,7 +1210,10 @@ function startManager(): void {
     addProxyStmt.run(proxy, "");
   }
 
-  const rateLimitBuckets = new Map<string, { count: number; resetAt: number }>();
+  const rateLimitBuckets = new Map<
+    string,
+    { count: number; resetAt: number }
+  >();
   const failureBuckets = new Map<string, { count: number; resetAt: number }>();
   const temporaryBlocks = new Map<string, number>();
   const recentGatewayEventIds = new Map<string, number>();
@@ -1082,7 +1225,11 @@ function startManager(): void {
     duplicateGatewayEvents: 0,
     alertsRaised: 0,
   };
-  const checkRateLimit = (key: string, limit: number, windowMs: number): boolean => {
+  const checkRateLimit = (
+    key: string,
+    limit: number,
+    windowMs: number,
+  ): boolean => {
     const now = Date.now();
     const existing = rateLimitBuckets.get(key);
     if (!existing || existing.resetAt <= now) {
@@ -1096,15 +1243,19 @@ function startManager(): void {
   const enforceRateLimit = (
     req: Request,
     keyPrefix: string,
-    policy: RateLimitPolicy
+    policy: RateLimitPolicy,
   ): Response | null => {
     const ip = extractClientIp(req);
     const subnet = toIpv4Subnet24(ip);
-    const ipAllowed = checkRateLimit(`${keyPrefix}:ip:${ip}`, policy.perIp, policy.windowMs);
+    const ipAllowed = checkRateLimit(
+      `${keyPrefix}:ip:${ip}`,
+      policy.perIp,
+      policy.windowMs,
+    );
     const subnetAllowed = checkRateLimit(
       `${keyPrefix}:subnet:${subnet}`,
       policy.perSubnet,
-      policy.windowMs
+      policy.windowMs,
     );
     if (ipAllowed && subnetAllowed) return null;
     securityMetrics.rateLimited += 1;
@@ -1116,20 +1267,23 @@ function startManager(): void {
       metadata: { keyPrefix, ip, subnet, windowMs: policy.windowMs },
     });
     return Response.json(
-      { error: "rate_limited", message: "Too many requests. Please try again shortly." },
+      {
+        error: "rate_limited",
+        message: "Too many requests. Please try again shortly.",
+      },
       {
         status: 429,
         headers: {
           ...corsHeaders,
           "Retry-After": String(Math.ceil(policy.windowMs / 1000)),
         },
-      }
+      },
     );
   };
   const recordFailureAndMaybeBlock = (
     scope: string,
     req: Request,
-    opts: { threshold: number; windowMs: number; blockMs: number }
+    opts: { threshold: number; windowMs: number; blockMs: number },
   ): void => {
     const ip = extractClientIp(req);
     const subnet = toIpv4Subnet24(ip);
@@ -1150,12 +1304,20 @@ function startManager(): void {
           category: "abuse_block",
           alertKey: `temp_block:${key}`,
           message: `Temporary block activated for ${scope}`,
-          metadata: { scope, key, threshold: opts.threshold, blockMs: opts.blockMs },
+          metadata: {
+            scope,
+            key,
+            threshold: opts.threshold,
+            blockMs: opts.blockMs,
+          },
         });
       }
     }
   };
-  const enforceTemporaryBlock = (req: Request, scope: string): Response | null => {
+  const enforceTemporaryBlock = (
+    req: Request,
+    scope: string,
+  ): Response | null => {
     const ip = extractClientIp(req);
     const subnet = toIpv4Subnet24(ip);
     const now = Date.now();
@@ -1172,14 +1334,17 @@ function startManager(): void {
           metadata: { scope, key, retryAfterMs: until - now },
         });
         return Response.json(
-          { error: "temporarily_blocked", message: "Temporarily blocked due to repeated failures." },
+          {
+            error: "temporarily_blocked",
+            message: "Temporarily blocked due to repeated failures.",
+          },
           {
             status: 429,
             headers: {
               ...corsHeaders,
               "Retry-After": String(Math.ceil((until - now) / 1000)),
             },
-          }
+          },
         );
       }
     }
@@ -1203,11 +1368,14 @@ function startManager(): void {
       if (until <= now) recentAlertKeys.delete(key);
     }
   }, 60_000);
-  setInterval(() => {
-    const cutoff = Date.now() - auditRetentionDays * 24 * 60 * 60 * 1000;
-    purgeOldAuditLogsStmt.run(cutoff);
-    purgeOldSecurityAlertsStmt.run(cutoff);
-  }, 60 * 60 * 1000);
+  setInterval(
+    () => {
+      const cutoff = Date.now() - auditRetentionDays * 24 * 60 * 60 * 1000;
+      purgeOldAuditLogsStmt.run(cutoff);
+      purgeOldSecurityAlertsStmt.run(cutoff);
+    },
+    60 * 60 * 1000,
+  );
   setInterval(() => {
     const staleBefore = Date.now() - STALE_GATEWAY_MS;
     const result = markStaleProxiesDrainingStmt.run(staleBefore);
@@ -1226,7 +1394,10 @@ function startManager(): void {
     message: string;
     metadata?: Record<string, unknown>;
   }): void => {
-    const safeMetadata = redactSensitive(entry.metadata || {}) as Record<string, unknown>;
+    const safeMetadata = redactSensitive(entry.metadata || {}) as Record<
+      string,
+      unknown
+    >;
     insertAuditLogStmt.run(
       Number(entry.ts || Date.now()),
       entry.actorType,
@@ -1237,7 +1408,7 @@ function startManager(): void {
       entry.sourceIp || "system",
       entry.status,
       entry.message,
-      JSON.stringify(safeMetadata)
+      JSON.stringify(safeMetadata),
     );
   };
 
@@ -1252,14 +1423,17 @@ function startManager(): void {
     const existingUntil = recentAlertKeys.get(entry.alertKey) || 0;
     if (existingUntil > now) return;
     recentAlertKeys.set(entry.alertKey, now + 5 * 60_000);
-    const safeMetadata = redactSensitive(entry.metadata || {}) as Record<string, unknown>;
+    const safeMetadata = redactSensitive(entry.metadata || {}) as Record<
+      string,
+      unknown
+    >;
     insertSecurityAlertStmt.run(
       now,
       entry.severity,
       entry.category,
       entry.alertKey,
       entry.message,
-      JSON.stringify(safeMetadata)
+      JSON.stringify(safeMetadata),
     );
     securityMetrics.alertsRaised += 1;
     writeAuditLog({
@@ -1280,8 +1454,19 @@ function startManager(): void {
   };
 
   const allowedTransitions: Record<SessionState, Set<SessionState>> = {
-    pending: new Set<SessionState>(["active", "app_offline_grace", "cli_offline_grace", "ended", "expired"]),
-    active: new Set<SessionState>(["app_offline_grace", "cli_offline_grace", "ended", "expired"]),
+    pending: new Set<SessionState>([
+      "active",
+      "app_offline_grace",
+      "cli_offline_grace",
+      "ended",
+      "expired",
+    ]),
+    active: new Set<SessionState>([
+      "app_offline_grace",
+      "cli_offline_grace",
+      "ended",
+      "expired",
+    ]),
     app_offline_grace: new Set<SessionState>(["active", "ended", "expired"]),
     cli_offline_grace: new Set<SessionState>(["active", "ended", "expired"]),
     ended: new Set<SessionState>([]),
@@ -1293,10 +1478,14 @@ function startManager(): void {
     nextState: SessionState,
     reconnectDeadline: number | null,
     updatedAt: number,
-    markEnded: 0 | 1
+    markEnded: 0 | 1,
   ): { ok: boolean; reason: string } => {
-    const currentRow = getSessionStateStmt.get(resumeToken) as { state?: SessionState; pairedAt?: number | null } | null;
-    if (!currentRow || !currentRow.state) return { ok: false, reason: "not_found" };
+    const currentRow = getSessionStateStmt.get(resumeToken) as {
+      state?: SessionState;
+      pairedAt?: number | null;
+    } | null;
+    if (!currentRow || !currentRow.state)
+      return { ok: false, reason: "not_found" };
     const currentState = currentRow.state;
     if (currentState === nextState) {
       const info = forceUpdateSessionStateStmt.run(
@@ -1304,25 +1493,35 @@ function startManager(): void {
         nextState,
         reconnectDeadline,
         updatedAt,
-        markEnded
+        markEnded,
       ) as { changes?: number };
-      if (nextState === "active" && !Number(currentRow.pairedAt || 0) && Number(info?.changes || 0) > 0) {
+      if (
+        nextState === "active" &&
+        !Number(currentRow.pairedAt || 0) &&
+        Number(info?.changes || 0) > 0
+      ) {
         markSessionPairedStmt.run(resumeToken, updatedAt);
       }
-      if ((nextState === "active" || nextState === "ended" || nextState === "expired") && Number(info?.changes || 0) > 0) {
+      if (
+        (nextState === "active" ||
+          nextState === "ended" ||
+          nextState === "expired") &&
+        Number(info?.changes || 0) > 0
+      ) {
         clearReattachSession(resumeToken);
       }
       return { ok: Number(info?.changes || 0) > 0, reason: "noop" };
     }
     const allowed = allowedTransitions[currentState]?.has(nextState) || false;
-    if (!allowed) return { ok: false, reason: `blocked:${currentState}->${nextState}` };
+    if (!allowed)
+      return { ok: false, reason: `blocked:${currentState}->${nextState}` };
     const info = updateSessionStateStmt.run(
       resumeToken,
       currentState,
       nextState,
       reconnectDeadline,
       updatedAt,
-      markEnded
+      markEnded,
     ) as { changes?: number };
     if (Number(info?.changes || 0) > 0) {
       if (nextState === "active" && !Number(currentRow.pairedAt || 0)) {
@@ -1331,7 +1530,11 @@ function startManager(): void {
       if (nextState === "ended" || nextState === "expired") {
         deleteSessionRuntimeStmt.run(resumeToken);
       }
-      if (nextState === "active" || nextState === "ended" || nextState === "expired") {
+      if (
+        nextState === "active" ||
+        nextState === "ended" ||
+        nextState === "expired"
+      ) {
         clearReattachSession(resumeToken);
       }
       return { ok: true, reason: "transitioned" };
@@ -1341,34 +1544,60 @@ function startManager(): void {
 
   const getResumeTokenStatus = (
     row: any,
-    now: number
+    now: number,
   ): { valid: boolean; reason: string; tokenExpiresAt: number } => {
     const state = String(row?.state || "");
     const createdAt = Number(row?.created_at ?? row?.createdAt ?? 0);
     const expiresAt = Number(row?.expires_at ?? row?.expiresAt ?? 0);
-    const reconnectDeadline = Number(row?.reconnect_deadline ?? row?.reconnectDeadline ?? 0);
+    const reconnectDeadline = Number(
+      row?.reconnect_deadline ?? row?.reconnectDeadline ?? 0,
+    );
     const tokenExpiresAt = createdAt > 0 ? createdAt + resumeTokenTtlMs : now;
 
     if (state === "ended" || state === "expired") {
       return { valid: false, reason: "session_finalized", tokenExpiresAt };
     }
     if (state === "pending" && expiresAt > 0 && expiresAt <= now) {
-      transitionSessionState(String(row?.resume_token ?? row?.resumeToken ?? ""), "expired", null, now, 1);
+      transitionSessionState(
+        String(row?.resume_token ?? row?.resumeToken ?? ""),
+        "expired",
+        null,
+        now,
+        1,
+      );
       return { valid: false, reason: "pairing_expired", tokenExpiresAt };
     }
-    if (state === "app_offline_grace" && reconnectDeadline > 0 && reconnectDeadline <= now) {
-      transitionSessionState(String(row?.resume_token ?? row?.resumeToken ?? ""), "expired", null, now, 1);
-      return { valid: false, reason: "reconnect_grace_expired", tokenExpiresAt };
+    if (
+      state === "app_offline_grace" &&
+      reconnectDeadline > 0 &&
+      reconnectDeadline <= now
+    ) {
+      transitionSessionState(
+        String(row?.resume_token ?? row?.resumeToken ?? ""),
+        "expired",
+        null,
+        now,
+        1,
+      );
+      return {
+        valid: false,
+        reason: "reconnect_grace_expired",
+        tokenExpiresAt,
+      };
     }
     if (tokenExpiresAt <= now) {
-      return { valid: false, reason: "resume_token_ttl_expired", tokenExpiresAt };
+      return {
+        valid: false,
+        reason: "resume_token_ttl_expired",
+        tokenExpiresAt,
+      };
     }
     return { valid: true, reason: "ok", tokenExpiresAt };
   };
 
   const buildSessionSnapshot = (
     row: any,
-    now: number
+    now: number,
   ): {
     exists: boolean;
     valid: boolean;
@@ -1400,7 +1629,8 @@ function startManager(): void {
       primary: row.primary_gateway ?? row.primaryGateway ?? row.primary,
       backup: row.backup_gateway ?? row.backupGateway ?? row.backup,
       state: row.state,
-      reconnectDeadline: row.reconnect_deadline ?? row.reconnectDeadline ?? null,
+      reconnectDeadline:
+        row.reconnect_deadline ?? row.reconnectDeadline ?? null,
       expiresAt: row.expires_at ?? row.expiresAt,
       updatedAt: row.updated_at ?? row.updatedAt,
       pairedAt: row.paired_at ?? row.pairedAt ?? null,
@@ -1409,7 +1639,7 @@ function startManager(): void {
   };
 
   const buildPairingSnapshot = (
-    row: any
+    row: any,
   ): {
     exists: boolean;
     valid: boolean;
@@ -1473,7 +1703,7 @@ function startManager(): void {
         token,
         managerAdminTokenSecret,
         MANAGER_ADMIN_TOKEN_AUDIENCE,
-        MANAGER_ADMIN_TOKEN_ISSUER
+        MANAGER_ADMIN_TOKEN_ISSUER,
       ) as ManagerAdminTokenClaims | null;
       return Boolean(claims && claims.role === "admin");
     }
@@ -1488,20 +1718,25 @@ function startManager(): void {
   const loadAllProxies = (): ManagerProxyMetrics[] => {
     return listProxiesStmt.all() as ManagerProxyMetrics[];
   };
-  const managerControlSocketsByGateway = new Map<string, Set<ServerWebSocket<ManagerControlSocketData>>>();
+  const managerControlSocketsByGateway = new Map<
+    string,
+    Set<ServerWebSocket<ManagerControlSocketData>>
+  >();
 
   const attachGatewayControlSocket = (
     gatewayUrl: string,
-    ws: ServerWebSocket<ManagerControlSocketData>
+    ws: ServerWebSocket<ManagerControlSocketData>,
   ): void => {
-    const set = managerControlSocketsByGateway.get(gatewayUrl) || new Set<ServerWebSocket<ManagerControlSocketData>>();
+    const set =
+      managerControlSocketsByGateway.get(gatewayUrl) ||
+      new Set<ServerWebSocket<ManagerControlSocketData>>();
     set.add(ws);
     managerControlSocketsByGateway.set(gatewayUrl, set);
   };
 
   const detachGatewayControlSocket = (
     gatewayUrl: string,
-    ws: ServerWebSocket<ManagerControlSocketData>
+    ws: ServerWebSocket<ManagerControlSocketData>,
   ): void => {
     const set = managerControlSocketsByGateway.get(gatewayUrl);
     if (!set) return;
@@ -1511,8 +1746,16 @@ function startManager(): void {
 
   const sendManagerCommandToGateway = (
     gatewayUrl: string,
-    command: "close_session" | "set_reconnect_grace" | "clear_reconnect_grace" | "set_cli_reconnect_grace",
-    payload: { resumeToken: string; reconnectDeadline?: number | null; reason?: string }
+    command:
+      | "close_session"
+      | "set_reconnect_grace"
+      | "clear_reconnect_grace"
+      | "set_cli_reconnect_grace",
+    payload: {
+      resumeToken: string;
+      reconnectDeadline?: number | null;
+      reason?: string;
+    },
   ): boolean => {
     const sockets = managerControlSocketsByGateway.get(gatewayUrl);
     if (!sockets || sockets.size === 0) return false;
@@ -1537,19 +1780,42 @@ function startManager(): void {
   };
 
   const sendManagerCommandForSession = (
-    sessionRow: { primaryGateway?: string; backupGateway?: string | null; primary_gateway?: string; backup_gateway?: string | null },
-    command: "close_session" | "set_reconnect_grace" | "clear_reconnect_grace" | "set_cli_reconnect_grace",
-    payload: { resumeToken: string; reconnectDeadline?: number | null; reason?: string }
+    sessionRow: {
+      primaryGateway?: string;
+      backupGateway?: string | null;
+      primary_gateway?: string;
+      backup_gateway?: string | null;
+    },
+    command:
+      | "close_session"
+      | "set_reconnect_grace"
+      | "clear_reconnect_grace"
+      | "set_cli_reconnect_grace",
+    payload: {
+      resumeToken: string;
+      reconnectDeadline?: number | null;
+      reason?: string;
+    },
   ): void => {
-    const primary = normalizeGatewayUrl((sessionRow.primaryGateway ?? sessionRow.primary_gateway ?? null) as string | null);
-    const backup = normalizeGatewayUrl((sessionRow.backupGateway ?? sessionRow.backup_gateway ?? null) as string | null);
+    const primary = normalizeGatewayUrl(
+      (sessionRow.primaryGateway ?? sessionRow.primary_gateway ?? null) as
+        string | null,
+    );
+    const backup = normalizeGatewayUrl(
+      (sessionRow.backupGateway ?? sessionRow.backup_gateway ?? null) as
+        string | null,
+    );
     if (primary) sendManagerCommandToGateway(primary, command, payload);
-    if (backup && backup !== primary) sendManagerCommandToGateway(backup, command, payload);
+    if (backup && backup !== primary)
+      sendManagerCommandToGateway(backup, command, payload);
   };
 
   // Consistent-hash ring: deterministically assign a sessionId to a position in a sorted
   // list of healthy gateway URLs. Takes first 4 bytes of SHA-256(sessionId) as uint32.
-  const hashSessionToRingIndex = (sessionId: string, nodes: string[]): number => {
+  const hashSessionToRingIndex = (
+    sessionId: string,
+    nodes: string[],
+  ): number => {
     if (nodes.length === 0) return 0;
     const buf = createHash("sha256").update(sessionId).digest();
     const val = buf.readUInt32BE(0);
@@ -1558,9 +1824,13 @@ function startManager(): void {
 
   const getHealthyRing = (): string[] => {
     const now = Date.now();
-    const allProxies = loadAllProxies().filter((p) => (p.state || "active") === "active");
+    const allProxies = loadAllProxies().filter(
+      (p) => (p.state || "active") === "active",
+    );
     const healthy = allProxies
-      .filter((p) => p.lastHeartbeat > 0 && now - p.lastHeartbeat <= STALE_GATEWAY_MS)
+      .filter(
+        (p) => p.lastHeartbeat > 0 && now - p.lastHeartbeat <= STALE_GATEWAY_MS,
+      )
       .sort((a, b) => a.url.localeCompare(b.url)) // lexicographic — stable across calls
       .map((p) => p.url);
     // Bootstrap: allow never-seen gateways when no heartbeat data yet
@@ -1585,11 +1855,20 @@ function startManager(): void {
 
   const broadcastRingUpdate = (): void => {
     const ring = getHealthyRing();
-    const event: GatewayControlEvent = { type: "manager_command", command: "ring_update", ring, ts: Date.now() };
+    const event: GatewayControlEvent = {
+      type: "manager_command",
+      command: "ring_update",
+      ring,
+      ts: Date.now(),
+    };
     const payload = JSON.stringify(event);
     for (const sockets of managerControlSocketsByGateway.values()) {
       for (const ws of sockets) {
-        try { ws.send(payload); } catch { /* ignore */ }
+        try {
+          ws.send(payload);
+        } catch {
+          /* ignore */
+        }
       }
     }
   };
@@ -1599,19 +1878,34 @@ function startManager(): void {
   const assembleMutex = new Mutex();
   const proxyAssignmentMutex = new Mutex();
   const reattachMutex = new Mutex();
-  const hashPassword = (password: string): string => createHash("sha256").update(password).digest("hex");
-  const getIssuedRecord = (passwordHash: string, now = Date.now()): IssuedPasswordRecord | null => {
+  const hashPassword = (password: string): string =>
+    createHash("sha256").update(password).digest("hex");
+  const getIssuedRecord = (
+    passwordHash: string,
+    now = Date.now(),
+  ): IssuedPasswordRecord | null => {
     const cached = issuedPasswordsByHash.get(passwordHash);
     if (cached && cached.expiresAt > now) return cached;
     if (cached) issuedPasswordsByHash.delete(passwordHash);
-    const saved = getEntitlementStmt.get(passwordHash) as { code: string; expiresAt: number; createdAt: number } | null;
+    const saved = getEntitlementStmt.get(passwordHash) as {
+      code: string;
+      expiresAt: number;
+      createdAt: number;
+    } | null;
     if (!saved || Number(saved.expiresAt) <= now) return null;
-    const restored = { code: saved.code, passwordHash, proxyUrl: null, issuedAt: Number(saved.createdAt), expiresAt: Number(saved.expiresAt) };
+    const restored = {
+      code: saved.code,
+      passwordHash,
+      proxyUrl: null,
+      issuedAt: Number(saved.createdAt),
+      expiresAt: Number(saved.expiresAt),
+    };
     issuedPasswordsByHash.set(passwordHash, restored);
     return restored;
   };
 
-  const makeV2Password = (): string => generatePersistentSecret(V2_PASSWORD_LENGTH);
+  const makeV2Password = (): string =>
+    generatePersistentSecret(V2_PASSWORD_LENGTH);
 
   const getActiveProxyUrls = (): string[] => getHealthyRing();
 
@@ -1677,7 +1971,15 @@ function startManager(): void {
       appAcked: false,
       cliAcked: false,
     };
-    upsertAssembleSessionStmt.run(created.code, created.createdAt, created.expiresAt, created.paidUntil, created.password, created.appAcked ? 1 : 0, created.cliAcked ? 1 : 0);
+    upsertAssembleSessionStmt.run(
+      created.code,
+      created.createdAt,
+      created.expiresAt,
+      created.paidUntil,
+      created.password,
+      created.appAcked ? 1 : 0,
+      created.cliAcked ? 1 : 0,
+    );
     assembleSessionsByCode.set(code, created);
     return created;
   };
@@ -1708,7 +2010,15 @@ function startManager(): void {
     const now = Date.now();
     const passwordHash = hashPassword(password);
     session.password = password;
-    upsertAssembleSessionStmt.run(session.code, session.createdAt, session.expiresAt, session.paidUntil, session.password, session.appAcked ? 1 : 0, session.cliAcked ? 1 : 0);
+    upsertAssembleSessionStmt.run(
+      session.code,
+      session.createdAt,
+      session.expiresAt,
+      session.paidUntil,
+      session.password,
+      session.appAcked ? 1 : 0,
+      session.cliAcked ? 1 : 0,
+    );
     issuedPasswordsByHash.set(passwordHash, {
       code: session.code,
       passwordHash,
@@ -1717,7 +2027,12 @@ function startManager(): void {
       // The password is the entitlement. It must not outlive the paid plan.
       expiresAt: session.paidUntil,
     });
-    upsertEntitlementStmt.run(passwordHash, session.code, session.paidUntil, now);
+    upsertEntitlementStmt.run(
+      passwordHash,
+      session.code,
+      session.paidUntil,
+      now,
+    );
 
     const payload = JSON.stringify({
       type: "assembled",
@@ -1728,7 +2043,9 @@ function startManager(): void {
     session.cliWs.send(payload);
   };
 
-  const assignProxyUrl = async (password: string): Promise<IssuedPasswordRecord | null> => {
+  const assignProxyUrl = async (
+    password: string,
+  ): Promise<IssuedPasswordRecord | null> => {
     const passwordHash = hashPassword(password);
     return proxyAssignmentMutex.runExclusive(() => {
       cleanupExpiredV2State();
@@ -1746,9 +2063,14 @@ function startManager(): void {
     });
   };
 
-  const getReattachSession = (resumeToken: string, now = Date.now()): ReattachSessionRow | null => {
+  const getReattachSession = (
+    resumeToken: string,
+    now = Date.now(),
+  ): ReattachSessionRow | null => {
     cleanupExpiredV2State(now);
-    const row = getReattachSessionStmt.get(resumeToken) as ReattachSessionRow | null;
+    const row = getReattachSessionStmt.get(
+      resumeToken,
+    ) as ReattachSessionRow | null;
     if (!row) return null;
     if (Number(row.expiresAt || 0) <= now) {
       deleteReattachSessionStmt.run(resumeToken);
@@ -1759,9 +2081,11 @@ function startManager(): void {
 
   const resolveReattachSource = (
     resumeToken: string,
-    now = Date.now()
+    now = Date.now(),
   ): { code: string } | null => {
-    const sessionRow = getSessionByTokenStmt.get(resumeToken) as SessionRow | null;
+    const sessionRow = getSessionByTokenStmt.get(
+      resumeToken,
+    ) as SessionRow | null;
     const sessionSnapshot = buildSessionSnapshot(sessionRow, now);
     if (sessionSnapshot.exists && sessionSnapshot.valid) {
       return { code: sessionSnapshot.code || "" };
@@ -1781,10 +2105,15 @@ function startManager(): void {
     return null;
   };
 
-  const chooseProxyForResumeToken = (resumeToken: string, fallbackCode: string): string | null => {
-    const routing = getSessionRoutingByTokenStmt.get(resumeToken) as
-      | { sessionId?: string; primaryGateway?: string; backupGateway?: string | null }
-      | null;
+  const chooseProxyForResumeToken = (
+    resumeToken: string,
+    fallbackCode: string,
+  ): string | null => {
+    const routing = getSessionRoutingByTokenStmt.get(resumeToken) as {
+      sessionId?: string;
+      primaryGateway?: string;
+      backupGateway?: string | null;
+    } | null;
     const primaryGateway = normalizeGatewayUrl(routing?.primaryGateway || null);
     const backupGateway = normalizeGatewayUrl(routing?.backupGateway || null);
     const healthy = new Set(getHealthyRing());
@@ -1794,7 +2123,9 @@ function startManager(): void {
     if (backupGateway && healthy.has(backupGateway)) {
       return backupGateway;
     }
-    const chosen = pickGatewaysForSession(routing?.sessionId || fallbackCode || resumeToken);
+    const chosen = pickGatewaysForSession(
+      routing?.sessionId || fallbackCode || resumeToken,
+    );
     return chosen?.primary || null;
   };
 
@@ -1807,7 +2138,7 @@ function startManager(): void {
     cliAttached: boolean,
     createdAt: number,
     updatedAt: number,
-    expiresAt: number
+    expiresAt: number,
   ): ReattachSessionRow => {
     upsertReattachSessionStmt.run(
       resumeToken,
@@ -1818,7 +2149,7 @@ function startManager(): void {
       cliAttached ? 1 : 0,
       createdAt,
       updatedAt,
-      expiresAt
+      expiresAt,
     );
     return {
       resumeToken,
@@ -1833,7 +2164,10 @@ function startManager(): void {
     };
   };
 
-  const claimReattachSession = async (resumeToken: string, role: Role): Promise<ReattachSessionRow | null> => {
+  const claimReattachSession = async (
+    resumeToken: string,
+    role: Role,
+  ): Promise<ReattachSessionRow | null> => {
     return reattachMutex.runExclusive(() => {
       const now = Date.now();
       const source = resolveReattachSource(resumeToken, now);
@@ -1854,18 +2188,23 @@ function startManager(): void {
         false,
         now,
         now,
-        now + RECONNECT_GRACE_MS
+        now + RECONNECT_GRACE_MS,
       );
     });
   };
 
-  const noteReattachDisconnect = async (resumeToken: string, missingRole: Role): Promise<ReattachSessionRow | null> => {
+  const noteReattachDisconnect = async (
+    resumeToken: string,
+    missingRole: Role,
+  ): Promise<ReattachSessionRow | null> => {
     return reattachMutex.runExclusive(() => {
       const now = Date.now();
       const source = resolveReattachSource(resumeToken, now);
       if (!source) return null;
       const existing = getReattachSession(resumeToken, now);
-      const proxyUrl = existing?.proxyUrl || chooseProxyForResumeToken(resumeToken, source.code);
+      const proxyUrl =
+        existing?.proxyUrl ||
+        chooseProxyForResumeToken(resumeToken, source.code);
       if (!proxyUrl) return null;
       const appAttached = missingRole === "cli";
       const cliAttached = missingRole === "app";
@@ -1878,12 +2217,17 @@ function startManager(): void {
         cliAttached,
         now,
         now,
-        now + (missingRole === "app" ? RECONNECT_GRACE_MS : CLI_OFFLINE_GRACE_MS)
+        now +
+          (missingRole === "app" ? RECONNECT_GRACE_MS : CLI_OFFLINE_GRACE_MS),
       );
     });
   };
 
-  const noteReattachAttached = (resumeToken: string, role: Role, generation: number): void => {
+  const noteReattachAttached = (
+    resumeToken: string,
+    role: Role,
+    generation: number,
+  ): void => {
     const now = Date.now();
     const existing = getReattachSession(resumeToken, now);
     if (!existing) return;
@@ -1900,7 +2244,7 @@ function startManager(): void {
       cliAttached ? 1 : 0,
       appAttached ? "cli" : "app",
       now,
-      generation
+      generation,
     );
   };
 
@@ -2921,7 +3265,9 @@ function startManager(): void {
       backupGateway: string | null;
     }>;
     for (const row of graceExpired) {
-      console.log(`[session] expired — ${row.sessionId} (app reconnect timeout)`);
+      console.log(
+        `[session] expired — ${row.sessionId} (app reconnect timeout)`,
+      );
       sendManagerCommandForSession(row, "close_session", {
         resumeToken: row.resumeToken,
         reason: "app reconnect timeout",
@@ -2938,7 +3284,9 @@ function startManager(): void {
       backupGateway: string | null;
     }>;
     for (const row of cliGraceExpired) {
-      console.log(`[session] expired — ${row.sessionId} (cli reconnect timeout)`);
+      console.log(
+        `[session] expired — ${row.sessionId} (cli reconnect timeout)`,
+      );
       sendManagerCommandForSession(row, "close_session", {
         resumeToken: row.resumeToken,
         reason: "cli reconnect timeout",
@@ -2950,7 +3298,9 @@ function startManager(): void {
     // Cloud VM dead detection: sessions in cli_offline_grace with stale VM heartbeats
     if (sandmanAuthToken) {
       const deadVmThreshold = now - VM_HEARTBEAT_STALE_MS;
-      const deadVmSessions = listDeadVmHeartbeatsForCliGraceStmt.all(deadVmThreshold) as Array<{
+      const deadVmSessions = listDeadVmHeartbeatsForCliGraceStmt.all(
+        deadVmThreshold,
+      ) as Array<{
         sandboxId: string;
         resumeToken: string;
         sandmanUrl: string;
@@ -2965,24 +3315,33 @@ function startManager(): void {
       for (const row of deadVmSessions) {
         const effectiveSandmanUrl = row.sandmanUrl || sandmanPublicUrl;
         if (!effectiveSandmanUrl) {
-          console.warn(`[manager] VM ${row.sandboxId} dead but no sandman_url; skipping replacement`);
+          console.warn(
+            `[manager] VM ${row.sandboxId} dead but no sandman_url; skipping replacement`,
+          );
           deleteVmHeartbeatStmt.run(row.sandboxId);
           continue;
         }
-        const newSandboxId = `${row.sandboxId.slice(0, 48)}-r${Date.now()}`.slice(0, 64);
+        const newSandboxId =
+          `${row.sandboxId.slice(0, 48)}-r${Date.now()}`.slice(0, 64);
         insertSecurityAlertStmt.run(
           now,
           "high",
           "vm_health",
           `vm_dead:${row.sandboxId}`,
           `VM ${row.sandboxId} heartbeat stale — provisioning replacement ${newSandboxId}`,
-          JSON.stringify({ sandboxId: row.sandboxId, sandmanUrl: effectiveSandmanUrl, sessionCode: row.sessionCode })
+          JSON.stringify({
+            sandboxId: row.sandboxId,
+            sandmanUrl: effectiveSandmanUrl,
+            sessionCode: row.sessionCode,
+          }),
         );
-        console.log(`[manager] VM ${row.sandboxId} dead, provisioning replacement ${newSandboxId}`);
+        console.log(
+          `[manager] VM ${row.sandboxId} dead, provisioning replacement ${newSandboxId}`,
+        );
         fetch(`${effectiveSandmanUrl}/vms`, {
           method: "POST",
           headers: {
-            "Authorization": `Bearer ${sandmanAuthToken}`,
+            Authorization: `Bearer ${sandmanAuthToken}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
@@ -2994,14 +3353,19 @@ function startManager(): void {
             sandman_url: effectiveSandmanUrl,
           }),
         }).catch((err) => {
-          console.warn(`[manager] replacement VM provision failed for ${row.sandboxId}:`, String(err));
+          console.warn(
+            `[manager] replacement VM provision failed for ${row.sandboxId}:`,
+            String(err),
+          );
         });
         deleteVmHeartbeatStmt.run(row.sandboxId);
       }
     }
   };
 
-  const pickGatewaysForSession = (sessionId: string): { primary: string; backup: string | null } | null => {
+  const pickGatewaysForSession = (
+    sessionId: string,
+  ): { primary: string; backup: string | null } | null => {
     const gateways = chooseGatewaysForSession(sessionId);
     if (gateways.length === 0) return null;
     return { primary: gateways[0], backup: gateways[1] || null };
@@ -3009,9 +3373,16 @@ function startManager(): void {
 
   const preloadGatewaySession = async (
     gateway: string,
-    payload: { password: string; createdAt: number; role: "primary" | "secondary"; peerGateway: string | null }
+    payload: {
+      password: string;
+      createdAt: number;
+      role: "primary" | "secondary";
+      peerGateway: string | null;
+    },
   ): Promise<void> => {
-    const proxyRow = getProxyPasswordStmt.get(gateway) as { password: string } | null;
+    const proxyRow = getProxyPasswordStmt.get(gateway) as {
+      password: string;
+    } | null;
     const proxyPassword = proxyRow?.password || "";
     await fetch(`${gateway}/v1/session/preload`, {
       method: "POST",
@@ -3025,9 +3396,11 @@ function startManager(): void {
 
   const aliasGatewaySession = async (
     gateway: string,
-    payload: { fromPassword: string; toPassword: string }
+    payload: { fromPassword: string; toPassword: string },
   ): Promise<void> => {
-    const proxyRow = getProxyPasswordStmt.get(gateway) as { password: string } | null;
+    const proxyRow = getProxyPasswordStmt.get(gateway) as {
+      password: string;
+    } | null;
     const proxyPassword = proxyRow?.password || "";
     await fetch(`${gateway}/v1/session/alias`, {
       method: "POST",
@@ -3039,10 +3412,12 @@ function startManager(): void {
     });
   };
 
-  const createManagedSession = async (opts: {
-    code?: string;
-    expiresAt?: number;
-  } = {}): Promise<ManagerSession> => {
+  const createManagedSession = async (
+    opts: {
+      code?: string;
+      expiresAt?: number;
+    } = {},
+  ): Promise<ManagerSession> => {
     const sessionId = randomUUID();
     const picked = pickGatewaysForSession(sessionId);
     if (!picked) {
@@ -3071,7 +3446,7 @@ function startManager(): void {
       state: "pending",
       createdAt,
       updatedAt: createdAt,
-      expiresAt: Number(opts.expiresAt || (createdAt + CODE_TTL_MS)),
+      expiresAt: Number(opts.expiresAt || createdAt + CODE_TTL_MS),
       endedAt: null,
     };
 
@@ -3087,7 +3462,7 @@ function startManager(): void {
       session.updatedAt,
       session.expiresAt,
       null,
-      session.endedAt
+      session.endedAt,
     );
 
     const preloadCalls: Promise<void>[] = [];
@@ -3097,7 +3472,7 @@ function startManager(): void {
         createdAt,
         role: "primary",
         peerGateway: picked.backup,
-      })
+      }),
     );
     if (picked.backup) {
       preloadCalls.push(
@@ -3106,7 +3481,7 @@ function startManager(): void {
           createdAt,
           role: "secondary",
           peerGateway: picked.primary,
-        })
+        }),
       );
     }
 
@@ -3119,18 +3494,34 @@ function startManager(): void {
     }
   };
 
-  const redeemAssembleSession = async (code: string, paidUntil: number): Promise<{ code: string; expiresAt: number }> => {
+  const redeemAssembleSession = async (
+    code: string,
+    paidUntil: number,
+  ): Promise<{ code: string; expiresAt: number }> => {
     const session = getOrCreateAssembleSession(code);
     if (!session || session.expiresAt <= Date.now()) {
       throw new Error("CLI pairing code was not found or has expired");
     }
     session.paidUntil = Math.max(session.paidUntil, paidUntil);
-    upsertAssembleSessionStmt.run(session.code, session.createdAt, session.expiresAt, session.paidUntil, session.password, session.appAcked ? 1 : 0, session.cliAcked ? 1 : 0);
+    upsertAssembleSessionStmt.run(
+      session.code,
+      session.createdAt,
+      session.expiresAt,
+      session.paidUntil,
+      session.password,
+      session.appAcked ? 1 : 0,
+      session.cliAcked ? 1 : 0,
+    );
     if (session.password) {
       const passwordHash = hashPassword(session.password);
       const issued = getIssuedRecord(passwordHash);
       if (issued) issued.expiresAt = session.paidUntil;
-      upsertEntitlementStmt.run(passwordHash, session.code, session.paidUntil, Date.now());
+      upsertEntitlementStmt.run(
+        passwordHash,
+        session.code,
+        session.paidUntil,
+        Date.now(),
+      );
     }
     maybeIssueAssemblePassword(session);
     return { code: session.code, expiresAt: session.paidUntil };
@@ -3147,8 +3538,11 @@ function startManager(): void {
     });
     console.log("[x402] paid CLI relay endpoints enabled");
   } catch (error) {
-    x402ConfigurationError = error instanceof Error ? error.message : "x402 configuration failed";
-    console.warn(`[x402] paid CLI relay endpoints disabled: ${x402ConfigurationError}`);
+    x402ConfigurationError =
+      error instanceof Error ? error.message : "x402 configuration failed";
+    console.warn(
+      `[x402] paid CLI relay endpoints disabled: ${x402ConfigurationError}`,
+    );
   }
 
   setInterval(cleanupManagerSessions, 60 * 1000);
@@ -3168,53 +3562,117 @@ function startManager(): void {
         if (path === "/v2/x402/health" && req.method === "GET") {
           return Response.json(
             x402App
-              ? { status: "ok", service: "HelixBox paid agent sessions", network: x402PaymentConfig?.network }
+              ? {
+                  status: "ok",
+                  service: "HelixBox paid agent sessions",
+                  network: x402PaymentConfig?.network,
+                }
               : { status: "misconfigured", error: x402ConfigurationError },
             { status: x402App ? 200 : 503, headers: corsHeaders },
           );
         }
+        if (path === "/v2/x402/agent-status" && req.method === "GET") {
+          return Response.json(getAgentSessionTaskStatus(), {
+            status: 200,
+            headers: corsHeaders,
+          });
+        }
         if (!x402App) {
-          return Response.json({ error: "x402 is not configured", details: x402ConfigurationError }, { status: 503, headers: corsHeaders });
+          return Response.json(
+            {
+              error: "x402 is not configured",
+              details: x402ConfigurationError,
+            },
+            { status: 503, headers: corsHeaders },
+          );
         }
         // Render terminates TLS before Bun, so req.url is HTTP unless we
         // restore the public origin before x402 builds its payment challenge.
         const publicUrl = new URL(req.url);
-        if (publicUrl.hostname === "helixbox-manager.onrender.com" || publicUrl.hostname === "127.0.0.1" || publicUrl.hostname === "localhost") {
+        if (
+          publicUrl.hostname === "helixbox-manager.onrender.com" ||
+          publicUrl.hostname === "127.0.0.1" ||
+          publicUrl.hostname === "localhost"
+        ) {
           publicUrl.protocol = "https:";
           publicUrl.host = "helixbox-manager.onrender.com";
         }
-        const paymentResponse = await x402App.fetch(publicUrl.href === req.url ? req : new Request(publicUrl, req));
-        console.log(`[x402] ${req.method} ${path} status=${paymentResponse.status} signed=${req.headers.has("payment-signature")}`);
-        if (paymentResponse.status >= 400 && req.headers.has("payment-signature")) {
+        const paymentResponse = await x402App.fetch(
+          publicUrl.href === req.url ? req : new Request(publicUrl, req),
+        );
+        console.log(
+          `[x402] ${req.method} ${path} status=${paymentResponse.status} signed=${req.headers.has("payment-signature")}`,
+        );
+        if (
+          paymentResponse.status >= 400 &&
+          req.headers.has("payment-signature")
+        ) {
           const cloned = paymentResponse.clone();
           const text = await cloned.text().catch(() => "");
-          console.error(`[x402-debug] Failed signed payment on ${path}: status=${paymentResponse.status}`, {
-            body: text,
-            headers: Object.fromEntries(cloned.headers.entries()),
-          });
+          console.error(
+            `[x402-debug] Failed signed payment on ${path}: status=${paymentResponse.status}`,
+            {
+              body: text,
+              headers: Object.fromEntries(cloned.headers.entries()),
+            },
+          );
         }
         return paymentResponse;
       }
 
       if (path === "/.well-known/x402.json" && req.method === "GET") {
         if (!x402PaymentConfig) {
-          return Response.json({ error: "x402 is not configured", details: x402ConfigurationError }, { status: 503, headers: corsHeaders });
+          return Response.json(
+            {
+              error: "x402 is not configured",
+              details: x402ConfigurationError,
+            },
+            { status: 503, headers: corsHeaders },
+          );
         }
-        return Response.json({
-          name: "HelixBox",
-          description: "HelixBox lets you use your full development environment from your phone so you can build, run, and manage your projects from anywhere. Pay micro amounts for time-bound agent sessions when you need them.",
-          category: "developer-tools",
-          projectType: "standard",
-          logo: "https://raw.githubusercontent.com/devndesigner6/helix-box/main/landing/public/helixbox.png",
-          image: "https://raw.githubusercontent.com/devndesigner6/helix-box/main/landing/public/helixbox.png",
-          tags: ["x402-global-challenge", "algorand", "cli", "mobile-ide", "agent-sessions"],
-          payTo: x402PaymentConfig.payTo,
-          endpoints: [
-            { path: CLI_HOURLY_ROUTE, method: "POST", priceUsdc: 0.25, description: "One hour of HelixBox agent session access." },
-            { path: PREMIUM_WEEKLY_ROUTE, method: "POST", priceUsdc: 2, description: "Seven days of HelixBox premium agent session access." },
-            { path: AGENT_SESSION_1HOUR_ROUTE, method: "POST", priceUsdc: 0.25, description: "One hour of HelixBox AI agent session and remote CLI access." },
-          ],
-        }, { headers: corsHeaders });
+        return Response.json(
+          {
+            name: "HelixBox",
+            description:
+              "HelixBox lets you use your full development environment from your phone so you can build, run, and manage your projects from anywhere. Pay micro amounts for time-bound agent sessions when you need them.",
+            category: "developer-tools",
+            projectType: "standard",
+            logo: "https://raw.githubusercontent.com/devndesigner6/helix-box/main/landing/public/helixbox.png",
+            image:
+              "https://raw.githubusercontent.com/devndesigner6/helix-box/main/landing/public/helixbox.png",
+            tags: [
+              "x402-global-challenge",
+              "algorand",
+              "cli",
+              "mobile-ide",
+              "agent-sessions",
+            ],
+            payTo: x402PaymentConfig.payTo,
+            endpoints: [
+              {
+                path: CLI_HOURLY_ROUTE,
+                method: "POST",
+                priceUsdc: 0.25,
+                description: "One hour of HelixBox agent session access.",
+              },
+              {
+                path: PREMIUM_WEEKLY_ROUTE,
+                method: "POST",
+                priceUsdc: 2,
+                description:
+                  "Seven days of HelixBox premium agent session access.",
+              },
+              {
+                path: AGENT_SESSION_1HOUR_ROUTE,
+                method: "POST",
+                priceUsdc: 0.25,
+                description:
+                  "One hour of HelixBox AI agent session and remote CLI access.",
+              },
+            ],
+          },
+          { headers: corsHeaders },
+        );
       }
 
       if (path === "/" && req.method === "GET") {
@@ -3228,7 +3686,10 @@ function startManager(): void {
           code = generateSecureCode();
         } while (assembleSessionsByCode.has(code));
         getOrCreateAssembleSession(code);
-        return Response.json({ code, expiresInMs: V2_CODE_TTL_MS }, { headers: corsHeaders });
+        return Response.json(
+          { code, expiresInMs: V2_CODE_TTL_MS },
+          { headers: corsHeaders },
+        );
       }
 
       if (path === "/v2/assemble" && req.method === "GET") {
@@ -3236,23 +3697,41 @@ function startManager(): void {
         const code = (url.searchParams.get("code") || "").trim();
         const role = (url.searchParams.get("role") || "").trim() as Role;
         if (!code) {
-          return Response.json({ error: "code is required" }, { status: 400, headers: corsHeaders });
+          return Response.json(
+            { error: "code is required" },
+            { status: 400, headers: corsHeaders },
+          );
         }
         if (role !== "app" && role !== "cli") {
-          return Response.json({ error: "role must be app or cli" }, { status: 400, headers: corsHeaders });
+          return Response.json(
+            { error: "role must be app or cli" },
+            { status: 400, headers: corsHeaders },
+          );
         }
         const session = assembleSessionsByCode.get(code);
         if (!session || session.expiresAt <= Date.now()) {
-          return Response.json({ error: "code not found or expired" }, { status: 404, headers: corsHeaders });
+          return Response.json(
+            { error: "code not found or expired" },
+            { status: 404, headers: corsHeaders },
+          );
         }
-        if ((role === "app" && session.appWs) || (role === "cli" && session.cliWs)) {
-          return Response.json({ error: `${role} already connected for code` }, { status: 409, headers: corsHeaders });
+        if (
+          (role === "app" && session.appWs) ||
+          (role === "cli" && session.cliWs)
+        ) {
+          return Response.json(
+            { error: `${role} already connected for code` },
+            { status: 409, headers: corsHeaders },
+          );
         }
         const upgraded = (server as any).upgrade(req, {
           data: { type: "assemble", code, role } as AssembleWebSocketData,
         });
         if (!upgraded) {
-          return Response.json({ error: "upgrade failed" }, { status: 500, headers: corsHeaders });
+          return Response.json(
+            { error: "upgrade failed" },
+            { status: 500, headers: corsHeaders },
+          );
         }
         return undefined;
       }
@@ -3261,25 +3740,43 @@ function startManager(): void {
         cleanupExpiredV2State();
         const password = (url.searchParams.get("password") || "").trim();
         if (!password) {
-          return Response.json({ error: "password is required" }, { status: 400, headers: corsHeaders });
+          return Response.json(
+            { error: "password is required" },
+            { status: 400, headers: corsHeaders },
+          );
         }
         const pairing = getPairingBySecretStmt.get(password) as any;
         if (pairing && Number(pairing.revokedAt || 0) > 0) {
-          return Response.json({ error: "password revoked", reason: "revoked" }, { status: 403, headers: corsHeaders });
+          return Response.json(
+            { error: "password revoked", reason: "revoked" },
+            { status: 403, headers: corsHeaders },
+          );
         }
         const passwordHash = hashPassword(password);
         const record = getIssuedRecord(passwordHash);
         if (!record || record.expiresAt <= Date.now()) {
-          return Response.json({ error: "password invalid" }, { status: 404, headers: corsHeaders });
+          return Response.json(
+            { error: "password invalid" },
+            { status: 404, headers: corsHeaders },
+          );
         }
         if (!record.proxyUrl && getActiveProxyUrls().length === 0) {
-          return Response.json({ error: "no active proxies" }, { status: 503, headers: corsHeaders });
+          return Response.json(
+            { error: "no active proxies" },
+            { status: 503, headers: corsHeaders },
+          );
         }
         return assignProxyUrl(password).then((record) => {
           if (!record || !record.proxyUrl) {
-            return Response.json({ error: "proxy assignment unavailable" }, { status: 503, headers: corsHeaders });
+            return Response.json(
+              { error: "proxy assignment unavailable" },
+              { status: 503, headers: corsHeaders },
+            );
           }
-          return Response.json({ proxyUrl: record.proxyUrl }, { headers: corsHeaders });
+          return Response.json(
+            { proxyUrl: record.proxyUrl },
+            { headers: corsHeaders },
+          );
         });
       }
 
@@ -3291,26 +3788,46 @@ function startManager(): void {
             const password = (body.password || "").trim();
             const role = body.role;
             if (!password) {
-              return Response.json({ error: "password is required" }, { status: 400, headers: corsHeaders });
+              return Response.json(
+                { error: "password is required" },
+                { status: 400, headers: corsHeaders },
+              );
             }
             if (role !== "app" && role !== "cli") {
-              return Response.json({ error: "role must be app or cli" }, { status: 400, headers: corsHeaders });
+              return Response.json(
+                { error: "role must be app or cli" },
+                { status: 400, headers: corsHeaders },
+              );
             }
             const pairing = getPairingBySecretStmt.get(password) as any;
             if (pairing && Number(pairing.revokedAt || 0) > 0) {
-              return Response.json({ error: "password revoked", reason: "revoked" }, { status: 403, headers: corsHeaders });
+              return Response.json(
+                { error: "password revoked", reason: "revoked" },
+                { status: 403, headers: corsHeaders },
+              );
             }
             const record = await claimReattachSession(password, role);
             if (!record || !record.proxyUrl) {
-              return Response.json({ error: "reattach unavailable" }, { status: 404, headers: corsHeaders });
+              return Response.json(
+                { error: "reattach unavailable" },
+                { status: 404, headers: corsHeaders },
+              );
             }
-            return Response.json({
-              proxyUrl: record.proxyUrl,
-              generation: record.generation,
-              expiresAt: record.expiresAt,
-            }, { headers: corsHeaders });
+            return Response.json(
+              {
+                proxyUrl: record.proxyUrl,
+                generation: record.generation,
+                expiresAt: record.expiresAt,
+              },
+              { headers: corsHeaders },
+            );
           })
-          .catch(() => Response.json({ error: "invalid body" }, { status: 400, headers: corsHeaders }));
+          .catch(() =>
+            Response.json(
+              { error: "invalid body" },
+              { status: 400, headers: corsHeaders },
+            ),
+          );
       }
 
       if (path === "/v2/proxy/validate" && req.method === "GET") {
@@ -3319,33 +3836,63 @@ function startManager(): void {
         const role = (url.searchParams.get("role") || "").trim() as Role;
         const generation = Number(url.searchParams.get("generation") || "0");
         if (!password) {
-          return Response.json({ valid: false, reason: "missing_password" }, { status: 400, headers: corsHeaders });
+          return Response.json(
+            { valid: false, reason: "missing_password" },
+            { status: 400, headers: corsHeaders },
+          );
         }
         if (role && role !== "app" && role !== "cli") {
-          return Response.json({ valid: false, reason: "invalid_role" }, { status: 400, headers: corsHeaders });
+          return Response.json(
+            { valid: false, reason: "invalid_role" },
+            { status: 400, headers: corsHeaders },
+          );
         }
         const passwordHash = hashPassword(password);
         const record = getIssuedRecord(passwordHash);
-        const v1Row = !record ? (getSessionByTokenStmt.get(password) as any) : null;
+        const v1Row = !record
+          ? (getSessionByTokenStmt.get(password) as any)
+          : null;
         if (!record && !v1Row) {
-          return Response.json({ valid: false, reason: "invalid_password" }, { headers: corsHeaders });
+          return Response.json(
+            { valid: false, reason: "invalid_password" },
+            { headers: corsHeaders },
+          );
         }
         if (record && record.expiresAt <= Date.now()) {
-          return Response.json({ valid: false, reason: "invalid_password" }, { headers: corsHeaders });
+          return Response.json(
+            { valid: false, reason: "invalid_password" },
+            { headers: corsHeaders },
+          );
         }
-        const assignedProxy = record?.proxyUrl || v1Row?.primary_gateway || process.env.PROXIES || process.env.PROXY_URL || "https://helixbox-proxy.onrender.com";
+        const assignedProxy =
+          record?.proxyUrl ||
+          v1Row?.primary_gateway ||
+          process.env.PROXIES ||
+          process.env.PROXY_URL ||
+          "https://helixbox-proxy.onrender.com";
         const code = record?.code || v1Row?.code || "";
-        return Response.json({ valid: true, proxyUrl: assignedProxy, code, expiresAt: record?.expiresAt ?? null }, { headers: corsHeaders });
+        return Response.json(
+          {
+            valid: true,
+            proxyUrl: assignedProxy,
+            code,
+            expiresAt: record?.expiresAt ?? null,
+          },
+          { headers: corsHeaders },
+        );
       }
 
       if (path === "/health") {
         const connectedProxies = managerControlSocketsByGateway.size;
-        return Response.json({
-          status: "ok",
-          mode: "manager",
-          connectedProxies,
-          ring: getHealthyRing(),
-        }, { headers: corsHeaders });
+        return Response.json(
+          {
+            status: "ok",
+            mode: "manager",
+            connectedProxies,
+            ring: getHealthyRing(),
+          },
+          { headers: corsHeaders },
+        );
       }
 
       if (path === "/v1/gateways" && req.method === "GET") {
@@ -3356,13 +3903,16 @@ function startManager(): void {
             primary: gateways[0] || null,
             backup: gateways[1] || null,
           },
-          { headers: corsHeaders }
+          { headers: corsHeaders },
         );
       }
 
       if (path === "/v1/session/resolve" && req.method === "POST") {
         const sourceIp = extractClientIp(req);
-        const tempBlocked = enforceTemporaryBlock(req, "public-session-resolve");
+        const tempBlocked = enforceTemporaryBlock(
+          req,
+          "public-session-resolve",
+        );
         if (tempBlocked) return tempBlocked;
         const blocked = enforceRateLimit(req, "manager:session-resolve", {
           windowMs: 60_000,
@@ -3392,12 +3942,14 @@ function startManager(): void {
             if ((!code && !resumeToken) || (code && resumeToken)) {
               return Response.json(
                 { error: "provide exactly one of code or resumeToken" },
-                { status: 400, headers: corsHeaders }
+                { status: 400, headers: corsHeaders },
               );
             }
 
             const now = Date.now();
-            let row = code ? getSessionByCodeStmt.get(code) : getSessionByTokenStmt.get(resumeToken);
+            let row = code
+              ? getSessionByCodeStmt.get(code)
+              : getSessionByTokenStmt.get(resumeToken);
             let snapshot = buildSessionSnapshot(row, now);
             if (!code && !snapshot.exists) {
               const pairing = getPairingBySecretStmt.get(resumeToken) as any;
@@ -3406,7 +3958,11 @@ function startManager(): void {
                 snapshot = pairingSnapshot;
                 row = pairing;
                 if (pairingSnapshot.valid) {
-                  updatePairingTouchStmt.run(pairing.secret, pairing.hostname, now);
+                  updatePairingTouchStmt.run(
+                    pairing.secret,
+                    pairing.hostname,
+                    now,
+                  );
                 }
               }
             }
@@ -3429,13 +3985,15 @@ function startManager(): void {
 
             if (!effectiveSnapshot.exists) {
               recordFailureAndMaybeBlock(
-                code ? "public-session-resolve-code" : "public-session-resolve-token",
+                code
+                  ? "public-session-resolve-code"
+                  : "public-session-resolve-token",
                 req,
                 {
                   threshold: 20,
                   windowMs: 5 * 60_000,
                   blockMs: 10 * 60_000,
-                }
+                },
               );
               if (resumeToken) {
                 emitSecurityAlert({
@@ -3472,7 +4030,12 @@ function startManager(): void {
 
             return Response.json(effectiveSnapshot, { headers: corsHeaders });
           })
-          .catch(() => Response.json({ error: "invalid body" }, { status: 400, headers: corsHeaders }));
+          .catch(() =>
+            Response.json(
+              { error: "invalid body" },
+              { status: 400, headers: corsHeaders },
+            ),
+          );
       }
 
       if (path === "/v1/session" && req.method === "POST") {
@@ -3500,7 +4063,7 @@ function startManager(): void {
 
         return req
           .json()
-          .catch(() => ({} as { requestedCode?: string }))
+          .catch(() => ({}) as { requestedCode?: string })
           .then(() => {
             return createManagedSession().then((session) => {
               writeAuditLog({
@@ -3527,7 +4090,7 @@ function startManager(): void {
                   backup: session.backup,
                   expiresAt: session.expiresAt,
                 },
-                { headers: corsHeaders }
+                { headers: corsHeaders },
               );
             });
           })
@@ -3544,10 +4107,21 @@ function startManager(): void {
               message: "preload failed",
               metadata: { error: message },
             });
-            console.warn(`[session] create failed — preload error:`, redactSensitive(message));
+            console.warn(
+              `[session] create failed — preload error:`,
+              redactSensitive(message),
+            );
             return Response.json(
-              { error: message === "no healthy gateways available" ? "no healthy gateways available" : "failed to preload gateways" },
-              { status: message === "no healthy gateways available" ? 503 : 502, headers: corsHeaders }
+              {
+                error:
+                  message === "no healthy gateways available"
+                    ? "no healthy gateways available"
+                    : "failed to preload gateways",
+              },
+              {
+                status: message === "no healthy gateways available" ? 503 : 502,
+                headers: corsHeaders,
+              },
             );
           });
       }
@@ -3563,139 +4137,197 @@ function startManager(): void {
 
         return req
           .json()
-          .then(async (body: { activeSecret?: string; phoneId?: string; pcId?: string; root?: string; hostname?: string }) => {
-            const activeSecret = (body.activeSecret || "").trim();
-            const phoneId = (body.phoneId || "").trim();
-            const pcId = (body.pcId || "").trim();
-            const root = (body.root || "").trim();
-            const hostname = (body.hostname || "").trim() || "Unknown Host";
+          .then(
+            async (body: {
+              activeSecret?: string;
+              phoneId?: string;
+              pcId?: string;
+              root?: string;
+              hostname?: string;
+            }) => {
+              const activeSecret = (body.activeSecret || "").trim();
+              const phoneId = (body.phoneId || "").trim();
+              const pcId = (body.pcId || "").trim();
+              const root = (body.root || "").trim();
+              const hostname = (body.hostname || "").trim() || "Unknown Host";
 
-            if (!activeSecret || !phoneId || !pcId || !root) {
-              return Response.json({ error: "activeSecret, phoneId, pcId, and root are required" }, { status: 400, headers: corsHeaders });
-            }
-
-            const sessionRow = getSessionByTokenStmt.get(activeSecret) as any;
-
-            const existingPairing = getPairingBySecretStmt.get(activeSecret) as any;
-            if (existingPairing) {
-              if (
-                Number(existingPairing.revokedAt || 0) > 0 ||
-                existingPairing.pcId !== pcId ||
-                existingPairing.phoneId !== phoneId ||
-                existingPairing.root !== root
-              ) {
-                return Response.json({ error: "pairing secret is invalid" }, { status: 403, headers: corsHeaders });
+              if (!activeSecret || !phoneId || !pcId || !root) {
+                return Response.json(
+                  {
+                    error: "activeSecret, phoneId, pcId, and root are required",
+                  },
+                  { status: 400, headers: corsHeaders },
+                );
               }
+
+              const sessionRow = getSessionByTokenStmt.get(activeSecret) as any;
+
+              const existingPairing = getPairingBySecretStmt.get(
+                activeSecret,
+              ) as any;
+              if (existingPairing) {
+                if (
+                  Number(existingPairing.revokedAt || 0) > 0 ||
+                  existingPairing.pcId !== pcId ||
+                  existingPairing.phoneId !== phoneId ||
+                  existingPairing.root !== root
+                ) {
+                  return Response.json(
+                    { error: "pairing secret is invalid" },
+                    { status: 403, headers: corsHeaders },
+                  );
+                }
+                const now = Date.now();
+                updatePairingTouchStmt.run(
+                  existingPairing.secret,
+                  hostname,
+                  now,
+                );
+                if (
+                  existingPairing.secret !== activeSecret &&
+                  sessionRow?.primary_gateway
+                ) {
+                  const aliasCalls: Promise<void>[] = [
+                    aliasGatewaySession(sessionRow.primary_gateway, {
+                      fromPassword: activeSecret,
+                      toPassword: existingPairing.secret,
+                    }),
+                  ];
+                  if (sessionRow.backup_gateway) {
+                    aliasCalls.push(
+                      aliasGatewaySession(sessionRow.backup_gateway, {
+                        fromPassword: activeSecret,
+                        toPassword: existingPairing.secret,
+                      }),
+                    );
+                  }
+                  await Promise.all(aliasCalls);
+                }
+                return Response.json(
+                  {
+                    secret: existingPairing.secret,
+                    hostname,
+                    root: existingPairing.root,
+                    phoneId: existingPairing.phoneId,
+                    pairedAt: existingPairing.pairedAt,
+                    lastUsedAt: now,
+                  },
+                  { headers: corsHeaders },
+                );
+              }
+
+              const sessionSnapshot = buildSessionSnapshot(
+                sessionRow,
+                Date.now(),
+              );
+              if (!sessionSnapshot.exists || !sessionSnapshot.valid) {
+                return Response.json(
+                  { error: "active session not found" },
+                  { status: 404, headers: corsHeaders },
+                );
+              }
+
+              const scopedPairing = getPairingByScopeStmt.get(
+                pcId,
+                phoneId,
+                root,
+              ) as any;
+              if (scopedPairing && Number(scopedPairing.revokedAt || 0) === 0) {
+                const now = Date.now();
+                updatePairingTouchStmt.run(scopedPairing.secret, hostname, now);
+                if (
+                  scopedPairing.secret !== activeSecret &&
+                  sessionRow?.primary_gateway
+                ) {
+                  const aliasCalls: Promise<void>[] = [
+                    aliasGatewaySession(sessionRow.primary_gateway, {
+                      fromPassword: activeSecret,
+                      toPassword: scopedPairing.secret,
+                    }),
+                  ];
+                  if (sessionRow.backup_gateway) {
+                    aliasCalls.push(
+                      aliasGatewaySession(sessionRow.backup_gateway, {
+                        fromPassword: activeSecret,
+                        toPassword: scopedPairing.secret,
+                      }),
+                    );
+                  }
+                  await Promise.all(aliasCalls);
+                }
+                return Response.json(
+                  {
+                    secret: scopedPairing.secret,
+                    hostname,
+                    root: scopedPairing.root,
+                    phoneId: scopedPairing.phoneId,
+                    pairedAt: scopedPairing.pairedAt,
+                    lastUsedAt: now,
+                  },
+                  { headers: corsHeaders },
+                );
+              }
+
               const now = Date.now();
-              updatePairingTouchStmt.run(existingPairing.secret, hostname, now);
-              if (existingPairing.secret !== activeSecret && sessionRow?.primary_gateway) {
+              const secret = generatePersistentSecret();
+              insertPairingStmt.run(
+                secret,
+                pcId,
+                phoneId,
+                root,
+                hostname,
+                now,
+                now,
+                now,
+                now,
+              );
+              if (sessionRow?.primary_gateway) {
                 const aliasCalls: Promise<void>[] = [
                   aliasGatewaySession(sessionRow.primary_gateway, {
                     fromPassword: activeSecret,
-                    toPassword: existingPairing.secret,
+                    toPassword: secret,
                   }),
                 ];
                 if (sessionRow.backup_gateway) {
-                  aliasCalls.push(aliasGatewaySession(sessionRow.backup_gateway, {
-                    fromPassword: activeSecret,
-                    toPassword: existingPairing.secret,
-                  }));
+                  aliasCalls.push(
+                    aliasGatewaySession(sessionRow.backup_gateway, {
+                      fromPassword: activeSecret,
+                      toPassword: secret,
+                    }),
+                  );
                 }
                 await Promise.all(aliasCalls);
               }
-              return Response.json({
-                secret: existingPairing.secret,
-                hostname,
-                root: existingPairing.root,
-                phoneId: existingPairing.phoneId,
-                pairedAt: existingPairing.pairedAt,
-                lastUsedAt: now,
-              }, { headers: corsHeaders });
-            }
-
-            const sessionSnapshot = buildSessionSnapshot(sessionRow, Date.now());
-            if (!sessionSnapshot.exists || !sessionSnapshot.valid) {
-              return Response.json({ error: "active session not found" }, { status: 404, headers: corsHeaders });
-            }
-
-            const scopedPairing = getPairingByScopeStmt.get(pcId, phoneId, root) as any;
-            if (scopedPairing && Number(scopedPairing.revokedAt || 0) === 0) {
-              const now = Date.now();
-              updatePairingTouchStmt.run(scopedPairing.secret, hostname, now);
-              if (scopedPairing.secret !== activeSecret && sessionRow?.primary_gateway) {
-                const aliasCalls: Promise<void>[] = [
-                  aliasGatewaySession(sessionRow.primary_gateway, {
-                    fromPassword: activeSecret,
-                    toPassword: scopedPairing.secret,
-                  }),
-                ];
-                if (sessionRow.backup_gateway) {
-                  aliasCalls.push(aliasGatewaySession(sessionRow.backup_gateway, {
-                    fromPassword: activeSecret,
-                    toPassword: scopedPairing.secret,
-                  }));
-                }
-                await Promise.all(aliasCalls);
-              }
-              return Response.json({
-                secret: scopedPairing.secret,
-                hostname,
-                root: scopedPairing.root,
-                phoneId: scopedPairing.phoneId,
-                pairedAt: scopedPairing.pairedAt,
-                lastUsedAt: now,
-              }, { headers: corsHeaders });
-            }
-
-            const now = Date.now();
-            const secret = generatePersistentSecret();
-            insertPairingStmt.run(
-              secret,
-              pcId,
-              phoneId,
-              root,
-              hostname,
-              now,
-              now,
-              now,
-              now
-            );
-            if (sessionRow?.primary_gateway) {
-              const aliasCalls: Promise<void>[] = [
-                aliasGatewaySession(sessionRow.primary_gateway, {
-                  fromPassword: activeSecret,
-                  toPassword: secret,
-                }),
-              ];
-              if (sessionRow.backup_gateway) {
-                aliasCalls.push(aliasGatewaySession(sessionRow.backup_gateway, {
-                  fromPassword: activeSecret,
-                  toPassword: secret,
-                }));
-              }
-              await Promise.all(aliasCalls);
-            }
-            writeAuditLog({
-              actorType: "public",
-              actorId: phoneId,
-              action: "pairing.register",
-              targetType: "pairing",
-              targetId: secret.slice(0, 12),
-              sourceIp,
-              status: "ok",
-              message: "persistent pairing registered",
-              metadata: { pcId, root, hostname },
-            });
-            return Response.json({
-              secret,
-              hostname,
-              root,
-              phoneId,
-              pairedAt: now,
-              lastUsedAt: now,
-            }, { headers: corsHeaders });
-          })
-          .catch(() => Response.json({ error: "invalid body" }, { status: 400, headers: corsHeaders }));
+              writeAuditLog({
+                actorType: "public",
+                actorId: phoneId,
+                action: "pairing.register",
+                targetType: "pairing",
+                targetId: secret.slice(0, 12),
+                sourceIp,
+                status: "ok",
+                message: "persistent pairing registered",
+                metadata: { pcId, root, hostname },
+              });
+              return Response.json(
+                {
+                  secret,
+                  hostname,
+                  root,
+                  phoneId,
+                  pairedAt: now,
+                  lastUsedAt: now,
+                },
+                { headers: corsHeaders },
+              );
+            },
+          )
+          .catch(() =>
+            Response.json(
+              { error: "invalid body" },
+              { status: 400, headers: corsHeaders },
+            ),
+          );
       }
 
       if (path === "/v1/pairings/lookup" && req.method === "POST") {
@@ -3713,11 +4345,19 @@ function startManager(): void {
             const pcId = (body.pcId || "").trim();
             const root = (body.root || "").trim();
             if (!pcId || !root) {
-              return Response.json({ error: "pcId and root are required" }, { status: 400, headers: corsHeaders });
+              return Response.json(
+                { error: "pcId and root are required" },
+                { status: 400, headers: corsHeaders },
+              );
             }
 
-            const matches = listPairingsByCliScopeStmt.all(pcId, root) as Array<any>;
-            const active = matches.filter((row) => Number(row.revokedAt || 0) === 0);
+            const matches = listPairingsByCliScopeStmt.all(
+              pcId,
+              root,
+            ) as Array<any>;
+            const active = matches.filter(
+              (row) => Number(row.revokedAt || 0) === 0,
+            );
             writeAuditLog({
               actorType: "public",
               actorId: pcId,
@@ -3726,20 +4366,29 @@ function startManager(): void {
               targetId: root,
               sourceIp,
               status: active.length > 0 ? "ok" : "error",
-              message: active.length > 0 ? "pairings found" : "pairings not found",
+              message:
+                active.length > 0 ? "pairings found" : "pairings not found",
             });
-            return Response.json({
-              pairings: active.map((row) => ({
-                secret: row.secret,
-                hostname: row.hostname,
-                root: row.root,
-                phoneId: row.phoneId,
-                pairedAt: row.pairedAt,
-                lastUsedAt: row.lastUsedAt,
-              })),
-            }, { headers: corsHeaders });
+            return Response.json(
+              {
+                pairings: active.map((row) => ({
+                  secret: row.secret,
+                  hostname: row.hostname,
+                  root: row.root,
+                  phoneId: row.phoneId,
+                  pairedAt: row.pairedAt,
+                  lastUsedAt: row.lastUsedAt,
+                })),
+              },
+              { headers: corsHeaders },
+            );
           })
-          .catch(() => Response.json({ error: "invalid body" }, { status: 400, headers: corsHeaders }));
+          .catch(() =>
+            Response.json(
+              { error: "invalid body" },
+              { status: 400, headers: corsHeaders },
+            ),
+          );
       }
 
       if (path === "/v2/revoke" && req.method === "POST") {
@@ -3757,16 +4406,29 @@ function startManager(): void {
             const password = (body.password || "").trim();
             const reason = (body.reason || "revoked by app").trim();
             if (!password) {
-              return Response.json({ error: "password is required" }, { status: 400, headers: corsHeaders });
+              return Response.json(
+                { error: "password is required" },
+                { status: 400, headers: corsHeaders },
+              );
             }
 
             const pairing = getPairingBySecretStmt.get(password) as any;
             if (!pairing) {
-              return Response.json({ valid: false, reason: "not_found" }, { status: 404, headers: corsHeaders });
+              return Response.json(
+                { valid: false, reason: "not_found" },
+                { status: 404, headers: corsHeaders },
+              );
             }
 
             if (Number(pairing.revokedAt || 0) > 0) {
-              return Response.json({ valid: false, reason: "revoked", revokedAt: pairing.revokedAt }, { headers: corsHeaders });
+              return Response.json(
+                {
+                  valid: false,
+                  reason: "revoked",
+                  revokedAt: pairing.revokedAt,
+                },
+                { headers: corsHeaders },
+              );
             }
 
             const now = Date.now();
@@ -3788,9 +4450,17 @@ function startManager(): void {
                 hostname: pairing.hostname,
               },
             });
-            return Response.json({ ok: true, valid: false, reason: "revoked", revokedAt: now }, { headers: corsHeaders });
+            return Response.json(
+              { ok: true, valid: false, reason: "revoked", revokedAt: now },
+              { headers: corsHeaders },
+            );
           })
-          .catch(() => Response.json({ error: "invalid body" }, { status: 400, headers: corsHeaders }));
+          .catch(() =>
+            Response.json(
+              { error: "invalid body" },
+              { status: 400, headers: corsHeaders },
+            ),
+          );
       }
 
       if (path === "/v1/manager/heartbeat" && req.method === "POST") {
@@ -3807,16 +4477,28 @@ function startManager(): void {
           .then((body: Partial<ManagerProxyMetrics>) => {
             const normalized = normalizeGatewayUrl(body.url || null);
             if (!normalized) {
-              return Response.json({ error: "invalid url" }, { status: 400, headers: corsHeaders });
+              return Response.json(
+                { error: "invalid url" },
+                { status: 400, headers: corsHeaders },
+              );
             }
-            const proxyRow = getProxyPasswordStmt.get(normalized) as { password: string } | null;
+            const proxyRow = getProxyPasswordStmt.get(normalized) as {
+              password: string;
+            } | null;
             const storedPassword = proxyRow?.password || "";
             if (!storedPassword || providedProxyPassword !== storedPassword) {
-              console.warn(`[heartbeat] rejected from ${normalized} — ${!storedPassword ? "proxy not registered or has no password" : "wrong PROXY_PASSWORD"}`);
-              return Response.json({ error: "unauthorized" }, { status: 401, headers: corsHeaders });
+              console.warn(
+                `[heartbeat] rejected from ${normalized} — ${!storedPassword ? "proxy not registered or has no password" : "wrong PROXY_PASSWORD"}`,
+              );
+              return Response.json(
+                { error: "unauthorized" },
+                { status: 401, headers: corsHeaders },
+              );
             }
             const gatewayId = normalizeGatewayId(
-              typeof (body as any).gatewayId === "string" ? (body as any).gatewayId : null
+              typeof (body as any).gatewayId === "string"
+                ? (body as any).gatewayId
+                : null,
             );
             upsertProxyStmt.run(
               normalized,
@@ -3832,11 +4514,16 @@ function startManager(): void {
               Number((body as any).memoryTotalMb || 0),
               Number((body as any).networkInBps || 0),
               Number((body as any).networkOutBps || 0),
-              Number((body as any).lastTelemetry || Date.now())
+              Number((body as any).lastTelemetry || Date.now()),
             );
             return Response.json({ ok: true }, { headers: corsHeaders });
           })
-          .catch(() => Response.json({ error: "invalid body" }, { status: 400, headers: corsHeaders }));
+          .catch(() =>
+            Response.json(
+              { error: "invalid body" },
+              { status: 400, headers: corsHeaders },
+            ),
+          );
       }
 
       if (path === "/v1/vm/heartbeat" && req.method === "POST") {
@@ -3850,28 +4537,58 @@ function startManager(): void {
         return req
           .json()
           .then((body: Partial<VmHeartbeat>) => {
-            const sandboxId = (typeof body.sandboxId === "string" ? body.sandboxId : "").trim();
-            const resumeToken = (typeof body.resumeToken === "string" ? body.resumeToken : "").trim();
-            const sandmanUrl = normalizeGatewayUrl(typeof body.sandmanUrl === "string" ? body.sandmanUrl : "") || "";
-            const repoUrl = (typeof body.repoUrl === "string" ? body.repoUrl : "").trim();
-            const branch = (typeof body.branch === "string" ? body.branch : "").trim();
-            const vmProfile = (typeof body.vmProfile === "string" ? body.vmProfile : "").trim();
+            const sandboxId = (
+              typeof body.sandboxId === "string" ? body.sandboxId : ""
+            ).trim();
+            const resumeToken = (
+              typeof body.resumeToken === "string" ? body.resumeToken : ""
+            ).trim();
+            const sandmanUrl =
+              normalizeGatewayUrl(
+                typeof body.sandmanUrl === "string" ? body.sandmanUrl : "",
+              ) || "";
+            const repoUrl = (
+              typeof body.repoUrl === "string" ? body.repoUrl : ""
+            ).trim();
+            const branch = (
+              typeof body.branch === "string" ? body.branch : ""
+            ).trim();
+            const vmProfile = (
+              typeof body.vmProfile === "string" ? body.vmProfile : ""
+            ).trim();
 
             if (!sandboxId || !/^[a-zA-Z0-9_-]{1,64}$/.test(sandboxId)) {
-              return Response.json({ error: "invalid sandbox_id" }, { status: 400, headers: corsHeaders });
+              return Response.json(
+                { error: "invalid sandbox_id" },
+                { status: 400, headers: corsHeaders },
+              );
             }
             if (!resumeToken) {
-              return Response.json({ error: "resumeToken is required" }, { status: 400, headers: corsHeaders });
+              return Response.json(
+                { error: "resumeToken is required" },
+                { status: 400, headers: corsHeaders },
+              );
             }
 
             // Validate resumeToken belongs to an active or grace session
             const session = getSessionByTokenStmt.get(resumeToken) as any;
             if (!session) {
-              return Response.json({ error: "session not found" }, { status: 404, headers: corsHeaders });
+              return Response.json(
+                { error: "session not found" },
+                { status: 404, headers: corsHeaders },
+              );
             }
-            const validStates = ["pending", "active", "app_offline_grace", "cli_offline_grace"];
+            const validStates = [
+              "pending",
+              "active",
+              "app_offline_grace",
+              "cli_offline_grace",
+            ];
             if (!validStates.includes(session.state)) {
-              return Response.json({ error: "session not active" }, { status: 409, headers: corsHeaders });
+              return Response.json(
+                { error: "session not active" },
+                { status: 409, headers: corsHeaders },
+              );
             }
 
             upsertVmHeartbeatStmt.run(
@@ -3881,11 +4598,16 @@ function startManager(): void {
               repoUrl,
               branch,
               vmProfile,
-              Date.now()
+              Date.now(),
             );
             return Response.json({ ok: true }, { headers: corsHeaders });
           })
-          .catch(() => Response.json({ error: "invalid body" }, { status: 400, headers: corsHeaders }));
+          .catch(() =>
+            Response.json(
+              { error: "invalid body" },
+              { status: 400, headers: corsHeaders },
+            ),
+          );
       }
 
       /* Retired sandbox route. It remains excluded until HelixBox has a separately deployed isolated runner. */
@@ -4107,10 +4829,16 @@ function startManager(): void {
         }
 
         const upgraded = (server as any).upgrade(req, {
-          data: { type: "manager-control", authed: false } as ManagerControlSocketData,
+          data: {
+            type: "manager-control",
+            authed: false,
+          } as ManagerControlSocketData,
         });
         if (!upgraded) {
-          return Response.json({ error: "upgrade failed" }, { status: 500, headers: corsHeaders });
+          return Response.json(
+            { error: "upgrade failed" },
+            { status: 500, headers: corsHeaders },
+          );
         }
         return undefined;
       }
@@ -4143,7 +4871,9 @@ function startManager(): void {
           .then((body: { password?: string }) => {
             const provided = (body.password || "").trim();
             if (!managerAdminPassword || provided !== managerAdminPassword) {
-              console.warn(`[admin] login failed — wrong password (ip=${sourceIp})`);
+              console.warn(
+                `[admin] login failed — wrong password (ip=${sourceIp})`,
+              );
               recordFailureAndMaybeBlock("admin-login", req, {
                 threshold: 8,
                 windowMs: 10 * 60_000,
@@ -4159,7 +4889,10 @@ function startManager(): void {
                 status: "denied",
                 message: "invalid password",
               });
-              return Response.json({ error: "unauthorized" }, { status: 401, headers: corsHeaders });
+              return Response.json(
+                { error: "unauthorized" },
+                { status: 401, headers: corsHeaders },
+              );
             }
 
             const now = Math.floor(Date.now() / 1000);
@@ -4187,14 +4920,21 @@ function startManager(): void {
             });
             return Response.json(
               { token, expiresAt: claims.exp * 1000, audience: claims.aud },
-              { headers: corsHeaders }
+              { headers: corsHeaders },
             );
           })
-          .catch(() => Response.json({ error: "invalid body" }, { status: 400, headers: corsHeaders }));
+          .catch(() =>
+            Response.json(
+              { error: "invalid body" },
+              { status: 400, headers: corsHeaders },
+            ),
+          );
       }
 
       if (path === "/oldschooladmin" && req.method === "GET") {
-        return new Response(renderManagerPage(), { headers: { "content-type": "text/html; charset=utf-8" } });
+        return new Response(renderManagerPage(), {
+          headers: { "content-type": "text/html; charset=utf-8" },
+        });
       }
       if (path.startsWith("/v1/admin/")) {
         const blocked = enforceRateLimit(req, "manager:admin-api", {
@@ -4221,26 +4961,40 @@ function startManager(): void {
             status: "denied",
             message: "unauthorized admin request",
           });
-          return Response.json({ error: "unauthorized" }, { status: 401, headers: corsHeaders });
+          return Response.json(
+            { error: "unauthorized" },
+            { status: 401, headers: corsHeaders },
+          );
         }
 
         if (path === "/v1/admin/list" && req.method === "GET") {
-          return Response.json({ proxies: loadAllProxies(), ring: getHealthyRing() }, { headers: corsHeaders });
+          return Response.json(
+            { proxies: loadAllProxies(), ring: getHealthyRing() },
+            { headers: corsHeaders },
+          );
         }
 
         if (path === "/v1/admin/security-metrics" && req.method === "GET") {
-          return Response.json({ metrics: securityMetrics }, { headers: corsHeaders });
+          return Response.json(
+            { metrics: securityMetrics },
+            { headers: corsHeaders },
+          );
         }
 
         if (path === "/v1/admin/security-alerts" && req.method === "GET") {
           const limitRaw = Number(url.searchParams.get("limit") || 100);
-          const limit = Math.max(1, Math.min(1000, Number.isFinite(limitRaw) ? limitRaw : 100));
+          const limit = Math.max(
+            1,
+            Math.min(1000, Number.isFinite(limitRaw) ? limitRaw : 100),
+          );
           const alerts = listSecurityAlertsStmt.all(limit);
           return Response.json({ alerts }, { headers: corsHeaders });
         }
 
         if (path === "/v1/admin/vm-health" && req.method === "GET") {
-          const heartbeats = db.query(`
+          const heartbeats = db
+            .query(
+              `
             SELECT v.sandbox_id as sandboxId, v.resume_token as resumeToken, v.sandman_url as sandmanUrl,
                    v.repo_url as repoUrl, v.branch, v.vm_profile as vmProfile, v.last_heartbeat as lastHeartbeat,
                    s.state as sessionState, s.code as sessionCode,
@@ -4249,8 +5003,13 @@ function startManager(): void {
             LEFT JOIN sessions s ON s.resume_token = v.resume_token
             ORDER BY v.last_heartbeat DESC
             LIMIT 200
-          `).all(Date.now() - VM_HEARTBEAT_STALE_MS);
-          return Response.json({ heartbeats, staleThresholdMs: VM_HEARTBEAT_STALE_MS }, { headers: corsHeaders });
+          `,
+            )
+            .all(Date.now() - VM_HEARTBEAT_STALE_MS);
+          return Response.json(
+            { heartbeats, staleThresholdMs: VM_HEARTBEAT_STALE_MS },
+            { headers: corsHeaders },
+          );
         }
 
         if (path === "/v1/admin/add" && req.method === "POST") {
@@ -4259,25 +5018,48 @@ function startManager(): void {
             .then(async (body: { url?: string; proxyPassword?: string }) => {
               const normalized = normalizeGatewayUrl(body.url || null);
               if (!normalized) {
-                return Response.json({ error: "invalid url" }, { status: 400, headers: corsHeaders });
+                return Response.json(
+                  { error: "invalid url" },
+                  { status: 400, headers: corsHeaders },
+                );
               }
               const proxyPassword = (body.proxyPassword || "").trim();
               if (!proxyPassword) {
-                return Response.json({ error: "proxyPassword is required" }, { status: 400, headers: corsHeaders });
+                return Response.json(
+                  { error: "proxyPassword is required" },
+                  { status: 400, headers: corsHeaders },
+                );
               }
               try {
                 const healthRes = await fetch(`${normalized}/health`, {
                   signal: AbortSignal.timeout(15000),
                 });
                 if (!healthRes.ok) {
-                  return Response.json({ error: "proxy health check failed — is the URL correct?" }, { status: 400, headers: corsHeaders });
+                  return Response.json(
+                    {
+                      error: "proxy health check failed — is the URL correct?",
+                    },
+                    { status: 400, headers: corsHeaders },
+                  );
                 }
-                const health = await healthRes.json() as { status?: string; mode?: string };
+                const health = (await healthRes.json()) as {
+                  status?: string;
+                  mode?: string;
+                };
                 if (health.status !== "ok" || health.mode !== "gateway") {
-                  return Response.json({ error: "URL does not point to a helixbox proxy" }, { status: 400, headers: corsHeaders });
+                  return Response.json(
+                    { error: "URL does not point to a helixbox proxy" },
+                    { status: 400, headers: corsHeaders },
+                  );
                 }
               } catch {
-                return Response.json({ error: "could not reach proxy — check the URL and that the proxy is running" }, { status: 400, headers: corsHeaders });
+                return Response.json(
+                  {
+                    error:
+                      "could not reach proxy — check the URL and that the proxy is running",
+                  },
+                  { status: 400, headers: corsHeaders },
+                );
               }
               try {
                 const pingRes = await fetch(`${normalized}/v1/ping`, {
@@ -4285,13 +5067,25 @@ function startManager(): void {
                   signal: AbortSignal.timeout(15000),
                 });
                 if (pingRes.status === 401) {
-                  return Response.json({ error: "wrong proxy password" }, { status: 400, headers: corsHeaders });
+                  return Response.json(
+                    { error: "wrong proxy password" },
+                    { status: 400, headers: corsHeaders },
+                  );
                 }
                 if (!pingRes.ok) {
-                  return Response.json({ error: "proxy ping failed unexpectedly" }, { status: 400, headers: corsHeaders });
+                  return Response.json(
+                    { error: "proxy ping failed unexpectedly" },
+                    { status: 400, headers: corsHeaders },
+                  );
                 }
               } catch {
-                return Response.json({ error: "could not verify proxy password — proxy unreachable on /v1/ping" }, { status: 400, headers: corsHeaders });
+                return Response.json(
+                  {
+                    error:
+                      "could not verify proxy password — proxy unreachable on /v1/ping",
+                  },
+                  { status: 400, headers: corsHeaders },
+                );
               }
               addProxyStmt.run(normalized, proxyPassword);
               console.log(`[admin] proxy added: ${normalized}`);
@@ -4312,11 +5106,18 @@ function startManager(): void {
                 headers: { "X-Proxy-Password": proxyPassword },
                 signal: AbortSignal.timeout(5000),
               }).catch(() => {
-                console.warn(`[admin] could not trigger connect on ${normalized} — proxy will need to be restarted`);
+                console.warn(
+                  `[admin] could not trigger connect on ${normalized} — proxy will need to be restarted`,
+                );
               });
               return Response.json({ ok: true }, { headers: corsHeaders });
             })
-            .catch(() => Response.json({ error: "invalid body" }, { status: 400, headers: corsHeaders }));
+            .catch(() =>
+              Response.json(
+                { error: "invalid body" },
+                { status: 400, headers: corsHeaders },
+              ),
+            );
         }
 
         if (path === "/v1/admin/remove" && req.method === "POST") {
@@ -4325,7 +5126,10 @@ function startManager(): void {
             .then((body: { url?: string }) => {
               const normalized = normalizeGatewayUrl(body.url || null);
               if (!normalized) {
-                return Response.json({ error: "invalid url" }, { status: 400, headers: corsHeaders });
+                return Response.json(
+                  { error: "invalid url" },
+                  { status: 400, headers: corsHeaders },
+                );
               }
               removeProxyStmt.run(normalized);
               console.log(`[admin] proxy removed: ${normalized}`);
@@ -4342,7 +5146,12 @@ function startManager(): void {
               });
               return Response.json({ ok: true }, { headers: corsHeaders });
             })
-            .catch(() => Response.json({ error: "invalid body" }, { status: 400, headers: corsHeaders }));
+            .catch(() =>
+              Response.json(
+                { error: "invalid body" },
+                { status: 400, headers: corsHeaders },
+              ),
+            );
         }
 
         if (path === "/v1/admin/proxy-state" && req.method === "POST") {
@@ -4352,10 +5161,16 @@ function startManager(): void {
               const normalized = normalizeGatewayUrl(body.url || null);
               const state = (body.state || "").trim();
               if (!normalized) {
-                return Response.json({ error: "invalid url" }, { status: 400, headers: corsHeaders });
+                return Response.json(
+                  { error: "invalid url" },
+                  { status: 400, headers: corsHeaders },
+                );
               }
               if (!["active", "draining", "disabled"].includes(state)) {
-                return Response.json({ error: "invalid state" }, { status: 400, headers: corsHeaders });
+                return Response.json(
+                  { error: "invalid state" },
+                  { status: 400, headers: corsHeaders },
+                );
               }
               setProxyStateStmt.run(normalized, state, "manual");
               writeAuditLog({
@@ -4371,78 +5186,125 @@ function startManager(): void {
               });
               return Response.json({ ok: true }, { headers: corsHeaders });
             })
-            .catch(() => Response.json({ error: "invalid body" }, { status: 400, headers: corsHeaders }));
+            .catch(() =>
+              Response.json(
+                { error: "invalid body" },
+                { status: 400, headers: corsHeaders },
+              ),
+            );
         }
 
         if (path === "/v1/admin/session/revoke" && req.method === "POST") {
           return req
             .json()
-            .then((body: { sessionId?: string; resumeToken?: string; reason?: string }) => {
-              const sessionId = (body.sessionId || "").trim();
-              const resumeToken = (body.resumeToken || "").trim();
-              const reason = (body.reason || "revoked by admin").trim();
-              if (!sessionId && !resumeToken) {
-                return Response.json({ error: "sessionId or resumeToken is required" }, { status: 400, headers: corsHeaders });
-              }
-              let row: any = null;
-              if (sessionId) {
-                row = db
-                  .query(`SELECT session_id, resume_token FROM sessions WHERE session_id = ?1 LIMIT 1`)
-                  .get(sessionId) as any;
-              } else {
-                row = db
-                  .query(`SELECT session_id, resume_token FROM sessions WHERE resume_token = ?1 LIMIT 1`)
-                  .get(resumeToken) as any;
-              }
-              if (!row) {
-                return Response.json({ error: "session not found" }, { status: 404, headers: corsHeaders });
-              }
-              const now = Date.now();
-              const revoked = transitionSessionState(row.resume_token, "ended", null, now, 1);
-              if (revoked.ok) {
-                const routing = getSessionRoutingByTokenStmt.get(row.resume_token) as
-                  | { primaryGateway?: string; backupGateway?: string | null }
-                  | null;
-                if (routing) {
-                  sendManagerCommandForSession(routing, "close_session", {
-                    resumeToken: row.resume_token,
-                    reason,
-                  });
+            .then(
+              (body: {
+                sessionId?: string;
+                resumeToken?: string;
+                reason?: string;
+              }) => {
+                const sessionId = (body.sessionId || "").trim();
+                const resumeToken = (body.resumeToken || "").trim();
+                const reason = (body.reason || "revoked by admin").trim();
+                if (!sessionId && !resumeToken) {
+                  return Response.json(
+                    { error: "sessionId or resumeToken is required" },
+                    { status: 400, headers: corsHeaders },
+                  );
                 }
-              }
-              writeAuditLog({
-                actorType: "admin",
-                actorId: "admin",
-                action: "admin.session_revoke",
-                targetType: "session",
-                targetId: row.session_id,
-                sourceIp: extractClientIp(req),
-                status: "ok",
-                message: "session revoked",
-                metadata: { reason },
-              });
-              return Response.json({ ok: true, sessionId: row.session_id }, { headers: corsHeaders });
-            })
-            .catch(() => Response.json({ error: "invalid body" }, { status: 400, headers: corsHeaders }));
+                let row: any = null;
+                if (sessionId) {
+                  row = db
+                    .query(
+                      `SELECT session_id, resume_token FROM sessions WHERE session_id = ?1 LIMIT 1`,
+                    )
+                    .get(sessionId) as any;
+                } else {
+                  row = db
+                    .query(
+                      `SELECT session_id, resume_token FROM sessions WHERE resume_token = ?1 LIMIT 1`,
+                    )
+                    .get(resumeToken) as any;
+                }
+                if (!row) {
+                  return Response.json(
+                    { error: "session not found" },
+                    { status: 404, headers: corsHeaders },
+                  );
+                }
+                const now = Date.now();
+                const revoked = transitionSessionState(
+                  row.resume_token,
+                  "ended",
+                  null,
+                  now,
+                  1,
+                );
+                if (revoked.ok) {
+                  const routing = getSessionRoutingByTokenStmt.get(
+                    row.resume_token,
+                  ) as {
+                    primaryGateway?: string;
+                    backupGateway?: string | null;
+                  } | null;
+                  if (routing) {
+                    sendManagerCommandForSession(routing, "close_session", {
+                      resumeToken: row.resume_token,
+                      reason,
+                    });
+                  }
+                }
+                writeAuditLog({
+                  actorType: "admin",
+                  actorId: "admin",
+                  action: "admin.session_revoke",
+                  targetType: "session",
+                  targetId: row.session_id,
+                  sourceIp: extractClientIp(req),
+                  status: "ok",
+                  message: "session revoked",
+                  metadata: { reason },
+                });
+                return Response.json(
+                  { ok: true, sessionId: row.session_id },
+                  { headers: corsHeaders },
+                );
+              },
+            )
+            .catch(() =>
+              Response.json(
+                { error: "invalid body" },
+                { status: 400, headers: corsHeaders },
+              ),
+            );
         }
 
         if (path === "/v1/admin/audit" && req.method === "GET") {
           const limitRaw = Number(url.searchParams.get("limit") || 100);
-          const limit = Math.max(1, Math.min(500, Number.isFinite(limitRaw) ? limitRaw : 100));
+          const limit = Math.max(
+            1,
+            Math.min(500, Number.isFinite(limitRaw) ? limitRaw : 100),
+          );
           const logs = listAuditLogsStmt.all(limit) as AuditLogRow[];
           return Response.json({ logs }, { headers: corsHeaders });
         }
 
         if (path === "/v1/admin/gateways" && req.method === "GET") {
           const limitRaw = Number(url.searchParams.get("limit") || 100);
-          const limit = Math.max(1, Math.min(1000, Number.isFinite(limitRaw) ? limitRaw : 100));
+          const limit = Math.max(
+            1,
+            Math.min(1000, Number.isFinite(limitRaw) ? limitRaw : 100),
+          );
           const gateways = listGatewayInstancesStmt.all(limit);
           return Response.json({ gateways }, { headers: corsHeaders });
         }
 
         if (path === "/v1/admin/audit/export" && req.method === "GET") {
           const limitRaw = Number(url.searchParams.get("limit") || 1000);
-          const limit = Math.max(1, Math.min(10_000, Number.isFinite(limitRaw) ? limitRaw : 1000));
+          const limit = Math.max(
+            1,
+            Math.min(10_000, Number.isFinite(limitRaw) ? limitRaw : 1000),
+          );
           const logs = listAuditLogsStmt.all(limit) as AuditLogRow[];
           const jsonl = logs.map((row) => JSON.stringify(row)).join("\n");
           return new Response(jsonl, {
@@ -4457,21 +5319,34 @@ function startManager(): void {
         if (path === "/v1/admin/details" && req.method === "GET") {
           const proxyUrl = normalizeGatewayUrl(url.searchParams.get("url"));
           if (!proxyUrl) {
-            return Response.json({ error: "invalid url" }, { status: 400, headers: corsHeaders });
+            return Response.json(
+              { error: "invalid url" },
+              { status: 400, headers: corsHeaders },
+            );
           }
-          const proxy = detailsProxyStmt.get(proxyUrl) as ManagerProxyMetrics | null;
+          const proxy = detailsProxyStmt.get(
+            proxyUrl,
+          ) as ManagerProxyMetrics | null;
           if (!proxy) {
-            return Response.json({ error: "not found" }, { status: 404, headers: corsHeaders });
+            return Response.json(
+              { error: "not found" },
+              { status: 404, headers: corsHeaders },
+            );
           }
           return Response.json({ proxy }, { headers: corsHeaders });
         }
       }
 
-      return Response.json({ error: "not found" }, { status: 404, headers: corsHeaders });
+      return Response.json(
+        { error: "not found" },
+        { status: 404, headers: corsHeaders },
+      );
     },
     websocket: {
       open(ws) {
-        const socketData = (ws.data || {}) as Partial<WebSocketData | ManagerControlSocketData>;
+        const socketData = (ws.data || {}) as Partial<
+          WebSocketData | ManagerControlSocketData
+        >;
         if (socketData.type === "assemble") {
           const assembleData = socketData as AssembleWebSocketData;
           void assembleMutex.runExclusive(() => {
@@ -4496,7 +5371,9 @@ function startManager(): void {
         };
       },
       close(ws, _code, reason) {
-        const socketData = (ws.data || {}) as Partial<WebSocketData | ManagerControlSocketData>;
+        const socketData = (ws.data || {}) as Partial<
+          WebSocketData | ManagerControlSocketData
+        >;
         if (socketData.type === "assemble") {
           const assembleData = socketData as AssembleWebSocketData;
           void assembleMutex.runExclusive(() => {
@@ -4512,28 +5389,36 @@ function startManager(): void {
           return;
         }
 
-        const controlSocketData = socketData as Partial<ManagerControlSocketData>;
+        const controlSocketData =
+          socketData as Partial<ManagerControlSocketData>;
         if (controlSocketData.gatewayUrl) {
-          console.warn(`[gateway] proxy disconnected: ${controlSocketData.gatewayUrl}${typeof reason === "string" && reason ? ` — ${reason}` : ""}`);
+          console.warn(
+            `[gateway] proxy disconnected: ${controlSocketData.gatewayUrl}${typeof reason === "string" && reason ? ` — ${reason}` : ""}`,
+          );
           detachGatewayControlSocket(
             controlSocketData.gatewayUrl,
-            ws as ServerWebSocket<ManagerControlSocketData>
+            ws as ServerWebSocket<ManagerControlSocketData>,
           );
         }
         if (controlSocketData.gatewayId) {
           markGatewayDisconnectedStmt.run(
             controlSocketData.gatewayId,
             Date.now(),
-            typeof reason === "string" ? reason : "control websocket closed"
+            typeof reason === "string" ? reason : "control websocket closed",
           );
         }
       },
       message(ws, message) {
         try {
-          const socketData = (ws.data || {}) as Partial<WebSocketData | ManagerControlSocketData>;
+          const socketData = (ws.data || {}) as Partial<
+            WebSocketData | ManagerControlSocketData
+          >;
           if (socketData.type === "assemble") {
             const assembleData = socketData as AssembleWebSocketData;
-            const raw = typeof message === "string" ? message : Buffer.from(message as any).toString("utf-8");
+            const raw =
+              typeof message === "string"
+                ? message
+                : Buffer.from(message as any).toString("utf-8");
             const parsed = JSON.parse(raw) as { type?: string };
             if (parsed.type !== "ack") {
               ws.close(1008, "ack required");
@@ -4550,40 +5435,72 @@ function startManager(): void {
               } else {
                 session.cliAcked = true;
               }
-              upsertAssembleSessionStmt.run(session.code, session.createdAt, session.expiresAt, session.paidUntil, session.password, session.appAcked ? 1 : 0, session.cliAcked ? 1 : 0);
+              upsertAssembleSessionStmt.run(
+                session.code,
+                session.createdAt,
+                session.expiresAt,
+                session.paidUntil,
+                session.password,
+                session.appAcked ? 1 : 0,
+                session.cliAcked ? 1 : 0,
+              );
               maybeCompleteAssembleSession(session);
             });
             return;
           }
 
-          const controlSocketData = socketData as Partial<ManagerControlSocketData>;
-          const raw = typeof message === "string" ? message : Buffer.from(message as any).toString("utf-8");
+          const controlSocketData =
+            socketData as Partial<ManagerControlSocketData>;
+          const raw =
+            typeof message === "string"
+              ? message
+              : Buffer.from(message as any).toString("utf-8");
           const event = JSON.parse(raw) as GatewayControlEvent;
           if (!controlSocketData.authed) {
             if (event.type === "gateway_auth" && event.password) {
               const gateway = normalizeGatewayUrl(event.gateway || null);
               const gatewayId = normalizeGatewayId(event.gatewayId);
-              const proxyRow = gateway ? getProxyPasswordStmt.get(gateway) as { password: string } | null : null;
+              const proxyRow = gateway
+                ? (getProxyPasswordStmt.get(gateway) as {
+                    password: string;
+                  } | null)
+                : null;
               const storedPassword = proxyRow?.password || "";
-              if (gateway && storedPassword && event.password === storedPassword) {
+              if (
+                gateway &&
+                storedPassword &&
+                event.password === storedPassword
+              ) {
                 (ws.data as ManagerControlSocketData).authed = true;
-                (ws.data as ManagerControlSocketData).gatewayId = gatewayId || gateway;
+                (ws.data as ManagerControlSocketData).gatewayId =
+                  gatewayId || gateway;
                 (ws.data as ManagerControlSocketData).gatewayUrl = gateway;
                 attachGatewayControlSocket(
                   gateway,
-                  ws as ServerWebSocket<ManagerControlSocketData>
+                  ws as ServerWebSocket<ManagerControlSocketData>,
                 );
                 // Send current ring immediately so this proxy doesn't need to wait for next gateway_hello
                 try {
-                  ws.send(JSON.stringify({ type: "manager_command", command: "ring_update", ring: getHealthyRing(), ts: Date.now() }));
-                } catch { /* ignore */ }
+                  ws.send(
+                    JSON.stringify({
+                      type: "manager_command",
+                      command: "ring_update",
+                      ring: getHealthyRing(),
+                      ts: Date.now(),
+                    }),
+                  );
+                } catch {
+                  /* ignore */
+                }
                 upsertGatewayInstanceStmt.run(
                   gatewayId || gateway,
                   gateway,
                   "connected",
-                  Date.now()
+                  Date.now(),
                 );
-                console.log(`[gateway] proxy connected via WS: ${gateway}${gatewayId ? ` (id=${gatewayId})` : ""}`);
+                console.log(
+                  `[gateway] proxy connected via WS: ${gateway}${gatewayId ? ` (id=${gatewayId})` : ""}`,
+                );
                 writeAuditLog({
                   actorType: "gateway",
                   actorId: gatewayId || gateway,
@@ -4597,7 +5514,9 @@ function startManager(): void {
                 return;
               }
             }
-            console.warn("[gateway] proxy WebSocket auth failed — wrong PROXY_PASSWORD or proxy not registered");
+            console.warn(
+              "[gateway] proxy WebSocket auth failed — wrong PROXY_PASSWORD or proxy not registered",
+            );
             writeAuditLog({
               actorType: "gateway",
               actorId: "unknown",
@@ -4616,12 +5535,20 @@ function startManager(): void {
             ws.close(1008, "unauthorized");
             return;
           }
-            if (event.type === "gateway_hello" || event.type === "proxy_metrics") {
+          if (
+            event.type === "gateway_hello" ||
+            event.type === "proxy_metrics"
+          ) {
             const gateway = normalizeGatewayUrl(event.gateway || null);
             if (!gateway) return;
             const gatewayId = normalizeGatewayId(event.gatewayId);
             if (gatewayId) {
-              upsertGatewayInstanceStmt.run(gatewayId, gateway, "connected", Number(event.ts || Date.now()));
+              upsertGatewayInstanceStmt.run(
+                gatewayId,
+                gateway,
+                "connected",
+                Number(event.ts || Date.now()),
+              );
             }
             upsertProxyStmt.run(
               gateway,
@@ -4637,7 +5564,7 @@ function startManager(): void {
               Number(event.memoryTotalMb || 0),
               Number(event.networkInBps || 0),
               Number(event.networkOutBps || 0),
-              Number(event.lastTelemetry || event.ts || Date.now())
+              Number(event.lastTelemetry || event.ts || Date.now()),
             );
             // Broadcast updated ring to all proxies after fleet membership changes
             if (event.type === "gateway_hello") broadcastRingUpdate();
@@ -4652,15 +5579,13 @@ function startManager(): void {
             const generation = Number(event.generation || 0);
             const now = Number(event.ts || Date.now());
 
-            const routing = getSessionRoutingByTokenStmt.get(resumeToken) as
-              | {
-                  sessionId: string;
-                  resumeToken: string;
-                  primaryGateway: string;
-                  backupGateway: string | null;
-                  state: SessionState;
-                }
-              | null;
+            const routing = getSessionRoutingByTokenStmt.get(resumeToken) as {
+              sessionId: string;
+              resumeToken: string;
+              primaryGateway: string;
+              backupGateway: string | null;
+              state: SessionState;
+            } | null;
             if (!routing) {
               if (action === "socket_connected" && generation > 0 && role) {
                 noteReattachAttached(resumeToken, role, generation);
@@ -4675,7 +5600,13 @@ function startManager(): void {
             }
 
             if (action === "session_end_requested") {
-              const end = transitionSessionState(resumeToken, "ended", null, now, 1);
+              const end = transitionSessionState(
+                resumeToken,
+                "ended",
+                null,
+                now,
+                1,
+              );
               if (end.ok) {
                 sendManagerCommandForSession(routing, "close_session", {
                   resumeToken,
@@ -4685,16 +5616,14 @@ function startManager(): void {
               return;
             }
 
-            const runtime = (getSessionRuntimeStmt.get(resumeToken) as
-              | {
-                  resumeToken: string;
-                  cliControl: number;
-                  cliData: number;
-                  appControl: number;
-                  appData: number;
-                  updatedAt: number;
-                }
-              | null) || {
+            const runtime = (getSessionRuntimeStmt.get(resumeToken) as {
+              resumeToken: string;
+              cliControl: number;
+              cliData: number;
+              appControl: number;
+              appData: number;
+              updatedAt: number;
+            } | null) || {
               resumeToken,
               cliControl: 0,
               cliData: 0,
@@ -4703,19 +5632,24 @@ function startManager(): void {
               updatedAt: now,
             };
 
-            if (action === "socket_connected" || action === "socket_disconnected") {
+            if (
+              action === "socket_connected" ||
+              action === "socket_disconnected"
+            ) {
               const value = action === "socket_connected" ? 1 : 0;
               if (role === "cli" && channel === "session") {
                 runtime.cliControl = value;
                 runtime.cliData = value;
               }
-              if (role === "cli" && channel === "control") runtime.cliControl = value;
+              if (role === "cli" && channel === "control")
+                runtime.cliControl = value;
               if (role === "cli" && channel === "data") runtime.cliData = value;
               if (role === "app" && channel === "session") {
                 runtime.appControl = value;
                 runtime.appData = value;
               }
-              if (role === "app" && channel === "control") runtime.appControl = value;
+              if (role === "app" && channel === "control")
+                runtime.appControl = value;
               if (role === "app" && channel === "data") runtime.appData = value;
             }
             runtime.updatedAt = now;
@@ -4725,7 +5659,7 @@ function startManager(): void {
               runtime.cliData,
               runtime.appControl,
               runtime.appData,
-              runtime.updatedAt
+              runtime.updatedAt,
             );
 
             const cliFully = runtime.cliControl === 1 && runtime.cliData === 1;
@@ -4736,13 +5670,21 @@ function startManager(): void {
               if (generation > 0 && role) {
                 noteReattachAttached(resumeToken, role, generation);
               }
-              sendManagerCommandForSession(routing, "clear_reconnect_grace", { resumeToken });
+              sendManagerCommandForSession(routing, "clear_reconnect_grace", {
+                resumeToken,
+              });
               return;
             }
 
             if (cliFully && !appFully) {
               const deadline = now + RECONNECT_GRACE_MS;
-              transitionSessionState(resumeToken, "app_offline_grace", deadline, now, 0);
+              transitionSessionState(
+                resumeToken,
+                "app_offline_grace",
+                deadline,
+                now,
+                0,
+              );
               void noteReattachDisconnect(resumeToken, "app");
               sendManagerCommandForSession(routing, "set_reconnect_grace", {
                 resumeToken,
@@ -4752,7 +5694,13 @@ function startManager(): void {
 
             if (!cliFully && appFully) {
               const deadline = now + CLI_OFFLINE_GRACE_MS;
-              transitionSessionState(resumeToken, "cli_offline_grace", deadline, now, 0);
+              transitionSessionState(
+                resumeToken,
+                "cli_offline_grace",
+                deadline,
+                now,
+                0,
+              );
               void noteReattachDisconnect(resumeToken, "cli");
               sendManagerCommandForSession(routing, "set_cli_reconnect_grace", {
                 resumeToken,
@@ -4776,18 +5724,28 @@ function startManager(): void {
                 });
                 return;
               }
-              recentGatewayEventIds.set(event.eventId, nowSeen + GATEWAY_EVENT_DEDUPE_MS);
+              recentGatewayEventIds.set(
+                event.eventId,
+                nowSeen + GATEWAY_EVENT_DEDUPE_MS,
+              );
             }
             const resumeToken = event.resumeToken || "";
             if (!resumeToken) return;
             const now = Number(event.ts || Date.now());
             let transitionResult: { ok: boolean; reason: string } | null = null;
             if (event.event === "peer_connected") {
-              transitionResult = transitionSessionState(resumeToken, "active", null, now, 0);
+              transitionResult = transitionSessionState(
+                resumeToken,
+                "active",
+                null,
+                now,
+                0,
+              );
               if (!transitionResult.ok && transitionResult.reason !== "noop") {
                 writeAuditLog({
                   actorType: "gateway",
-                  actorId: controlSocketData.gatewayId || event.gateway || "unknown",
+                  actorId:
+                    controlSocketData.gatewayId || event.gateway || "unknown",
                   action: "session.transition",
                   targetType: "session_token",
                   targetId: "redacted",
@@ -4804,12 +5762,13 @@ function startManager(): void {
                 "app_offline_grace",
                 event.reconnectDeadline ?? null,
                 now,
-                0
+                0,
               );
               if (!transitionResult.ok && transitionResult.reason !== "noop") {
                 writeAuditLog({
                   actorType: "gateway",
-                  actorId: controlSocketData.gatewayId || event.gateway || "unknown",
+                  actorId:
+                    controlSocketData.gatewayId || event.gateway || "unknown",
                   action: "session.transition",
                   targetType: "session_token",
                   targetId: "redacted",
@@ -4821,11 +5780,18 @@ function startManager(): void {
               return;
             }
             if (event.event === "session_ended") {
-              transitionResult = transitionSessionState(resumeToken, "ended", null, now, 1);
+              transitionResult = transitionSessionState(
+                resumeToken,
+                "ended",
+                null,
+                now,
+                1,
+              );
               if (!transitionResult.ok && transitionResult.reason !== "noop") {
                 writeAuditLog({
                   actorType: "gateway",
-                  actorId: controlSocketData.gatewayId || event.gateway || "unknown",
+                  actorId:
+                    controlSocketData.gatewayId || event.gateway || "unknown",
                   action: "session.transition",
                   targetType: "session_token",
                   targetId: "redacted",
@@ -4837,11 +5803,18 @@ function startManager(): void {
               return;
             }
             if (event.event === "session_expired") {
-              transitionResult = transitionSessionState(resumeToken, "expired", null, now, 1);
+              transitionResult = transitionSessionState(
+                resumeToken,
+                "expired",
+                null,
+                now,
+                1,
+              );
               if (!transitionResult.ok && transitionResult.reason !== "noop") {
                 writeAuditLog({
                   actorType: "gateway",
-                  actorId: controlSocketData.gatewayId || event.gateway || "unknown",
+                  actorId:
+                    controlSocketData.gatewayId || event.gateway || "unknown",
                   action: "session.transition",
                   targetType: "session_token",
                   targetId: "redacted",
@@ -4861,8 +5834,13 @@ function startManager(): void {
 
   const configuredCount = configured.length;
   console.log(`[manager] started — port=${process.env.PORT || 8899}`);
-  if (configuredCount > 0) console.log(`[manager] ${configuredCount} proxy(ies) loaded from PROXIES env`);
-  console.log(`[manager] admin UI at http://localhost:${process.env.PORT || 8899}`);
+  if (configuredCount > 0)
+    console.log(
+      `[manager] ${configuredCount} proxy(ies) loaded from PROXIES env`,
+    );
+  console.log(
+    `[manager] admin UI at http://localhost:${process.env.PORT || 8899}`,
+  );
 }
 
 startManager();

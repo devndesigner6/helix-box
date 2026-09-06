@@ -1,10 +1,14 @@
-// AI manager — runs both OpenCode and Codex simultaneously and routes calls
+// AI manager — runs every installed provider simultaneously and routes calls
 // by the `backend` field in each request. Backends that fail to init are
 // skipped gracefully; the available list is exposed to the app.
 
 import type { AIProvider, AiEvent, AiEventEmitter, ModelSelector, FileAttachment, CodexPromptOptions } from "./interface.js";
 
-export type AiBackend = "opencode" | "codex";
+export type AiBackend = "opencode" | "codex" | "claude" | "hermes";
+export const AI_BACKENDS: readonly AiBackend[] = ["opencode", "codex", "claude", "hermes"];
+export function isAiBackend(value: unknown): value is AiBackend {
+  return typeof value === "string" && (AI_BACKENDS as readonly string[]).includes(value);
+}
 const DEBUG_MODE = process.env.HELIXBOX_DEBUG === "1" || process.env.HELIXBOX_DEBUG_AI === "1";
 
 export class AiManager {
@@ -15,6 +19,8 @@ export class AiManager {
     await Promise.allSettled([
       this.tryInit("opencode"),
       this.tryInit("codex"),
+      this.tryInit("claude"),
+      this.tryInit("hermes"),
     ]);
     if (this._available.length === 0) {
       console.warn("[ai] No AI backends available. CLI will continue without AI features.");
@@ -32,11 +38,16 @@ export class AiManager {
         const p = new OpenCodeProvider();
         await p.init();
         this._providers.opencode = p;
-      } else {
+      } else if (backend === "codex") {
         const { CodexProvider } = await import("./codex.js");
         const p = new CodexProvider();
         await p.init();
         this._providers.codex = p;
+      } else {
+        const { CliAgentProvider } = await import("./cli.js");
+        const p = new CliAgentProvider(backend);
+        await p.init();
+        this._providers[backend] = p;
       }
       this._available.push(backend);
     } catch (err) {

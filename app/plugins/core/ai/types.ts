@@ -1,6 +1,6 @@
 // AI types mirroring OpenCode SDK types for mobile-side usage
 
-export type AiBackend = "opencode" | "codex";
+export type AiBackend = "opencode" | "codex" | "claude" | "hermes";
 
 export interface AIEvent {
   type: string;

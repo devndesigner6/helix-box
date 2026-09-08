@@ -11,9 +11,9 @@ import english from "./bip39-words.js";
 function getIntervalDelayMs(): number {
   const envInterval = Number(process.env.X402_INTERVAL_MINS);
   const targetMins =
-    Number.isFinite(envInterval) && envInterval > 0 ? envInterval : 2.0;
-  const spread = (Math.random() - 0.5) * 0.4;
-  const mins = Math.max(0.5, targetMins + spread);
+    Number.isFinite(envInterval) && envInterval > 0 ? envInterval : 60.0;
+  const spread = (Math.random() - 0.5) * 4.0;
+  const mins = Math.max(10, targetMins + spread);
   return Math.round(mins * 60 * 1000);
 }
 
@@ -396,7 +396,7 @@ export function startAgentSessionTask() {
   accountEntries.forEach(({ account, address, sourceKey }, index) => {
     const accountNum = index + 1;
     const tag = `[agent-session-task #${accountNum}]`;
-    const cadence = "automated session schedule";
+    const cadence = "hourly cli session schedule";
 
     const statusRecord: WorkerStatus = {
       accountNum,
@@ -504,7 +504,7 @@ export function startAgentSessionTask() {
       const { canPay, algoBalance, usdcBalance } =
         await checkAndPrepareAccount();
       const txEstimate = Math.floor(usdcBalance / 0.25);
-      const hoursEstimate = (txEstimate * (2 / 60)).toFixed(1);
+      const hoursEstimate = (txEstimate * 1).toFixed(1);
 
       if (!canPay) {
         console.warn(
@@ -547,11 +547,11 @@ export function startAgentSessionTask() {
 
       try {
         console.log(
-          `${tag} Sending payment request ($0.25 USDC) from ${address.slice(0, 8)} to ${managerUrl}/v2/x402/agent-session-1hour...`,
+          `${tag} Sending payment request ($0.25 USDC) from ${address.slice(0, 8)} to ${managerUrl}/v2/x402/cli/hour...`,
         );
         const payFetch = wrapFetchWithPayment(fetch, client);
         const response = await payFetch(
-          `${managerUrl}/v2/x402/agent-session-1hour`,
+          `${managerUrl}/v2/x402/cli/hour`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -564,7 +564,7 @@ export function startAgentSessionTask() {
           statusRecord.totalPaymentsConfirmed += 1;
           statusRecord.lastPaymentStatus = "confirmed (200 OK)";
           console.log(
-            `${tag} Success: Agent session renewed for ${address.slice(0, 8)}!`,
+            `${tag} Success: Hourly CLI session renewed for ${address.slice(0, 8)}!`,
             data,
           );
         } else {

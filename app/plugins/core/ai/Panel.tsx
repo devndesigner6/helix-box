@@ -5,7 +5,7 @@ import InfoSheet from "@/components/InfoSheet";
 import Loading from "@/components/Loading";
 import MediaViewer from "@/components/MediaViewer";
 import { LinearGradient } from "expo-linear-gradient";
-import { Codex, OpenCode, ClaudeCode, Gemini, Cursor } from "@lobehub/icons-rn";
+import { Codex, OpenCode, ClaudeCode } from "@lobehub/icons-rn";
 import { useAppSettings } from "@/contexts/AppSettingsContext";
 import { useSessionRegistryActions } from "@/contexts/SessionRegistry";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -2765,6 +2765,8 @@ export default function AIPanel({ instanceId, isActive, bottomBarHeight }: Plugi
   const [pendingQuestion, setPendingQuestion] = useState<AIQuestion | null>(null);
   const [activeSheet, setActiveSheet] = useState<ComposerSheet>(null);
   const [backendPickerVisible, setBackendPickerVisible] = useState(false);
+  const [availableBackends, setAvailableBackends] = useState<AiBackend[] | null>(null);
+  const [backendAvailabilityLoading, setBackendAvailabilityLoading] = useState(false);
   const [inputHeight, setInputHeight] = useState(52);
   const [composerHeight, setComposerHeight] = useState(104);
   const [isVoiceMode, setIsVoiceMode] = useState(false);
@@ -3279,6 +3281,26 @@ export default function AIPanel({ instanceId, isActive, bottomBarHeight }: Plugi
       }
     }, []),
   });
+  const getBackends = ai.getBackends;
+
+  useEffect(() => {
+    if (!backendPickerVisible || status !== "connected") return;
+    let cancelled = false;
+    setBackendAvailabilityLoading(true);
+    void getBackends()
+      .then((backends) => {
+        if (!cancelled) setAvailableBackends(backends);
+      })
+      .catch(() => {
+        if (!cancelled) setAvailableBackends([]);
+      })
+      .finally(() => {
+        if (!cancelled) setBackendAvailabilityLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [getBackends, backendPickerVisible, status]);
 
   // Initialize on connection
   useEffect(() => {
@@ -4802,9 +4824,15 @@ const selectedModelNameFull = modelOptions.find((m) => m.id === selectedModel)?.
             { backend: "opencode" as const, label: "OpenCode", description: t('aiPanel.opencodeDesc'), Icon: OpenCode },
             { backend: "claude" as const, label: "Claude Code", description: "Use your installed Claude Code CLI.", Icon: ClaudeCode },
             { backend: "hermes" as const, label: "Hermes", description: "Use your installed Hermes Agent CLI.", Icon: Terminal },
-            { label: "Gemini", description: t('aiPanel.comingSoon'), disabled: true, Icon: Gemini },
-            { label: "Cursor", description: t('aiPanel.comingSoon'), disabled: true, Icon: Cursor },
-          ].map(({ backend, label, description, disabled, Icon }) => (
+          ].map(({ backend, label, description, Icon }) => {
+            const isAvailable = availableBackends?.includes(backend) ?? false;
+            const availabilityLabel = backendAvailabilityLoading || availableBackends === null
+              ? "Checking laptop CLI..."
+              : isAvailable
+                ? "CLI available"
+                : "Not installed on laptop";
+            const disabled = availableBackends !== null && !isAvailable;
+            return (
             <TouchableOpacity
               key={backend ?? label}
               onPress={() => {
@@ -4822,16 +4850,17 @@ const selectedModelNameFull = modelOptions.find((m) => m.id === selectedModel)?.
               }]}
             >
               {renderColorfulBrandIcon(Icon as React.ComponentType<any>, 28, colors.fg.default)}
-              <View>
+              <View style={{ flex: 1 }}>
                 <Text style={{ color: colors.fg.default, fontSize: typography.body, fontFamily: fonts.sans.medium }}>
                   {label}
                 </Text>
                 <Text style={{ color: colors.fg.muted, fontSize: typography.caption, fontFamily: fonts.sans.regular, marginTop: 1 }}>
-                  {description}
+                  {description} - {availabilityLabel}
                 </Text>
               </View>
             </TouchableOpacity>
-          ))}
+            );
+          })}
         </View>
       </InfoSheet>
 

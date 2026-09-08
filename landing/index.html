@@ -6,7 +6,7 @@
   <title>HelixBox</title>
   <link rel="icon" type="image/png" href="/helixbox.png">
   <link rel="apple-touch-icon" href="/helixbox.png">
-  <meta name="description" content="HelixBox lets you use your full development environment from your phone so you can build, run, and manage your projects from anywhere. Pay micro amounts for time-bound agent sessions with Algorand x402.">
+  <meta name="description" content="HelixBox puts your real laptop development environment on your phone. Pair once, run tools and agents, review changes, and ship from anywhere.">
   <meta property="og:site_name" content="HelixBox">
   <meta property="og:title" content="HelixBox">
   <meta property="og:description" content="Use your full development environment from your phone with time-bound, micro-billed agent sessions.">
@@ -44,11 +44,11 @@
       <a href="/index.html" class="logo">
         <span class="logo-icon" aria-hidden="true"></span> HELIX / BOX
       </a>
-      <nav class="header-nav">
-        <a href="/index.html" aria-current="page">Contents</a>
-        <a href="/catalog.html" >Catalog</a>
-        <a href="/roadmap.html" >Roadmap</a>
-        <a href="/glossary.html" >Glossary</a>
+      <button class="header-menu-toggle" id="menuToggle" type="button" aria-controls="primaryNav" aria-expanded="false" aria-label="Open navigation">
+        <span class="header-menu-icon" aria-hidden="true"><span></span><span></span><span></span></span>
+      </button>
+      <nav class="header-nav" id="primaryNav" hidden>
+        <a href="#how-it-works">How it works</a>
         <a href="/about.html" >About</a>
         <a href="https://github.com/devndesigner6/helix-box" target="_blank" rel="noopener" class="header-github">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.4 3-.405 1.02.005 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
@@ -101,9 +101,10 @@
           <span class="agent-chip">+ local shell PTY host</span>
         </div>
       </div>
-      <p class="masthead-install-caption reveal" style="--stagger-delay: 240ms;">Develop directly on your remote workspace through a mobile terminal paired via secure WebSocket relays.</p>
+      <p class="masthead-install-caption reveal" style="--stagger-delay: 240ms;">Pair your laptop once, then use the same workspace from your phone.</p>
 
-      <figure class="masthead-figure" aria-hidden="true" data-fig-cycle>
+      <div class="masthead-video-slot" aria-label="Hero video placeholder"></div>
+      <figure class="masthead-figure" aria-hidden="true" data-fig-cycle hidden>
         <div class="fig-plate">
           <!-- FIG 1: PTY Host Tunnel -->
           <div class="fig-panel is-active" data-caption="Low-latency bidirectional PTY stream connecting Mobile client to Laptop CLI.">
@@ -123,8 +124,8 @@
               <circle class="fig-pulse" r="4" style="offset-path: path('M90,190 L280,100 L470,190'); animation-delay: 0.5s"/>
               <circle class="fig-pulse" r="4" style="offset-path: path('M470,190 L280,280 L90,190'); animation-delay: 2.0s"/>
               <text class="fig-axis" x="90" y="220">Mobile Client</text>
-              <text class="fig-axis" x="280" y="80">Relay Control</text>
-              <text class="fig-axis" x="280" y="310">Relay Data</text>
+              <text class="fig-axis" x="280" y="80">Session Control</text>
+              <text class="fig-axis" x="280" y="310">Session Data</text>
               <text class="fig-axis" x="470" y="220">CLI Shell</text>
             </svg>
           </div>
@@ -187,7 +188,6 @@
             <span class="logo-item"><img src="/logos/codex.png" alt="OpenAI Codex" /> Codex</span>
             <span class="logo-item"><img src="/logos/opencode.png" alt="DeepSeek OpenCode" /> OpenCode</span>
             <span class="logo-item"><img src="/logos/hermes.png" alt="Nous Hermes" /> Nous Hermes</span>
-            <span class="logo-item"><img src="/logos/openclaw.png" alt="OpenClaw" /> OpenClaw</span>
           </div>
           <!-- Repeated group to loop seamlessly -->
           <div class="logo-marquee-group" aria-hidden="true">
@@ -195,81 +195,22 @@
             <span class="logo-item"><img src="/logos/codex.png" alt="OpenAI Codex" /> Codex</span>
             <span class="logo-item"><img src="/logos/opencode.png" alt="DeepSeek OpenCode" /> OpenCode</span>
             <span class="logo-item"><img src="/logos/hermes.png" alt="Nous Hermes" /> Nous Hermes</span>
-            <span class="logo-item"><img src="/logos/openclaw.png" alt="OpenClaw" /> OpenClaw</span>
           </div>
         </div>
       </div>
       <p class="learners-quote">&ldquo;Secure remote terminal emulator and AI workspace right inside your pocket.&rdquo; <span class="learners-quote-attr">&mdash; HelixBox Engineering</span></p>
     </section>
 
-    <section class="preface container">
+    <section class="preface container" id="how-it-works">
       <div class="preface-grid">
         <div class="preface-eyebrow">How this works</div>
         <div class="preface-body">
-          <p>Developers shouldn't be locked into massive desktop setups. HelixBox transforms your mobile device into a high-powered Remote IDE. By pairing your laptop terminal with our lightweight client app, you get access to all local directories, terminal tools, and testing commands right on the go.</p>
-          <p>The connection uses end-to-end encrypted tunnels. Your laptop remains behind firewall restrictions; no ports are forwarded. A proxy-relay acts as the messaging post, passing binary shell byte frames back and forth with microsecond latency. An AI agent runs inside the proxy container, watching for errors and performing repairs autonomously.</p>
-          <p>We believe in developer-aligned billing. HelixBox remains free as a local editor. When starting a remote session through our proxy-relays, you only pay for the time you use ($0.25/hour or $2.00/week) via USDC transactions settled by your Pera Wallet on Algorand.</p>
+          <p>Pair your laptop with a QR code and keep working in the same project from your phone. HelixBox exposes your real files, terminal, processes, logs, and Git state without moving the project into a separate cloud editor.</p>
+          <p>Workspace controls stay free. When you need an AI agent, start a time-bound session: pay $0.25 USDC for one hour or $2 USDC for seven days with fair-use limits. One payment unlocks the session, not each individual task.</p>
+          <p>Agent availability comes from the connected laptop CLI. Codex, OpenCode, Claude Code, and Hermes appear only when their runtimes are actually installed and reported ready. Review diffs and approve risky changes before they run.</p>
         </div>
       </div>
     </section>
-
-    <section class="stat-block container">
-      <div class="stat-block-title">Current Progress</div>
-      <div class="stat-rows">
-        <div class="stat-row">
-          <span class="stat-row-label">Implemented Features</span>
-          <span class="stat-row-bar" data-bar="complete" style="--bar-pct:100%;" aria-hidden="true">bar</span>
-          <span class="stat-row-value" data-stat="complete-frac">20 / 20</span>
-        </div>
-        <div class="stat-row">
-          <span class="stat-row-label">Handshake Phases</span>
-          <span class="stat-row-bar" data-bar="phases" style="--bar-pct:100%;" aria-hidden="true">bar</span>
-          <span class="stat-row-value" data-stat="phases-frac">6 / 6</span>
-        </div>
-        <div class="stat-row">
-          <span class="stat-row-label">Supported Languages</span>
-          <span class="stat-row-bar" data-bar="languages" style="--bar-pct:100%;" aria-hidden="true">bar</span>
-          <span class="stat-row-value">4 (Rust, TSX, Shell, Go)</span>
-        </div>
-        <div class="stat-row">
-          <span class="stat-row-label">Glossary Definitions</span>
-          <span class="stat-row-bar" data-bar="glossary" style="--bar-pct:100%;" aria-hidden="true">bar</span>
-          <span class="stat-row-value" data-stat="glossary-count">8</span>
-        </div>
-      </div>
-    </section>
-
-    <section class="toc container" id="contents">
-      <div class="toc-title">HelixBox Component Modules · 6 Phases · 20 Lessons</div>
-      <div class="toc-subtitle">Tap a phase to inspect its implementation. All client and CLI codes are compiled in our GitHub releases.</div>
-      <div class="toc-list" id="phasesGrid"></div>
-      <div class="legend">
-        <span class="legend-item"><span class="toc-status complete"></span> Complete</span>
-        <span class="legend-item"><span class="toc-status in-progress"></span> In progress</span>
-        <span class="legend-item"><span class="toc-status planned"></span> Planned</span>
-      </div>
-    </section>
-
-    <div class="modal-overlay" id="modalOverlay">
-      <div class="modal">
-        <button class="modal-close" id="modalClose" type="button">×</button>
-        <div class="modal-header">
-          <span class="modal-phase-num">Phase 01</span>
-          <h2 class="modal-title">Mobile Client Core</h2>
-          <p class="modal-desc">Build the file navigator, authentication state container, and low-latency xterm rendering screens.</p>
-          <div class="modal-progress">
-            <span class="modal-progress-count">5 / 5 Completed</span>
-            <span class="modal-progress-pct">100%</span>
-          </div>
-          <div class="modal-progress-bar"><div class="modal-progress-bar-fill"></div></div>
-        </div>
-        <div class="modal-lessons"></div>
-        <div class="modal-footer">
-          <span class="modal-footer-note">Compiles on Expo Go & Android/iOS Simulators</span>
-          <button class="modal-reset" id="modalReset" type="button">Reset</button>
-        </div>
-      </div>
-    </div>
 
     <section class="colophon container">
       <div class="colophon-grid">
@@ -302,14 +243,10 @@
       <div class="footer-links">
         <a href="https://github.com/devndesigner6/helix-box" target="_blank" rel="noopener">GitHub</a>
         <a href="/about.html">About</a>
-        <a href="/catalog.html">Catalog</a>
-        <a href="/roadmap.html">Roadmap</a>
-        <a href="/glossary.html">Glossary</a>
       </div>
     </div>
   </footer>
 
-  <script type="module" src="/data.js"></script>
   <script type="module" src="/app.js"></script>
 </body>
 </html>

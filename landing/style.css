@@ -2244,9 +2244,20 @@ body[data-palette-open] {
       width: 430px;
     }
 
-    @media (min-width: 1280px) { .masthead-figure { display: block; } }
-    @media (min-width: 1440px) { .masthead-figure { right: -80px; width: 520px; } }
-    @media (min-width: 1640px) { .masthead-figure { right: -150px; width: 600px; } }
+    .masthead-video-slot {
+      display: none;
+      position: absolute;
+      top: 152px;
+      right: -8px;
+      width: 430px;
+      aspect-ratio: 560 / 380;
+      border: 1px dashed var(--rule-soft);
+      background: var(--bg-soft);
+    }
+
+    @media (min-width: 1280px) { .masthead-video-slot { display: block; } }
+    @media (min-width: 1440px) { .masthead-video-slot { right: -80px; width: 520px; } }
+    @media (min-width: 1640px) { .masthead-video-slot { right: -150px; width: 600px; } }
 
     .fig-plate { position: relative; aspect-ratio: 560 / 380; }
 

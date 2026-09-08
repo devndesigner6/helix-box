@@ -296,6 +296,7 @@ export default function Auth() {
   const [showPastSessionsSheet, setShowPastSessionsSheet] = useState(false);
   const [availableUpdate, setAvailableUpdate] = useState<UpdateCheckResponse | null>(null);
   const cancelledContinueRef = useRef(false);
+  const autoResumeAttemptedRef = useRef(false);
   const connectingSpinner = useSharedValue(0);
   const connectingSpinnerStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${connectingSpinner.value}deg` }],
@@ -431,6 +432,16 @@ export default function Auth() {
       setConnectingHostname(null);
     }
   }, [isContinuing, removePairedSession, resumeSession]);
+
+  useEffect(() => {
+    if (autoResumeAttemptedRef.current || status !== "disconnected" || pairedSessions.length === 0) return;
+    autoResumeAttemptedRef.current = true;
+    logger.info("auth", "auto-resuming most recently used saved session", {
+      hostname: pairedSessions[0].hostname,
+      root: pairedSessions[0].root,
+    });
+    void handlePairedSession(pairedSessions[0]);
+  }, [handlePairedSession, pairedSessions, status]);
 
   const handleCancelContinue = useCallback(() => {
     if (!isContinuing) return;

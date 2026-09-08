@@ -16,14 +16,11 @@ inject();
 
   document.addEventListener('DOMContentLoaded', function () {
     initThemeToggle();
-    populateStats();
-    renderPhases();
-    initModal();
+    initMobileNavigation();
     initCopyButtons();
     initStreamingTagline();
     initSmoothScroll();
     initFadeObserver();
-    initFigureCycle();
   });
 
   function updateThemeIcon() {
@@ -44,6 +41,45 @@ inject();
       updateThemeIcon();
     });
     updateThemeIcon();
+  }
+
+  function initMobileNavigation() {
+    var nav = document.getElementById('primaryNav');
+    var toggle = document.getElementById('menuToggle');
+    if (!nav || !toggle) return;
+
+    function syncForViewport() {
+      var isMobile = window.matchMedia('(max-width: 1100px)').matches;
+      if (!isMobile) {
+        nav.hidden = false;
+        toggle.setAttribute('aria-expanded', 'false');
+        return;
+      }
+      nav.hidden = toggle.getAttribute('aria-expanded') !== 'true';
+    }
+
+    toggle.addEventListener('click', function () {
+      var isOpen = toggle.getAttribute('aria-expanded') === 'true';
+      toggle.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+      toggle.setAttribute('aria-label', isOpen ? 'Open navigation' : 'Close navigation');
+      nav.hidden = isOpen;
+    });
+    nav.querySelectorAll('a').forEach(function (link) {
+      link.addEventListener('click', function () {
+        if (window.matchMedia('(max-width: 1100px)').matches) {
+          toggle.setAttribute('aria-expanded', 'false');
+          toggle.setAttribute('aria-label', 'Open navigation');
+          nav.hidden = true;
+        }
+      });
+    });
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
+        toggle.click();
+      }
+    });
+    window.addEventListener('resize', syncForViewport);
+    syncForViewport();
   }
 
   function computeStats() {
@@ -330,7 +366,7 @@ inject();
     if (!panels.length) return;
 
     var captions = [
-      "FIG. 001 — Remote execution forward pass: Spawns a lightweight connection layer via secure relays to execute tasks in local PTY terminal.",
+      "FIG. 001 — Remote execution forward pass: connects the phone to the paired laptop workspace.",
       "FIG. 002 — Mobile client pairing code validation: Scans QR code or enters credentials to negotiate an encrypted session password.",
       "FIG. 003 — Micro-billing flow: Settles an approved USDC payment before the selected remote session begins."
     ];

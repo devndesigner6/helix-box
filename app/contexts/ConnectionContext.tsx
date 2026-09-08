@@ -406,6 +406,7 @@ export function ConnectionProvider({ children }: { children: React.ReactNode }) 
         ...entry,
         gateways: Array.isArray(entry.gateways) ? entry.gateways : [],
       }));
+      filtered.sort((a, b) => (b.lastUsedAt || b.savedAt || 0) - (a.lastUsedAt || a.savedAt || 0));
       logger.info('connection', 'paired sessions loaded', {
         count: filtered.length,
         hosts: filtered.map((session) => session.hostname),
@@ -480,8 +481,16 @@ export function ConnectionProvider({ children }: { children: React.ReactNode }) 
   }, [getPairedSessions, persistPairedSessions]);
 
   const getStoredSession = useCallback(async (): Promise<StoredSession | null> => {
-    return null;
-  }, []);
+    const sessions = await getPairedSessions();
+    const latest = sessions[0];
+    if (!latest) return null;
+    return {
+      sessionCode: latest.sessionCode,
+      sessionPassword: latest.sessionPassword,
+      gateways: latest.gateways,
+      savedAt: latest.savedAt,
+    };
+  }, [getPairedSessions]);
 
   const clearStoredSession = useCallback(async (): Promise<void> => {
     try {
@@ -1569,10 +1578,6 @@ export function ConnectionProvider({ children }: { children: React.ReactNode }) 
       clearInterval(interval);
     };
   }, [handleConnectivityLost, handleConnectivityRestored]);
-
-  useEffect(() => {
-    void clearStoredSession();
-  }, [clearStoredSession]);
 
   useEffect(() => {
     logger.info('connection', 'provider state updated', {

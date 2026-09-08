@@ -100,6 +100,16 @@ export interface PairedSession extends StoredSession {
   lastUsedAt: number;
 }
 
+export interface SessionPaymentStatus {
+  code: string;
+  exists: boolean;
+  paid: boolean;
+  paidUntil: number;
+  expiresAt?: number;
+  appConnected?: boolean;
+  cliConnected?: boolean;
+}
+
 interface ConnectionContextType {
   status: ConnectionStatus;
   sessionState: SessionState;
@@ -111,6 +121,7 @@ interface ConnectionContextType {
   trackedProxyPorts: number[];
   discoveredProxyPorts: number[];
   connect: (code: string) => Promise<void>;
+  getSessionPaymentStatus: (code: string) => Promise<SessionPaymentStatus>;
   resumeSession: (session: StoredSession) => Promise<void>;
   getStoredSession: () => Promise<StoredSession | null>;
   getPairedSessions: () => Promise<PairedSession[]>;
@@ -144,6 +155,9 @@ const fallbackConnectionContext: ConnectionContextType = {
   trackedProxyPorts: [],
   discoveredProxyPorts: [],
   connect: async () => {
+    throw unavailableConnectionError();
+  },
+  getSessionPaymentStatus: async () => {
     throw unavailableConnectionError();
   },
   resumeSession: async () => {
@@ -1029,6 +1043,36 @@ export function ConnectionProvider({ children }: { children: React.ReactNode }) 
     });
   }, []);
 
+  const getSessionPaymentStatus = useCallback(async (code: string): Promise<SessionPaymentStatus> => {
+    const url = new URL('/v2/session-status', MANAGER_URL);
+    url.searchParams.set('code', code);
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+    });
+    const payload = await response.json().catch(() => ({})) as Partial<SessionPaymentStatus>;
+    if (response.status === 404) {
+      return {
+        code,
+        exists: false,
+        paid: false,
+        paidUntil: 0,
+      };
+    }
+    if (!response.ok || typeof payload.paid !== 'boolean') {
+      throw new Error(typeof payload.error === 'string' ? payload.error : `Session status failed (${response.status})`);
+    }
+    return {
+      code,
+      exists: payload.exists === true,
+      paid: payload.paid,
+      paidUntil: typeof payload.paidUntil === 'number' ? payload.paidUntil : 0,
+      expiresAt: typeof payload.expiresAt === 'number' ? payload.expiresAt : undefined,
+      appConnected: payload.appConnected === true,
+      cliConnected: payload.cliConnected === true,
+    };
+  }, []);
+
   const getAssignedProxyUrl = useCallback(async (password: string): Promise<string> => {
     const url = new URL('/v2/proxy', MANAGER_URL);
     url.searchParams.set('password', password);
@@ -1559,6 +1603,7 @@ export function ConnectionProvider({ children }: { children: React.ReactNode }) 
       trackedProxyPorts,
       discoveredProxyPorts,
       connect,
+    getSessionPaymentStatus,
     resumeSession,
     getStoredSession,
     getPairedSessions,
@@ -1574,7 +1619,7 @@ export function ConnectionProvider({ children }: { children: React.ReactNode }) 
     sendData,
     fireData,
     onDataEvent,
-  }), [status, sessionState, sessionCode, capabilities, error, isReconnecting, interactionBlockReason, trackedProxyPorts, discoveredProxyPorts, connect, resumeSession, getStoredSession, getPairedSessions, revokePairedSession, removePairedSession, clearStoredSession, endSession, disconnect, refreshProxyState, trackProxyPort, untrackProxyPort, sendControl, sendData, fireData, onDataEvent]);
+  }), [status, sessionState, sessionCode, capabilities, error, isReconnecting, interactionBlockReason, trackedProxyPorts, discoveredProxyPorts, connect, getSessionPaymentStatus, resumeSession, getStoredSession, getPairedSessions, revokePairedSession, removePairedSession, clearStoredSession, endSession, disconnect, refreshProxyState, trackProxyPort, untrackProxyPort, sendControl, sendData, fireData, onDataEvent]);
 
   return (
     <ConnectionContext.Provider value={value}>

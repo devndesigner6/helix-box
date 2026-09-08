@@ -23,6 +23,7 @@ export interface PurchasedSession {
 interface X402AppOptions {
   config: X402Config;
   redeemSession: (code: string, expiresAt: number) => Promise<PurchasedSession>;
+  sessionExists: (code: string) => boolean;
 }
 
 const sessionOutputSchema = {
@@ -34,7 +35,7 @@ const sessionOutputSchema = {
   required: ["code", "expiresAt"],
 };
 
-export function createX402App({ config, redeemSession }: X402AppOptions): Hono {
+export function createX402App({ config, redeemSession, sessionExists }: X402AppOptions): Hono {
   const facilitator = new HTTPFacilitatorClient({ url: config.facilitatorUrl });
   const resourceServer = new x402ResourceServer(facilitator)
     .register(config.network, new ExactAvmScheme())
@@ -53,6 +54,14 @@ export function createX402App({ config, redeemSession }: X402AppOptions): Hono {
     mimeType: "application/json",
     extensions: declareDiscoveryExtension({
       bodyType: "json",
+      inputSchema: {
+        type: "object",
+        properties: {
+          code: { type: "string", minLength: 1 },
+        },
+        required: ["code"],
+        additionalProperties: false,
+      },
       output: { schema: sessionOutputSchema },
     }),
   });
@@ -63,6 +72,29 @@ export function createX402App({ config, redeemSession }: X402AppOptions): Hono {
     c.header("Access-Control-Allow-Origin", "*");
     c.header("Access-Control-Expose-Headers", "payment-required, x-payment-required, payment-response, x-payment-response");
   });
+  app.use(
+    "*",
+    async (c, next) => {
+      const path = new URL(c.req.url).pathname;
+      const paidRoute =
+        c.req.method === "POST" &&
+        [
+          CLI_HOURLY_ROUTE,
+          PREMIUM_WEEKLY_ROUTE,
+          AGENT_SESSION_1HOUR_ROUTE,
+          CODEX_AGENT_ROUTE,
+        ].includes(path);
+      if (!paidRoute) return next();
+
+      const body = await c.req.raw.clone().json().catch(() => null) as { code?: unknown } | null;
+      const code = typeof body?.code === "string" ? body.code.trim() : "";
+      if (!code) return c.json({ error: "CLI pairing code is required" }, 400);
+      if (!sessionExists(code)) {
+        return c.json({ error: "CLI pairing code was not found or has expired" }, 404);
+      }
+      return next();
+    },
+  );
   app.use(
     paymentMiddleware(
       {

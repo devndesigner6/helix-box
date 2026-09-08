@@ -20,6 +20,10 @@ import {
   startAgentSessionTask,
   getAgentSessionTaskStatus,
 } from "./agent-session-task.js";
+import {
+  buildAssembleSessionStatus,
+  createAssembledPayload,
+} from "./assemble-session.js";
 
 const CHARSET = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
 const CODE_LENGTH = 10;
@@ -1937,6 +1941,32 @@ function startManager(): void {
     deleteExpiredReattachSessionsStmt.run(now);
   };
 
+  const restoreAssembleSessionRow = (row: any): AssembleSession => {
+    const restored: AssembleSession = {
+      code: row.code,
+      createdAt: Number(row.createdAt),
+      expiresAt: Number(row.expiresAt),
+      paidUntil: Number(row.paidUntil),
+      password: row.password,
+      appWs: null,
+      cliWs: null,
+      appAcked: Boolean(row.appAcked),
+      cliAcked: Boolean(row.cliAcked),
+    };
+    assembleSessionsByCode.set(restored.code, restored);
+    return restored;
+  };
+
+  const getExistingAssembleSession = (code: string): AssembleSession | null => {
+    const now = Date.now();
+    cleanupExpiredV2State(now);
+    const existing = assembleSessionsByCode.get(code);
+    if (existing && existing.expiresAt > now) return existing;
+    const row = getAssembleSessionStmt.get(code) as any;
+    if (row && Number(row.expiresAt) > now) return restoreAssembleSessionRow(row);
+    return null;
+  };
+
   const getOrCreateAssembleSession = (code: string): AssembleSession => {
     const now = Date.now();
     cleanupExpiredV2State(now);
@@ -1946,19 +1976,7 @@ function startManager(): void {
     }
     const row = getAssembleSessionStmt.get(code) as any;
     if (row && Number(row.expiresAt) > now) {
-      const restored: AssembleSession = {
-        code: row.code,
-        createdAt: Number(row.createdAt),
-        expiresAt: Number(row.expiresAt),
-        paidUntil: Number(row.paidUntil),
-        password: row.password,
-        appWs: null,
-        cliWs: null,
-        appAcked: Boolean(row.appAcked),
-        cliAcked: Boolean(row.cliAcked),
-      };
-      assembleSessionsByCode.set(code, restored);
-      return restored;
+      return restoreAssembleSessionRow(row);
     }
     const created: AssembleSession = {
       code,
@@ -2001,8 +2019,26 @@ function startManager(): void {
     // paid access without scanning a new QR code.
   };
 
+  const replayAssemblePassword = (session: AssembleSession): void => {
+    const payload = createAssembledPayload(session);
+    if (!payload) return;
+    try {
+      session.appWs?.send(payload);
+    } catch {
+      // The socket may have closed between the connection check and send.
+    }
+    try {
+      session.cliWs?.send(payload);
+    } catch {
+      // The socket may have closed between the connection check and send.
+    }
+  };
+
   const maybeIssueAssemblePassword = (session: AssembleSession): void => {
-    if (session.password) return;
+    if (session.password) {
+      if (session.paidUntil > Date.now()) replayAssemblePassword(session);
+      return;
+    }
     if (session.paidUntil <= Date.now()) return;
     if (!session.appWs || !session.cliWs) return;
 
@@ -2034,13 +2070,7 @@ function startManager(): void {
       now,
     );
 
-    const payload = JSON.stringify({
-      type: "assembled",
-      code: session.code,
-      password,
-    });
-    session.appWs.send(payload);
-    session.cliWs.send(payload);
+    replayAssemblePassword(session);
   };
 
   const assignProxyUrl = async (
@@ -3498,7 +3528,7 @@ function startManager(): void {
     code: string,
     paidUntil: number,
   ): Promise<{ code: string; expiresAt: number }> => {
-    const session = getOrCreateAssembleSession(code);
+    const session = getExistingAssembleSession(code);
     if (!session || session.expiresAt <= Date.now()) {
       throw new Error("CLI pairing code was not found or has expired");
     }
@@ -3535,6 +3565,7 @@ function startManager(): void {
     x402App = createX402App({
       config: x402PaymentConfig,
       redeemSession: redeemAssembleSession,
+      sessionExists: (code) => Boolean(getExistingAssembleSession(code)),
     });
     console.log("[x402] paid CLI relay endpoints enabled");
   } catch (error) {
@@ -3692,6 +3723,26 @@ function startManager(): void {
         );
       }
 
+      if (path === "/v2/session-status" && req.method === "GET") {
+        const code = (url.searchParams.get("code") || "").trim();
+        if (!code) {
+          return Response.json(
+            { error: "code is required" },
+            { status: 400, headers: corsHeaders },
+          );
+        }
+        const session = getExistingAssembleSession(code);
+        if (!session) {
+          return Response.json(
+            { exists: false, paid: false, code },
+            { status: 404, headers: corsHeaders },
+          );
+        }
+        return Response.json(buildAssembleSessionStatus(session), {
+          headers: corsHeaders,
+        });
+      }
+
       if (path === "/v2/assemble" && req.method === "GET") {
         cleanupExpiredV2State();
         const code = (url.searchParams.get("code") || "").trim();
@@ -3708,7 +3759,7 @@ function startManager(): void {
             { status: 400, headers: corsHeaders },
           );
         }
-        const session = assembleSessionsByCode.get(code);
+        const session = getExistingAssembleSession(code);
         if (!session || session.expiresAt <= Date.now()) {
           return Response.json(
             { error: "code not found or expired" },

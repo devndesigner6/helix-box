@@ -26,7 +26,7 @@ export default function WorkspaceScreen() {
   const { colors, fonts } = useTheme();
   const { isLoading, openTab, openTabs, activeTabId, setActiveTab } = usePlugins();
   const { registry } = useSessionRegistry();
-  const { status, sessionState, sessionCode, error, isReconnecting, interactionBlockReason, disconnect, connect, getPairedSessions, resumeSession } = useConnection();
+  const { status, sessionState, sessionCode, error, isReconnecting, interactionBlockReason, disconnect, connect, getSessionPaymentStatus, getPairedSessions, resumeSession } = useConnection();
   const router = useRouter();
   const { code, payment } = useLocalSearchParams<{ code?: string; payment?: string }>();
   const drawerStatus = useDrawerStatus();
@@ -42,13 +42,65 @@ export default function WorkspaceScreen() {
   const showConnectionNotice = status === "connecting" || isReconnecting || interactionBlockReason !== null;
   const pendingCode = typeof code === "string" ? code : null;
   const paidCode = pendingCode ?? sessionCode;
+  const [externalPaidUntil, setExternalPaidUntil] = useState(0);
+  const [paymentStatusChecked, setPaymentStatusChecked] = useState(false);
   const needsPaidSession = Boolean(paidCode) && (
     sessionState === "expired" ||
     (status === "disconnected" && sessionState === "idle")
-  );
+  ) && paymentStatusChecked && externalPaidUntil <= Date.now();
   const [isPaying, setIsPaying] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const completedPaymentRef = useRef<string | null>(null);
+  const externalActivationRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    setExternalPaidUntil(0);
+    setPaymentStatusChecked(false);
+    externalActivationRef.current = null;
+  }, [paidCode]);
+
+  useEffect(() => {
+    if (!paidCode || status === "connected") return;
+    let cancelled = false;
+
+    const checkExternalPayment = async () => {
+      try {
+        const remote = await getSessionPaymentStatus(paidCode);
+        if (cancelled) return;
+        setPaymentStatusChecked(true);
+        if (!remote.paid) return;
+
+        setExternalPaidUntil(remote.paidUntil);
+        if (
+          status !== "disconnected" ||
+          (sessionState !== "idle" && sessionState !== "expired") ||
+          externalActivationRef.current === paidCode
+        ) {
+          return;
+        }
+
+        externalActivationRef.current = paidCode;
+        // Re-assemble from the pairing code so an external payment can renew
+        // an expired local password instead of trying the stale resume token.
+        await connect(paidCode);
+      } catch (cause) {
+        if (!cancelled) {
+          setPaymentStatusChecked(true);
+          logger.warn("workspace", "external payment status check failed", {
+            code: paidCode,
+            error: cause instanceof Error ? cause.message : String(cause),
+          });
+        }
+      }
+    };
+
+    void checkExternalPayment();
+    const interval = setInterval(() => void checkExternalPayment(), 2_000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [connect, getSessionPaymentStatus, paidCode, sessionState, status]);
   const startPaidSession = async () => {
     if (!paidCode || isPaying) return;
     setIsPaying(true); setPaymentError(null);

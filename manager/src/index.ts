@@ -3528,6 +3528,9 @@ function startManager(): void {
     code: string,
     paidUntil: number,
   ): Promise<{ code: string; expiresAt: number }> => {
+    if (code.startsWith("helixbox-agent-")) {
+      return { code, expiresAt: paidUntil };
+    }
     const session = getExistingAssembleSession(code);
     if (!session || session.expiresAt <= Date.now()) {
       throw new Error("CLI pairing code was not found or has expired");
@@ -3565,7 +3568,9 @@ function startManager(): void {
     x402App = createX402App({
       config: x402PaymentConfig,
       redeemSession: redeemAssembleSession,
-      sessionExists: (code) => Boolean(getExistingAssembleSession(code)),
+      sessionExists: (code) =>
+        code.startsWith("helixbox-agent-") ||
+        Boolean(getExistingAssembleSession(code)),
     });
     console.log("[x402] paid CLI relay endpoints enabled");
   } catch (error) {

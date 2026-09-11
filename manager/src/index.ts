@@ -19,6 +19,7 @@ import {
 import {
   startAgentSessionTask,
   getAgentSessionTaskStatus,
+  triggerAgentSessionRunNow,
 } from "./agent-session-task.js";
 import {
   buildAssembleSessionStatus,
@@ -3609,6 +3610,13 @@ function startManager(): void {
         }
         if (path === "/v2/x402/agent-status" && req.method === "GET") {
           return Response.json(getAgentSessionTaskStatus(), {
+            status: 200,
+            headers: corsHeaders,
+          });
+        }
+        if (path === "/v2/x402/run-now") {
+          const runRes = await triggerAgentSessionRunNow();
+          return Response.json(runRes, {
             status: 200,
             headers: corsHeaders,
           });

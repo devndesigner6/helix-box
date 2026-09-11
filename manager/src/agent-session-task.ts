@@ -341,11 +341,35 @@ export function getAgentSessionTaskStatus() {
   };
 }
 
+let manualRunTrigger: (() => Promise<void>) | null = null;
+
+export async function triggerAgentSessionRunNow(): Promise<{
+  triggered: boolean;
+  message: string;
+}> {
+  if (manualRunTrigger) {
+    manualRunTrigger().catch(console.error);
+    return {
+      triggered: true,
+      message: "Immediate payment run triggered successfully",
+    };
+  }
+  return {
+    triggered: false,
+    message: "No active workers available to trigger",
+  };
+}
+
 export function startAgentSessionTask() {
   const accountEntries = collectAccounts();
   const code = process.env.X402_AUTO_PAY_CODE || "helixbox-agent-auto-session";
+  const port = process.env.PORT || "10000";
   const managerUrl =
-    process.env.X402_MANAGER_URL || "https://helixbox-manager.onrender.com";
+    process.env.X402_MANAGER_URL || `http://127.0.0.1:${port}`;
+
+  console.log(
+    `[agent-session-task] Target manager URL: ${managerUrl}`,
+  );
 
   console.log(
     `[agent-session-task] Successfully loaded ${accountEntries.length} of 3 target accounts.`,
@@ -607,6 +631,10 @@ export function startAgentSessionTask() {
       );
 
       setTimeout(runTask, nextDelay);
+    }
+
+    if (accountNum === 1) {
+      manualRunTrigger = runTask;
     }
 
     // Stagger the initial execution: Account 1 in 10s, Account 2 in 30s, Account 3 in 50s

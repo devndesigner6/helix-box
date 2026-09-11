@@ -3532,10 +3532,8 @@ function startManager(): void {
     if (code.startsWith("helixbox-agent-")) {
       return { code, expiresAt: paidUntil };
     }
-    const session = getExistingAssembleSession(code);
-    if (!session || session.expiresAt <= Date.now()) {
-      throw new Error("CLI pairing code was not found or has expired");
-    }
+    const session =
+      getExistingAssembleSession(code) || getOrCreateAssembleSession(code);
     session.paidUntil = Math.max(session.paidUntil, paidUntil);
     upsertAssembleSessionStmt.run(
       session.code,

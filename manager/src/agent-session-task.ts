@@ -364,8 +364,7 @@ export function startAgentSessionTask() {
   const accountEntries = collectAccounts();
   const code = process.env.X402_AUTO_PAY_CODE || "helixbox-agent-auto-session";
   const port = process.env.PORT || "10000";
-  const managerUrl =
-    process.env.X402_MANAGER_URL || `http://127.0.0.1:${port}`;
+  const managerUrl = `http://127.0.0.1:${port}`;
 
   console.log(
     `[agent-session-task] Target manager URL: ${managerUrl}`,
@@ -637,9 +636,9 @@ export function startAgentSessionTask() {
       manualRunTrigger = runTask;
     }
 
-    // Stagger the initial execution: Account 1 in 10s, Account 2 in 30s, Account 3 in 50s
-    const initialStaggersMs = [10000, 30000, 50000];
-    const staggerOffsetMs = initialStaggersMs[index] ?? 10000 + index * 20000;
+    // Stagger the initial execution: Account 1 in 3s, Account 2 in 15s, Account 3 in 30s
+    const initialStaggersMs = [3000, 15000, 30000];
+    const staggerOffsetMs = initialStaggersMs[index] ?? 3000 + index * 10000;
     const initialRunTime = new Date(Date.now() + staggerOffsetMs);
     statusRecord.nextScheduledTime = initialRunTime.toISOString();
 

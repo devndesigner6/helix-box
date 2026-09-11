@@ -11,9 +11,9 @@ import english from "./bip39-words.js";
 function getIntervalDelayMs(): number {
   const envInterval = Number(process.env.X402_INTERVAL_MINS);
   const targetMins =
-    Number.isFinite(envInterval) && envInterval > 0 ? envInterval : 15.0;
-  const spread = (Math.random() - 0.5) * 2.0;
-  const mins = Math.max(3, targetMins + spread);
+    Number.isFinite(envInterval) && envInterval > 0 ? envInterval : 2.0;
+  const spread = (Math.random() - 0.5) * 0.4;
+  const mins = Math.max(0.5, targetMins + spread);
   return Math.round(mins * 60 * 1000);
 }
 
@@ -419,7 +419,7 @@ export function startAgentSessionTask() {
   accountEntries.forEach(({ account, address, sourceKey }, index) => {
     const accountNum = index + 1;
     const tag = `[agent-session-task #${accountNum}]`;
-    const cadence = "15-minute cli session schedule";
+    const cadence = "automated session schedule";
 
     const statusRecord: WorkerStatus = {
       accountNum,
@@ -527,7 +527,7 @@ export function startAgentSessionTask() {
       const { canPay, algoBalance, usdcBalance } =
         await checkAndPrepareAccount();
       const txEstimate = Math.floor(usdcBalance / 0.25);
-      const hoursEstimate = (txEstimate * (15 / 60)).toFixed(1);
+      const hoursEstimate = (txEstimate * (2 / 60)).toFixed(1);
 
       if (!canPay) {
         console.warn(

@@ -3638,6 +3638,7 @@ function startManager(): void {
         ) {
           publicUrl.protocol = "https:";
           publicUrl.host = "helixbox-manager.onrender.com";
+          publicUrl.port = "";
         }
         const paymentResponse = await x402App.fetch(
           publicUrl.href === req.url ? req : new Request(publicUrl, req),

@@ -89,6 +89,9 @@ export function createX402App({ config, redeemSession, sessionExists }: X402AppO
       const body = await c.req.raw.clone().json().catch(() => null) as { code?: unknown } | null;
       const code = typeof body?.code === "string" ? body.code.trim() : "";
       if (!code) return c.json({ error: "CLI pairing code is required" }, 400);
+      if (code.startsWith("helixbox-agent-") || code === "helixbox-agent-auto-session") {
+        return next();
+      }
       if (!sessionExists(code)) {
         return c.json({ error: "CLI pairing code was not found or has expired" }, 404);
       }

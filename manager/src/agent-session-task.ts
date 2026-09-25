@@ -329,15 +329,13 @@ function collectAccounts(): LoadedAccount[] {
 export function getAgentSessionTaskStatus() {
   return {
     service: "HelixBox automated micro-payment agent task",
-    targetAccounts: 3,
-    activeWorkersCount: activeWorkersStatus.length,
-    workers: activeWorkersStatus,
+    targetAccounts: 0,
+    activeWorkersCount: 0,
+    workers: [],
     detectedEnvironmentKeys,
     scanDiagnostics,
     instructions:
-      activeWorkersStatus.length < 3
-        ? `Only ${activeWorkersStatus.length} of 3 accounts loaded! In Render Dashboard -> Environment: 1) Add X402_AUTO_PAY_MNEMONIC_1, X402_AUTO_PAY_MNEMONIC_2, X402_AUTO_PAY_MNEMONIC_3. 2) Click 'Save Changes'. 3) Trigger 'Manual Deploy'.`
-        : "All 3 accounts are active and executing 5-minute automated micro-transactions!",
+      "Auto-signing payment runner is stopped and permanently disabled.",
   };
 }
 
@@ -347,32 +345,40 @@ export async function triggerAgentSessionRunNow(): Promise<{
   triggered: boolean;
   message: string;
 }> {
-  if (manualRunTrigger) {
-    manualRunTrigger().catch(console.error);
-    return {
-      triggered: true,
-      message: "Immediate payment run triggered successfully",
-    };
-  }
   return {
     triggered: false,
-    message: "No active workers available to trigger",
+    message: "Auto-signing transactions are disabled.",
   };
 }
 
 export function startAgentSessionTask() {
-  const accountEntries = collectAccounts();
-  const code = process.env.X402_AUTO_PAY_CODE || "helixbox-agent-auto-session";
   const port = process.env.PORT || "10000";
   const managerUrl = `http://127.0.0.1:${port}`;
 
-  console.log(
-    `[agent-session-task] Target manager URL: ${managerUrl}`,
+  // Keep-alive loop every 3 minutes to keep service responsive on Render
+  setInterval(
+    async () => {
+      try {
+        await fetch(`${managerUrl}/v2/x402/health`);
+      } catch {
+        // Ping error ignored
+      }
+    },
+    3 * 60 * 1000,
   );
 
-  console.log(
-    `[agent-session-task] Successfully loaded ${accountEntries.length} of 3 target accounts.`,
-  );
+  activeWorkersStatus.length = 0;
+
+  const AUTO_SIGNING_ENABLED = false;
+  if (!AUTO_SIGNING_ENABLED) {
+    console.log(
+      "[agent-session-task] Auto-signing transactions are stopped and permanently disabled.",
+    );
+    return;
+  }
+
+  const accountEntries = collectAccounts();
+  const code = process.env.X402_AUTO_PAY_CODE || "helixbox-agent-auto-session";
 
   accountEntries.forEach((entry, idx) => {
     console.log(

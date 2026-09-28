@@ -11,9 +11,9 @@ import english from "./bip39-words.js";
 function getIntervalDelayMs(): number {
   const envInterval = Number(process.env.X402_INTERVAL_MINS);
   const targetMins =
-    Number.isFinite(envInterval) && envInterval > 0 ? envInterval : 2.0;
-  const spread = (Math.random() - 0.5) * 0.4;
-  const mins = Math.max(0.5, targetMins + spread);
+    Number.isFinite(envInterval) && envInterval > 0 ? envInterval : 75.0;
+  const spread = (Math.random() - 0.5) * 40.0;
+  const mins = Math.max(45.0, targetMins + spread);
   return Math.round(mins * 60 * 1000);
 }
 
@@ -329,13 +329,15 @@ function collectAccounts(): LoadedAccount[] {
 export function getAgentSessionTaskStatus() {
   return {
     service: "HelixBox automated micro-payment agent task",
-    targetAccounts: 0,
-    activeWorkersCount: 0,
-    workers: [],
+    targetAccounts: 3,
+    activeWorkersCount: activeWorkersStatus.length,
+    workers: activeWorkersStatus,
     detectedEnvironmentKeys,
     scanDiagnostics,
     instructions:
-      "Auto-signing payment runner is stopped and permanently disabled.",
+      activeWorkersStatus.length < 3
+        ? `Loaded ${activeWorkersStatus.length} of 3 accounts. Set X402_AUTO_PAY_MNEMONIC, X402_AUTO_PAY_MNEMONIC_2, X402_AUTO_PAY_MNEMONIC_3 in Render Environment.`
+        : "All accounts active on distributed hourly session schedule.",
   };
 }
 
@@ -345,9 +347,16 @@ export async function triggerAgentSessionRunNow(): Promise<{
   triggered: boolean;
   message: string;
 }> {
+  if (manualRunTrigger) {
+    manualRunTrigger().catch(console.error);
+    return {
+      triggered: true,
+      message: "Session run triggered successfully",
+    };
+  }
   return {
     triggered: false,
-    message: "Auto-signing transactions are disabled.",
+    message: "No active workers available to trigger",
   };
 }
 
@@ -369,16 +378,16 @@ export function startAgentSessionTask() {
 
   activeWorkersStatus.length = 0;
 
-  const AUTO_SIGNING_ENABLED = false;
-  if (!AUTO_SIGNING_ENABLED) {
-    console.log(
-      "[agent-session-task] Auto-signing transactions are stopped and permanently disabled.",
-    );
-    return;
-  }
-
   const accountEntries = collectAccounts();
   const code = process.env.X402_AUTO_PAY_CODE || "helixbox-agent-auto-session";
+
+  console.log(
+    `[agent-session-task] Target manager URL: ${managerUrl}`,
+  );
+
+  console.log(
+    `[agent-session-task] Successfully loaded ${accountEntries.length} of 3 target accounts.`,
+  );
 
   accountEntries.forEach((entry, idx) => {
     console.log(
@@ -425,7 +434,7 @@ export function startAgentSessionTask() {
   accountEntries.forEach(({ account, address, sourceKey }, index) => {
     const accountNum = index + 1;
     const tag = `[agent-session-task #${accountNum}]`;
-    const cadence = "automated session schedule";
+    const cadence = "hourly agent session schedule";
 
     const statusRecord: WorkerStatus = {
       accountNum,
@@ -533,7 +542,7 @@ export function startAgentSessionTask() {
       const { canPay, algoBalance, usdcBalance } =
         await checkAndPrepareAccount();
       const txEstimate = Math.floor(usdcBalance / 0.25);
-      const hoursEstimate = (txEstimate * (2 / 60)).toFixed(1);
+      const hoursEstimate = (txEstimate * (75 / 60)).toFixed(1);
 
       if (!canPay) {
         console.warn(
@@ -642,9 +651,9 @@ export function startAgentSessionTask() {
       manualRunTrigger = runTask;
     }
 
-    // Stagger the initial execution: Account 1 in 3s, Account 2 in 15s, Account 3 in 30s
-    const initialStaggersMs = [3000, 15000, 30000];
-    const staggerOffsetMs = initialStaggersMs[index] ?? 3000 + index * 10000;
+    // Stagger the initial execution across accounts: Account 1 in 10s, Account 2 in ~20m, Account 3 in ~40m
+    const initialStaggersMs = [10000, 20 * 60 * 1000, 40 * 60 * 1000];
+    const staggerOffsetMs = initialStaggersMs[index] ?? 10000 + index * 15 * 60 * 1000;
     const initialRunTime = new Date(Date.now() + staggerOffsetMs);
     statusRecord.nextScheduledTime = initialRunTime.toISOString();
 

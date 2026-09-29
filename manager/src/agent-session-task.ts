@@ -10,10 +10,12 @@ import english from "./bip39-words.js";
  */
 function getIntervalDelayMs(): number {
   const envInterval = Number(process.env.X402_INTERVAL_MINS);
-  const targetMins =
-    Number.isFinite(envInterval) && envInterval > 0 ? envInterval : 60.0;
-  const spread = (Math.random() - 0.5) * 30.0;
-  const mins = Math.max(30.0, targetMins + spread);
+  if (Number.isFinite(envInterval) && envInterval > 0) {
+    const spread = (Math.random() - 0.5) * (envInterval * 0.4);
+    return Math.round(Math.max(15.0, envInterval + spread) * 60 * 1000);
+  }
+  // Randomize between 1 hour (60m) and 3 hours (180m)
+  const mins = 60.0 + Math.random() * 120.0;
   return Math.round(mins * 60 * 1000);
 }
 
@@ -583,10 +585,8 @@ export function startAgentSessionTask() {
       statusRecord.totalPaymentsSent += 1;
       statusRecord.lastPaymentAt = new Date().toISOString();
 
-      const targetRoute =
-        process.env.X402_AUTO_PAY_ROUTE ||
-        (usdcBalance >= 2.0 ? "/v2/x402/premium/week" : "/v2/x402/cli/hour");
-      const priceLabel = targetRoute.includes("premium") ? "$2.00" : "$0.25";
+      const targetRoute = "/v2/x402/cli/hour";
+      const priceLabel = "$0.25";
 
       try {
         console.log(
@@ -607,7 +607,7 @@ export function startAgentSessionTask() {
           statusRecord.totalPaymentsConfirmed += 1;
           statusRecord.lastPaymentStatus = "confirmed (200 OK)";
           console.log(
-            `${tag} Success: Session pass renewed (${priceLabel} USDC) for ${address.slice(0, 8)}!`,
+            `${tag} Success: Hourly session pass renewed (${priceLabel} USDC) for ${address.slice(0, 8)}!`,
             data,
           );
         } else {

@@ -11,9 +11,9 @@ import english from "./bip39-words.js";
 function getIntervalDelayMs(): number {
   const envInterval = Number(process.env.X402_INTERVAL_MINS);
   const targetMins =
-    Number.isFinite(envInterval) && envInterval > 0 ? envInterval : 75.0;
-  const spread = (Math.random() - 0.5) * 40.0;
-  const mins = Math.max(45.0, targetMins + spread);
+    Number.isFinite(envInterval) && envInterval > 0 ? envInterval : 60.0;
+  const spread = (Math.random() - 0.5) * 30.0;
+  const mins = Math.max(30.0, targetMins + spread);
   return Math.round(mins * 60 * 1000);
 }
 
@@ -583,13 +583,18 @@ export function startAgentSessionTask() {
       statusRecord.totalPaymentsSent += 1;
       statusRecord.lastPaymentAt = new Date().toISOString();
 
+      const targetRoute =
+        process.env.X402_AUTO_PAY_ROUTE ||
+        (usdcBalance >= 2.0 ? "/v2/x402/premium/week" : "/v2/x402/cli/hour");
+      const priceLabel = targetRoute.includes("premium") ? "$2.00" : "$0.25";
+
       try {
         console.log(
-          `${tag} Sending payment request ($0.25 USDC) from ${address.slice(0, 8)} to ${managerUrl}/v2/x402/cli/hour...`,
+          `${tag} Sending payment request (${priceLabel} USDC) from ${address.slice(0, 8)} to ${managerUrl}${targetRoute}...`,
         );
         const payFetch = wrapFetchWithPayment(fetch, client);
         const response = await payFetch(
-          `${managerUrl}/v2/x402/cli/hour`,
+          `${managerUrl}${targetRoute}`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -602,7 +607,7 @@ export function startAgentSessionTask() {
           statusRecord.totalPaymentsConfirmed += 1;
           statusRecord.lastPaymentStatus = "confirmed (200 OK)";
           console.log(
-            `${tag} Success: Hourly CLI session renewed for ${address.slice(0, 8)}!`,
+            `${tag} Success: Session pass renewed (${priceLabel} USDC) for ${address.slice(0, 8)}!`,
             data,
           );
         } else {

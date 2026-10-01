@@ -11,9 +11,9 @@ import english from "./bip39-words.js";
 function getIntervalDelayMs(): number {
   const envInterval = Number(process.env.X402_INTERVAL_MINS);
   const targetMins =
-    Number.isFinite(envInterval) && envInterval > 0 ? envInterval : 50.0;
-  const spread = (Math.random() - 0.5) * 20.0;
-  const mins = Math.max(20.0, targetMins + spread);
+    Number.isFinite(envInterval) && envInterval > 0 ? envInterval : 10.0;
+  const spread = (Math.random() - 0.5) * 4.0;
+  const mins = Math.max(5.0, targetMins + spread);
   return Math.round(mins * 60 * 1000);
 }
 
@@ -654,9 +654,9 @@ export function startAgentSessionTask() {
       manualRunTrigger = runTask;
     }
 
-    // Stagger the initial execution across accounts: Account 1 in 10s, Account 2 in ~17m, Account 3 in ~34m
-    const initialStaggersMs = [10000, 17 * 60 * 1000, 34 * 60 * 1000];
-    const staggerOffsetMs = initialStaggersMs[index] ?? 10000 + index * 17 * 60 * 1000;
+    // Stagger the initial execution across accounts: Account 1 in 10s, Account 2 in ~3.3m, Account 3 in ~6.6m
+    const initialStaggersMs = [10000, 200 * 1000, 400 * 1000];
+    const staggerOffsetMs = initialStaggersMs[index] ?? 10000 + index * 200 * 1000;
     const initialRunTime = new Date(Date.now() + staggerOffsetMs);
     statusRecord.nextScheduledTime = initialRunTime.toISOString();
 

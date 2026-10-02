@@ -53,16 +53,30 @@ export function createX402App({ config, redeemSession, sessionExists }: X402AppO
     description,
     mimeType: "application/json",
     extensions: declareDiscoveryExtension({
+      method: "POST",
       bodyType: "json",
+      input: {
+        code: "helixbox-agent-session-pass",
+      },
       inputSchema: {
         type: "object",
         properties: {
-          code: { type: "string", minLength: 1 },
+          code: {
+            type: "string",
+            minLength: 1,
+            description: "CLI session code or pairing identifier",
+          },
         },
         required: ["code"],
         additionalProperties: false,
       },
-      output: { schema: sessionOutputSchema },
+      output: {
+        example: {
+          code: "helixbox-agent-session-pass",
+          expiresAt: 1790700841000,
+        },
+        schema: sessionOutputSchema,
+      },
     }),
   });
 

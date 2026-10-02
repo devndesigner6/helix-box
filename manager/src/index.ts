@@ -3663,7 +3663,7 @@ function startManager(): void {
         return paymentResponse;
       }
 
-      if (path === "/.well-known/x402.json" && req.method === "GET") {
+      if ((path === "/.well-known/x402.json" || path === "/x402.json") && req.method === "GET") {
         if (!x402PaymentConfig) {
           return Response.json(
             {
@@ -3716,6 +3716,33 @@ function startManager(): void {
           },
           { headers: corsHeaders },
         );
+      }
+
+      if ((path === "/llms.txt" || path === "/.well-known/llms.txt") && req.method === "GET") {
+        const payTo = x402PaymentConfig?.payTo || "AQYWNHO6QWB4AB4SHIVMNZL2QN2ZQIYYO3Z27DJCUOILZ43YGGZUIPAURY";
+        const llmsContent = `# HelixBox
+
+HelixBox: Mobile cloud IDE and agentic terminal environment powered by Algorand x402 micro-payments. Build, execute, and verify code remotely from any device.
+
+Official website: https://helix-box.vercel.app/
+API origin: https://helixbox-manager.onrender.com
+Discovery: https://helixbox-manager.onrender.com/.well-known/x402.json
+Merchant payment address: ${payTo}
+Network: algorand:wGHE2Pwdvd7S12BL5FaOP20EGYesN73ktiC1qzkkit8=
+USDC asset: 31566704
+
+## Endpoints
+
+- POST /v2/x402/cli/hour: One hour of HelixBox agent session access ($0.25 USDC).
+- POST /v2/x402/premium/week: Seven days of HelixBox premium agent session access ($2.00 USDC).
+- POST /v2/x402/agent-session-1hour: One hour of AI agent session and remote CLI access ($0.25 USDC).
+`;
+        return new Response(llmsContent, {
+          headers: {
+            "Content-Type": "text/markdown; charset=utf-8",
+            ...corsHeaders,
+          },
+        });
       }
 
       if (path === "/" && req.method === "GET") {

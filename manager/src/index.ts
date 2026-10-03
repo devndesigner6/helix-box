@@ -3683,7 +3683,13 @@ function startManager(): void {
         return paymentResponse;
       }
 
-      if ((path === "/.well-known/x402.json" || path === "/x402.json") && req.method === "GET") {
+      if (
+        (path === "/.well-known/x402" ||
+          path === "/.well-known/x402.json" ||
+          path === "/x402" ||
+          path === "/x402.json") &&
+        req.method === "GET"
+      ) {
         if (!x402PaymentConfig) {
           return Response.json(
             {
@@ -3693,24 +3699,158 @@ function startManager(): void {
             { status: 503, headers: corsHeaders },
           );
         }
+        const payTo = x402PaymentConfig.payTo;
         return Response.json(
           {
             name: "HelixBox",
             description:
-              "HelixBox lets you use your full development environment from your phone so you can build, run, and manage your projects from anywhere. Pay micro amounts for time-bound agent sessions when you need them.",
-            category: "developer-tools",
-            projectType: "standard",
-            logo: "https://raw.githubusercontent.com/devndesigner6/helix-box/main/landing/public/helixbox.png",
-            image:
-              "https://raw.githubusercontent.com/devndesigner6/helix-box/main/landing/public/helixbox.png",
-            tags: [
-              "x402-global-challenge",
-              "algorand",
+              "Use your full development environment from your phone with time-bound, micro-billed agent sessions.",
+            url: "https://helix-box.vercel.app",
+            website: "https://helix-box.vercel.app",
+            logo: "https://helix-box.vercel.app/helixbox.png",
+            image: "https://helix-box.vercel.app/helixbox.png",
+            categories: [
+              "developer-tools",
               "cli",
               "mobile-ide",
               "agent-sessions",
             ],
-            payTo: x402PaymentConfig.payTo,
+            x402Version: 2,
+            revision: "20261003",
+            resource: {
+              url: "https://helixbox-manager.onrender.com/v2/x402/cli/hour",
+              description: "One hour of HelixBox agent session access.",
+              mimeType: "application/json",
+            },
+            resources: [
+              "https://helixbox-manager.onrender.com/v2/x402/cli/hour",
+              "https://helixbox-manager.onrender.com/v2/x402/premium/week",
+              "https://helixbox-manager.onrender.com/v2/x402/agent-session-1hour",
+            ],
+            extensions: {
+              bazaar: {
+                info: {
+                  name: "HelixBox",
+                  description: "One hour of HelixBox agent session access.",
+                  tags: [
+                    "x402-global-challenge",
+                    "cli",
+                    "mobile-ide",
+                    "agent-sessions",
+                  ],
+                  input: {
+                    type: "http",
+                    method: "POST",
+                    bodyType: "json",
+                    body: {
+                      code: "helixbox-agent-session-pass",
+                    },
+                  },
+                  output: {
+                    type: "json",
+                    example: {
+                      code: "helixbox-agent-session-pass",
+                      expiresAt: 1790700841000,
+                    },
+                  },
+                },
+                schema: {
+                  $schema: "https://json-schema.org/draft/2020-12/schema",
+                  type: "object",
+                  properties: {
+                    name: { type: "string" },
+                    description: { type: "string" },
+                    tags: {
+                      type: "array",
+                      items: { type: "string" },
+                    },
+                    input: {
+                      type: "object",
+                      properties: {
+                        type: { type: "string", const: "http" },
+                        method: { type: "string", enum: ["POST"] },
+                        bodyType: { type: "string", enum: ["json"] },
+                        body: {
+                          type: "object",
+                          properties: {
+                            code: {
+                              type: "string",
+                              description: "Session pass or authorization code",
+                            },
+                          },
+                          required: ["code"],
+                          additionalProperties: false,
+                        },
+                      },
+                      required: ["type", "method", "bodyType", "body"],
+                      additionalProperties: false,
+                    },
+                    output: {
+                      type: "object",
+                      properties: {
+                        type: { type: "string", enum: ["json"] },
+                        example: {
+                          type: "object",
+                          properties: {
+                            code: { type: "string" },
+                            expiresAt: { type: "number" },
+                          },
+                          required: ["code", "expiresAt"],
+                        },
+                      },
+                      required: ["type", "example"],
+                    },
+                  },
+                  required: ["input"],
+                },
+              },
+              "x402-merchant": {
+                info: {
+                  name: "HelixBox",
+                  description:
+                    "Use your full development environment from your phone with time-bound, micro-billed agent sessions.",
+                  url: "https://helix-box.vercel.app",
+                  website: "https://helix-box.vercel.app",
+                  logo: "https://helix-box.vercel.app/helixbox.png",
+                  categories: [
+                    "developer-tools",
+                    "cli",
+                    "mobile-ide",
+                    "agent-sessions",
+                  ],
+                },
+                schema: {
+                  $schema: "https://json-schema.org/draft/2020-12/schema",
+                  type: "object",
+                  properties: {
+                    name: { type: "string" },
+                    description: { type: "string" },
+                    url: { type: "string", format: "uri" },
+                    website: { type: "string", format: "uri" },
+                    logo: { type: "string", format: "uri" },
+                    categories: {
+                      type: "array",
+                      items: { type: "string" },
+                    },
+                  },
+                  required: ["name"],
+                },
+              },
+            },
+            payment: {
+              scheme: "exact",
+              network: "algorand:wGHE2Pwdvd7S12BL5FaOP20EGYesN73ktiC1qzkkit8=",
+              asset: "31566704",
+              payTo,
+              extra: {
+                decimals: 6,
+                tag: "x402-global-challenge",
+                feePayer:
+                  "ZMFK2OI7ZBD2U27ISERZC4S6LKM6WMFJPZQ4MYNJDZ2VNBNMBA67RA22AA",
+              },
+              pricing:
+                "Hourly session: $0.25 USDC (exact payment from HTTP 402 challenge quote).",
+            },
             endpoints: [
               {
                 path: CLI_HOURLY_ROUTE,
@@ -3746,7 +3886,7 @@ HelixBox: Mobile cloud IDE and agentic terminal environment powered by Algorand 
 
 Official website: https://helix-box.vercel.app/
 API origin: https://helixbox-manager.onrender.com
-Discovery: https://helixbox-manager.onrender.com/.well-known/x402.json
+Discovery: https://helixbox-manager.onrender.com/.well-known/x402
 Merchant payment address: ${payTo}
 Network: algorand:wGHE2Pwdvd7S12BL5FaOP20EGYesN73ktiC1qzkkit8=
 USDC asset: 31566704

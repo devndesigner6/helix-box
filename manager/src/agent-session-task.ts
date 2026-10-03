@@ -362,7 +362,7 @@ export async function triggerAgentSessionRunNow(): Promise<{
 
 export function startAgentSessionTask() {
   const port = process.env.PORT || "10000";
-  const managerUrl = `http://127.0.0.1:${port}`;
+  const managerUrl = process.env.RENDER_EXTERNAL_URL || `http://127.0.0.1:${port}`;
 
   // Keep-alive loop every 3 minutes to keep service responsive on Render
   setInterval(
@@ -595,7 +595,11 @@ export function startAgentSessionTask() {
           `${managerUrl}${targetRoute}`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              "Host": "helixbox-manager.onrender.com",
+              "X-Forwarded-Proto": "https",
+            },
             body: JSON.stringify({ code }),
           },
         );

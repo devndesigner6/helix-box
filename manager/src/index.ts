@@ -3646,6 +3646,26 @@ function startManager(): void {
         console.log(
           `[x402] ${req.method} ${path} status=${paymentResponse.status} signed=${req.headers.has("payment-signature")}`,
         );
+        if (paymentResponse.status === 402) {
+          const authHeader =
+            paymentResponse.headers.get("payment-required") ||
+            paymentResponse.headers.get("x-payment-required");
+          if (authHeader) {
+            try {
+              const decoded = JSON.parse(
+                Buffer.from(authHeader, "base64").toString("utf-8"),
+              );
+              const headers = new Headers(paymentResponse.headers);
+              headers.set("Content-Type", "application/json");
+              return new Response(JSON.stringify(decoded, null, 2), {
+                status: 402,
+                headers,
+              });
+            } catch {
+              // keep original response
+            }
+          }
+        }
         if (
           paymentResponse.status >= 400 &&
           req.headers.has("payment-signature")

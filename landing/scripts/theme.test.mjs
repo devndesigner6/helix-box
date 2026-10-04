@@ -21,3 +21,17 @@ test('theme updates both legacy routes and Interior components', () => {
   assert.equal(classes.has('dark'), false);
   assert.equal(root.style.colorScheme, 'light');
 });
+
+test('explicit sun and moon controls reflect the active theme', () => {
+  const root = { dataset: {}, style: {}, classList: { toggle() {} } };
+  const controls = ['light', 'dark'].map(theme => ({
+    dataset: { themeChoice: theme }, attributes: {},
+    setAttribute(name, value) { this.attributes[name] = value; },
+  }));
+  applyTheme('dark', root, controls);
+  assert.equal(controls[0].attributes['aria-pressed'], 'false');
+  assert.equal(controls[1].attributes['aria-pressed'], 'true');
+  applyTheme('light', root, controls);
+  assert.equal(controls[0].attributes['aria-pressed'], 'true');
+  assert.equal(controls[1].attributes['aria-pressed'], 'false');
+});

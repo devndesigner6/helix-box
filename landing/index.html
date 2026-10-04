@@ -20,6 +20,7 @@
   <link rel="preload" href="/fonts/VT323-Regular.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="stylesheet" href="/product.css">
   <link rel="stylesheet" href="/product-surfaces.css">
+  <link rel="stylesheet" href="/theme-controls.css">
 </head>
 <body class="product-page">
   <a href="#main" class="skip-link">Skip to content</a>
@@ -50,8 +51,10 @@
           <div class="demo-bar"><span><i class="status-dot"></i> HELIXBOX / IN ACTION</span><span>YOUR PROJECT, YOUR MACHINE</span></div>
           <div class="demo-screen">
             <video muted loop playsinline preload="metadata" poster="/media/demo-poster.webp" aria-label="Preview of HelixBox running on a phone"><source src="/media/helixbox-preview.mp4" type="video/mp4"></video>
-            <button class="motion-toggle" id="demoMotion" type="button" aria-label="Play demo preview" aria-pressed="false"><span class="play-icon" aria-hidden="true">▶</span><span class="motion-label">Play preview</span></button>
-            <a class="demo-link" href="https://youtu.be/2cmHX_T2Qis" target="_blank" rel="noopener noreferrer" aria-label="Watch the full HelixBox demo on YouTube">Full walkthrough on YouTube ↗</a>
+            <div class="demo-controls">
+              <button class="motion-toggle" id="demoMotion" type="button" aria-label="Play demo preview" aria-pressed="false"><span class="play-icon" aria-hidden="true">▶</span><span class="motion-label">Play preview</span></button>
+              <a class="demo-link" href="https://youtu.be/2cmHX_T2Qis" target="_blank" rel="noopener noreferrer" aria-label="Watch the full HelixBox demo on YouTube">Full walkthrough on YouTube ↗</a>
+            </div>
             <p class="media-status" id="mediaStatus" role="status" aria-live="polite"></p>
           </div>
         </div>

@@ -95,7 +95,7 @@ The package entrypoint is `dist/index.js`, generated from `src/index.ts`. `npm r
 ```text
 src/
   index.ts              CLI entrypoint and local machine bridge
-  ai/                   Codex/OpenCode provider integration
+  ai/                   Codex, OpenCode, Claude Code and Hermes integration
   transport/            Session transport protocol
   libsodium-wrappers.d.ts
 ```

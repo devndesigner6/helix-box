@@ -26,3 +26,27 @@ landing/vite.config.js.timestamp-*.mjs
 *.pem
 *.key
 LOCAL_NOTES.md
+
+# Local outputs and editor artifacts (not product assets)
+/output/
+*.swp
+*.swo
+*~
+Thumbs.db
+Desktop.ini
+__pycache__/
+*.pyc
+*.tsbuildinfo
+coverage/
+playwright-report/
+test-results/
+/check_goplausible.py
+/docs/superpowers/plans/
+/docs/superpowers/specs/2026-10-03-helixbox-product-landing.md
+/landing/assets/reference/git.png
+/landing/scripts/check-pages.mjs
+
+# Legacy generated bundles; referenced tracked bundles remain versioned
+/assets/*.js
+/assets/*.css
+/assets/assets/

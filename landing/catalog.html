@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HelixBox — Catalog</title>
-  <link rel="icon" type="image/png" href="/helixbox.png">
-  <link rel="apple-touch-icon" href="/helixbox.png">
-  <meta name="description" content="AI-powered mobile IDE and interactive PTY terminal emulator paired via E2E encrypted relays and Algorand x402 micro-billing.">
+  <title>HelixBox | Catalog</title>
+  <link rel="icon" type="image/png" href="/assets/images/helixbox-splash.png">
+  <link rel="apple-touch-icon" href="/assets/images/helixbox-splash.png">
+  <meta name="description" content="Set up HelixBox: run the laptop CLI, scan its QR code, and open your workspace on Android.">
   <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/theme-controls.css">
   <style>
     .checkout-btn {
       background: var(--blueprint);
@@ -37,9 +38,9 @@
         <span class="logo-icon" aria-hidden="true"></span> HELIX / BOX
       </a>
       <nav class="header-nav">
-        <a href="/index.html" >Contents</a>
-        <a href="/catalog.html" aria-current="page">Catalog</a>
-        <a href="/roadmap.html" >Roadmap</a>
+        <a href="/index.html" >Home</a>
+        <a href="/catalog.html" aria-current="page">Setup</a>
+        <a href="/roadmap.html" >How it works</a>
         <a href="/glossary.html" >Glossary</a>
         <a href="/about.html" >About</a>
         <a href="https://github.com/devndesigner6/helix-box" target="_blank" rel="noopener" class="header-github">
@@ -56,10 +57,10 @@
   <main id="main">
     <section class="manual-masthead container">
       <div class="manual-meta-row">
-        <span>CATALOG &middot; CLI COMMANDS</span>
+        <span>HELIXBOX &middot; GETTING STARTED</span>
       </div>
-      <h1 class="manual-title">CLI Command<br>Catalog</h1>
-      <p class="manual-tagline">Complete catalog of the HelixBox command-line interface utilities, configuration properties, and environment variables.</p>
+      <h1 class="manual-title">From laptop<br>to phone.</h1>
+      <p class="manual-tagline">Open your existing project from Android. Your laptop keeps running the files, tools, and processes you already use.</p>
       <div class="ascii-rule" style="margin-top:48px;"></div>
     </section>
 
@@ -67,10 +68,10 @@
       <div class="preface-grid">
         <div class="preface-eyebrow">CLI Guide</div>
         <div class="preface-body">
-          <p><strong>helixbox-cli -n</strong><br>Bootstrap a new pairing session. Spawns the handshake daemon, prints a pairing code, and outputs a QR code to the stdout.</p>
-          <p><strong>helixbox-cli --config &lt;path&gt;</strong><br>Boot with a custom config JSON file, overriding defaults for websocket servers, latency timeouts, and log locations.</p>
-          <p><strong>helixbox-cli --port &lt;port&gt;</strong><br>Directs the native Rust PTY spawner to run on a specific local port (defaults to 8899).</p>
-          <p><strong>X402_MANAGER_URL</strong><br>Environment variable setting the Hono web server address for micro-billing and state checks.</p>
+          <p><strong>Run the CLI</strong><br>Open a terminal inside your project and run <code>npx helixbox-cli</code>. Keep the CLI running and your laptop connected to the internet.</p>
+          <p><strong>Pair the Android app</strong><br>Download HelixBox from <a href="https://github.com/devndesigner6/helix-box/releases/latest" target="_blank" rel="noopener noreferrer">GitHub Releases</a>, then scan the QR shown by the CLI.</p>
+          <p><strong>Return to your workspace</strong><br>Use the saved connection or Past Sessions while the laptop session is valid. Generate a new QR only through the new-session flow when you need a new connection.</p>
+          <p><strong>Get your agents ready</strong><br>Install and authenticate Codex, OpenCode, Claude Code, or Hermes on the laptop. The app reports availability from that machine's CLI status.</p>
         </div>
       </div>
     </section>
@@ -82,8 +83,8 @@
       <div class="footer-links">
         <a href="https://github.com/devndesigner6/helix-box" target="_blank" rel="noopener">GitHub</a>
         <a href="/about.html">About</a>
-        <a href="/catalog.html">Catalog</a>
-        <a href="/roadmap.html">Roadmap</a>
+        <a href="/catalog.html">Setup</a>
+        <a href="/roadmap.html">How it works</a>
         <a href="/glossary.html">Glossary</a>
       </div>
     </div>

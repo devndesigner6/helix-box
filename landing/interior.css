@@ -1,0 +1,19 @@
+/* Interior needs Tailwind's variable defaults, not a site-wide reset. */
+@tailwind base;
+
+:where(.interior-copy, .product-accordion, .product-tool-grid, .product-lightbox, .interior-heading),
+:where(.interior-copy, .product-accordion, .product-tool-grid, .product-lightbox, .interior-heading) *,
+:where(.interior-copy, .product-accordion, .product-tool-grid, .product-lightbox, .interior-heading) *::before,
+:where(.interior-copy, .product-accordion, .product-tool-grid, .product-lightbox, .interior-heading) *::after {
+  border-width: 0;
+  border-style: solid;
+  border-color: var(--line);
+}
+
+:where(button.interior-copy, .product-accordion button, .product-tool-grid button, .product-lightbox button) {
+  background: transparent;
+  font: inherit;
+  color: inherit;
+}
+
+@tailwind utilities;

@@ -118,7 +118,7 @@ root.innerHTML = `
     transform: none;
   }
   .checkout-btn-secondary {
-    background: #fafaf5;
+    background: var(--bg);
     color: var(--ink-soft);
   }
   .checkout-btn-secondary:hover {
@@ -167,7 +167,7 @@ root.innerHTML = `
     </div>
     
     <div style="display:flex; justify-content:center; margin-bottom: 4px;">
-      <img src="/helixbox.png" alt="HelixBox Logo" style="height:48px; width:48px; border:1px solid var(--ink); box-shadow: 2px 2px 0 var(--ink);" />
+      <img src="/assets/images/helixbox.png" alt="HelixBox Logo" style="height:48px; width:48px; border:1px solid var(--ink); box-shadow: 2px 2px 0 var(--ink);" />
     </div>
 
     <div class="checkout-title-label" style="text-align: center;">HELIXBOX // SECURE CHECKOUT</div>

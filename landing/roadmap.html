@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HelixBox — Roadmap</title>
-  <link rel="icon" type="image/png" href="/helixbox.png">
-  <meta name="description" content="AI-powered mobile IDE and interactive PTY terminal emulator paired via E2E encrypted relays and Algorand x402 micro-billing.">
+  <title>HelixBox | How it works</title>
+  <link rel="icon" type="image/png" href="/assets/images/helixbox-splash.png">
+  <meta name="description" content="Pair your laptop, open your mobile workspace, and use x402-paid coding agent sessions in HelixBox.">
   <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/theme-controls.css">
   <style>
     .checkout-btn {
       background: var(--blueprint);
@@ -36,9 +37,9 @@
         <span class="logo-icon" aria-hidden="true"></span> HELIX / BOX
       </a>
       <nav class="header-nav">
-        <a href="/index.html" >Contents</a>
-        <a href="/catalog.html" >Catalog</a>
-        <a href="/roadmap.html" aria-current="page">Roadmap</a>
+        <a href="/index.html" >Home</a>
+        <a href="/catalog.html" >Setup</a>
+        <a href="/roadmap.html" aria-current="page">How it works</a>
         <a href="/glossary.html" >Glossary</a>
         <a href="/about.html" >About</a>
         <a href="https://github.com/devndesigner6/helix-box" target="_blank" rel="noopener" class="header-github">
@@ -55,10 +56,10 @@
   <main id="main">
     <section class="manual-masthead container">
       <div class="manual-meta-row">
-        <span>ROADMAP &middot; SYSTEM ARCHITECTURE</span>
+        <span>HELIXBOX &middot; HOW IT WORKS</span>
       </div>
-      <h1 class="manual-title">System<br>Roadmap</h1>
-      <p class="manual-tagline">Architectural data flow diagram illustrating the secure connection paths between client and terminal hosts.</p>
+      <h1 class="manual-title">Same project.<br>Another screen.</h1>
+      <p class="manual-tagline">Your phone controls the workspace. Your laptop does the work.</p>
       <div class="ascii-rule" style="margin-top:48px;"></div>
     </section>
 
@@ -66,10 +67,10 @@
       <div class="preface-grid">
         <div class="preface-eyebrow">Data Flow</div>
         <div class="preface-body">
-          <p><strong>Step 1: Handshake</strong><br>The CLI generates a pairing code. The mobile client inputs this code, fetching the E2E relay details from Hono manager.</p>
-          <p><strong>Step 2: Tunneling</strong><br>Both devices open outgoing WebSocket channels to the proxy relay, establishing control and data channels without open router ports.</p>
-          <p><strong>Step 3: PTY Stream</strong><br>The native Rust PTY spawner captures terminal sessions, streaming I/O frames securely to xterm.js in the Expo app.</p>
-          <p><strong>Step 4: x402 Payments</strong><br>Periodic bills are automatically sent over the control channel and settled in background USDC transaction ticks.</p>
+          <p><strong>1. Pair your laptop</strong><br>Run <code>npx helixbox-cli</code> in your project and scan the QR code in the Android app.</p>
+          <p><strong>2. Open your workspace</strong><br>Browse files, follow logs, inspect Git changes, and use basic workspace controls for free. The project stays on the laptop.</p>
+          <p><strong>3. Start an agent session</strong><br>Approve $0.25 USDC for one hour or $2 USDC for seven days in Pera Wallet. HelixBox verifies Algorand MainNet settlement before activating access.</p>
+          <p><strong>4. Keep working</strong><br>Ask agent questions, run tests, and review patches during the active session without paying separately for each prompt. The seven-day pass has fair-use limits; model and API costs remain separate.</p>
         </div>
       </div>
     </section>
@@ -81,8 +82,8 @@
       <div class="footer-links">
         <a href="https://github.com/devndesigner6/helix-box" target="_blank" rel="noopener">GitHub</a>
         <a href="/about.html">About</a>
-        <a href="/catalog.html">Catalog</a>
-        <a href="/roadmap.html">Roadmap</a>
+        <a href="/catalog.html">Setup</a>
+        <a href="/roadmap.html">How it works</a>
         <a href="/glossary.html">Glossary</a>
       </div>
     </div>

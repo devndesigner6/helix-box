@@ -4,7 +4,6 @@
     cli-install cli-build cli-dev \
     manager-install manager-dev manager-start \
     proxy-install proxy-dev proxy-start \
-    sandman-build sandman-run sandman-test sandman-tidy \
     pty-build pty-dev
 
 # ─── Help ──────────────────────────────────────────────────────────
@@ -13,9 +12,9 @@ help:
 	@echo "Usage: make <target>"
 	@echo ""
 	@echo "Top-level"
-	@echo "  install            Install deps for app + cli + gateway + sandman"
+	@echo "  install            Install deps for app + cli + manager + proxy"
 	@echo "  dev                Start gateway + app dev servers in parallel"
-	@echo "  build              Build cli + sandman"
+	@echo "  build              Build cli + pty"
 	@echo "  lint               Lint app"
 	@echo ""
 	@echo "App        (Expo / React Native)"
@@ -45,24 +44,19 @@ help:
 	@echo "  pty-build          cargo build --release"
 	@echo "  pty-dev            cargo build (debug)"
 	@echo ""
-	@echo "Sandman    (Not yet added)"
-	@echo "  sandman-build      go build"
-	@echo "  sandman-run        go run"
-	@echo "  sandman-test       go test"
-	@echo "  sandman-tidy       go mod tidy"
 
 .DEFAULT_GOAL := help
 
 # ─── Top-level ─────────────────────────────────────────────────────
 
-install: app-install cli-install manager-install proxy-install sandman-tidy
+install: app-install cli-install manager-install proxy-install
 
 ## Runs proxy + app dev servers in parallel.
 ## Ctrl-C kills both.
 dev:
 	$(MAKE) -j2 proxy-dev app-start
 
-build: cli-build pty-build sandman-build
+build: cli-build pty-build
 
 lint: app-lint
 
@@ -126,17 +120,3 @@ pty-build:
 
 pty-dev:
 	cd pty && cargo build
-
-# ─── Sandman ───────────────────────────────────────────────────────
-
-sandman-build:
-	cd sandman && go build -o sandman .
-
-sandman-run:
-	cd sandman && go run .
-
-sandman-test:
-	cd sandman && go test ./...
-
-sandman-tidy:
-	cd sandman && go mod tidy

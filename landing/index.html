@@ -3,250 +3,167 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HelixBox</title>
-  <link rel="icon" type="image/png" href="/helixbox.png">
-  <link rel="apple-touch-icon" href="/helixbox.png">
-  <meta name="description" content="HelixBox puts your real laptop development environment on your phone. Pair once, run tools and agents, review changes, and ship from anywhere.">
+  <title>HelixBox | Your development environment, in your pocket</title>
+  <meta name="description" content="Build, run, and ship from your phone. Pair your laptop with HelixBox for files, terminal, Git, previews, and coding agents. Free workspace controls; x402 agent sessions from $0.25 USDC.">
+  <link rel="canonical" href="https://helix-box.vercel.app/">
+  <link rel="icon" type="image/png" href="/assets/images/helixbox-splash.png">
+  <link rel="apple-touch-icon" href="/assets/images/helixbox-splash.png">
   <meta property="og:site_name" content="HelixBox">
-  <meta property="og:title" content="HelixBox">
-  <meta property="og:description" content="Use your full development environment from your phone with time-bound, micro-billed agent sessions.">
-  <meta property="og:image" content="https://raw.githubusercontent.com/devndesigner6/helix-box/main/landing/public/helixbox.png">
+  <meta property="og:title" content="HelixBox | Your development environment, in your pocket">
+  <meta property="og:description" content="Your laptop does the work. Keep building from your phone. Coding agents, editor, browser, terminal, and Git in one app.">
+  <meta property="og:image" content="https://helix-box.vercel.app/assets/images/helixbox-splash.png">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="HelixBox">
-  <meta name="twitter:description" content="Use your full development environment from your phone with time-bound, micro-billed agent sessions.">
-  <meta name="twitter:image" content="https://raw.githubusercontent.com/devndesigner6/helix-box/main/landing/public/helixbox.png">
-  <link rel="stylesheet" href="/style.css">
-  <style>
-    .checkout-btn {
-      background: var(--blueprint);
-      color: var(--bg);
-      border: 1px solid var(--blueprint);
-      padding: 6px 12px;
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      text-decoration: none;
-      transition: background 0.15s, color 0.15s;
-    }
-    .checkout-btn:hover {
-      background: var(--bg);
-      color: var(--blueprint);
-      border-bottom: 1px solid var(--blueprint);
-    }
-  </style>
+  <meta name="twitter:site" content="@helixboxide">
+  <meta name="twitter:title" content="HelixBox | Build, run, and ship from your phone">
+  <meta name="twitter:description" content="Pair your laptop. Open your workspace. Start a coding agent session from $0.25 USDC.">
+  <meta name="twitter:image" content="https://helix-box.vercel.app/assets/images/helixbox-splash.png">
+  <link rel="preload" href="/assets/fonts/VT323-Regular.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="/product.css">
+  <link rel="stylesheet" href="/product-surfaces.css">
+  <link rel="stylesheet" href="/theme-controls.css">
 </head>
-<body>
+<body class="product-page">
   <a href="#main" class="skip-link">Skip to content</a>
-
-  <header class="site-header">
-    <div class="header-inner">
-      <a href="/index.html" class="logo">
-        <span class="logo-icon" aria-hidden="true"></span> HELIX / BOX
-      </a>
-      <button class="header-menu-toggle" id="menuToggle" type="button" aria-controls="primaryNav" aria-expanded="false" aria-label="Open navigation">
-        <span class="header-menu-icon" aria-hidden="true"><span></span><span></span><span></span></span>
-      </button>
-      <nav class="header-nav" id="primaryNav" hidden>
-        <a href="#how-it-works">How it works</a>
-        <a href="/about.html" >About</a>
-        <a href="https://github.com/devndesigner6/helix-box" target="_blank" rel="noopener" class="header-github">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.4 3-.405 1.02.005 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
-          <span class="star-count" aria-label="GitHub">GitHub</span>
-        </a>
-      </nav>
-      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" type="button">
-        <span class="theme-icon" id="themeIcon">N</span>
-      </button>
-    </div>
-  </header>
-
   <main id="main">
-    <section class="manual-masthead container">
-      <div class="manual-meta-row">
-        <span>FIG_000 &middot; HelixBox Protocol v2.0 · 2026</span>
-        <span class="right">Algorand USDC · MIT</span>
+  <div class="hero-shell" id="top">
+    <header class="product-header" role="banner">
+      <div class="wrap header-content">
+        <a class="brand" href="/index.html" aria-label="HelixBox home"><img src="/assets/images/helixbox-splash.png" alt="" width="38" height="38"><span>helixbox</span></a>
+        <button class="menu-toggle" id="menuToggle" type="button" aria-controls="primaryNav" aria-expanded="false" aria-label="Open navigation"><span></span><span></span><span></span></button>
+        <nav id="primaryNav" class="product-nav" aria-label="Main navigation">
+          <a href="#features">Features</a><a href="#how-it-works">How it works</a><a href="#pricing">Pricing</a>
+          <a class="nav-github" href="https://github.com/devndesigner6/helix-box" target="_blank" rel="noopener noreferrer"><img src="/assets/media/github.svg" alt="" width="16" height="16"> GitHub ↗</a>
+          <a class="button button-small button-dark" href="#download">Get HelixBox</a>
+        </nav>
+        <button class="theme-button" id="themeToggle" type="button" aria-label="Switch to dark theme"><span id="themeIcon" aria-hidden="true">◐</span></button>
       </div>
-      <h1 class="manual-title">Remote IDE<br>for Mobile</h1>
-      <p class="manual-tagline reveal">Use your full development environment from your phone with time-bound, micro-billed agent sessions.</p>
-      <p class="manual-attribution reveal" style="--stagger-delay: 80ms;">Maintained by HelixBox and contributors. Connect your laptop in 2 seconds.</p>
-      <div class="masthead-cta reveal" style="--stagger-delay: 140ms;">
-        <a class="masthead-btn masthead-btn--primary" href="https://github.com/devndesigner6/helix-box" target="_blank" rel="noopener">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279L12 19.896l-7.416 3.517 1.48-8.279L0 9.306l8.332-1.151z"/></svg>
-          <span>GitHub</span>
-        </a>
-        <a class="checkout-btn" href="https://github.com/devndesigner6/helix-box/releases" target="_blank" rel="noopener">Download App</a>
-      </div>
-      <div class="masthead-install reveal" style="--stagger-delay: 200ms;">
-        <div class="masthead-install-bar">
-          <span>Boot remote CLI</span>
-          <button class="copy-btn" type="button" id="copyInstallCmd" data-copy-value="npm install -g helixbox-cli">
-            <span class="copy-icon-container">
-              <svg class="copy-icon-svg" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9.6 5.1V3.7A1.7 1.7 0 0 0 7.9 2H3.7A1.7 1.7 0 0 0 2 3.7v4.2a1.7 1.7 0 0 0 1.7 1.7h1.4" />
-                <rect x="5.1" y="5.1" width="6.9" height="6.9" rx="1.7" />
-              </svg>
-              <svg class="check-icon-svg" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
-                <path d="M2.9 7.4 5.6 10.1 11.1 4" />
-              </svg>
-            </span>
-            <span>copy</span>
-          </button>
+    </header>
+      <section class="hero wrap" aria-labelledby="hero-title">
+        <p class="eyebrow hero-eyebrow" data-reveal>YOUR LAPTOP. NOW WITH YOU.</p>
+        <h1 id="hero-title"><span data-heading-reveal>Build, run, and ship</span><br><span class="hero-subtitle" data-heading-reveal>from your phone.</span></h1>
+        <p class="hero-description" data-reveal>HelixBox connects your phone to the development environment on your laptop. Your files, terminal, Git, previews, and coding agents, all in one mobile app.</p>
+        <div class="button-row" data-reveal>
+          <a class="button button-dark" href="https://github.com/devndesigner6/helix-box/releases/latest" target="_blank" rel="noopener noreferrer"><img src="/assets/media/android.svg" alt="" width="19" height="19"> Download Android ↗</a>
+          <a class="button button-light" href="https://youtu.be/2cmHX_T2Qis" target="_blank" rel="noopener noreferrer">Watch the demo <span aria-hidden="true">▶</span></a>
         </div>
-        <pre>npm install -g helixbox-cli
-<span class="cmd-prompt">&gt;</span> <span class="cmd-skill">helixbox-cli -n</span></pre>
-        <div class="masthead-install-agents">
-          <span class="agent-chip"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z"/></svg>Expo Go</span>
-          <span class="agent-chip"><svg class="glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M11.503.131 1.891 5.678a.84.84 0 0 0-.42.726v11.188c0 .3.162.575.42.724l9.609 5.55a1 1 0 0 0 .998 0l9.61-5.55a.84.84 0 0 0 .42-.724V6.404a.84.84 0 0 0-.42-.726L12.497.131a1.01 1.01 0 0 0-.996 0M2.657 6.338h18.55c.263 0 .43.287.297.515L12.23 22.918c-.062.107-.229.064-.229-.06V12.335a.59.59 0 0 0-.295-.51l-9.11-5.257c-.109-.063-.064-.23.061-.23"/></svg>VS Code</span>
-          <span class="agent-chip">+ local shell PTY host</span>
-        </div>
-      </div>
-      <p class="masthead-install-caption reveal" style="--stagger-delay: 240ms;">Pair your laptop once, then use the same workspace from your phone.</p>
-
-      <div class="masthead-video-slot" aria-label="Hero video placeholder"></div>
-      <figure class="masthead-figure" aria-hidden="true" data-fig-cycle hidden>
-        <div class="fig-plate">
-          <!-- FIG 1: PTY Host Tunnel -->
-          <div class="fig-panel is-active" data-caption="Low-latency bidirectional PTY stream connecting Mobile client to Laptop CLI.">
-            <svg viewBox="0 0 560 380" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect class="fig-frame" x="8" y="8" width="544" height="364"/>
-              <path class="fig-tick" d="M8 28 V8 H28 M532 8 H552 V28 M552 352 V372 H532 M28 372 H8 V352"/>
-              <text class="fig-label" x="24" y="34">FIG_001 · BIDIRECTIONAL PTY TUNNEL</text>
-              <text class="fig-label fig-label--right" x="536" y="34">Mobile &lt;--&gt; CLI</text>
-              <line class="fig-edge fig-l1" x1="90" y1="190" x2="280" y2="100" pathLength="1"/>
-              <line class="fig-edge fig-l1" x1="90" y1="190" x2="280" y2="280" pathLength="1"/>
-              <line class="fig-edge fig-l2" x1="280" y1="100" x2="470" y2="190" pathLength="1"/>
-              <line class="fig-edge fig-l2" x1="280" y1="280" x2="470" y2="190" pathLength="1"/>
-              <circle class="fig-node fig-n1" cx="90" cy="190" r="7"/>
-              <circle class="fig-node fig-n2" cx="280" cy="100" r="7"/>
-              <circle class="fig-node fig-n2" cx="280" cy="280" r="7"/>
-              <circle class="fig-node fig-n3" cx="470" cy="190" r="7"/>
-              <circle class="fig-pulse" r="4" style="offset-path: path('M90,190 L280,100 L470,190'); animation-delay: 0.5s"/>
-              <circle class="fig-pulse" r="4" style="offset-path: path('M470,190 L280,280 L90,190'); animation-delay: 2.0s"/>
-              <text class="fig-axis" x="90" y="220">Mobile Client</text>
-              <text class="fig-axis" x="280" y="80">Session Control</text>
-              <text class="fig-axis" x="280" y="310">Session Data</text>
-              <text class="fig-axis" x="470" y="220">CLI Shell</text>
-            </svg>
-          </div>
-          <!-- FIG 2: Pairing QR handshake -->
-          <div class="fig-panel" data-caption="Handshake security: scanning the CLI QR code to establish encrypted key pairings.">
-            <svg viewBox="0 0 560 380" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect class="fig-frame" x="8" y="8" width="544" height="364"/>
-              <path class="fig-tick" d="M8 28 V8 H28 M532 8 H552 V28 M552 352 V372 H532 M28 372 H8 V352"/>
-              <text class="fig-label" x="24" y="34">FIG_002 · PAIRING CODE HANDSHAKE</text>
-              <text class="fig-label fig-label--right" x="536" y="34">QR Scan</text>
-              <rect class="fig-term" x="120" y="80" width="320" height="230"/>
-              <line class="fig-term-bar" x1="120" y1="110" x2="440" y2="110"/>
-              <circle class="fig-term-dot" cx="136" cy="95" r="3.5"/>
-              <circle class="fig-term-dot" cx="150" cy="95" r="3.5"/>
-              <circle class="fig-term-dot" cx="164" cy="95" r="3.5"/>
-              <text class="fig-line fig-line--cmd" x="140" y="150">helixbox-cli -n</text>
-              <text class="fig-line fig-line--agent" x="140" y="200">Pairing Code: 893-471-290</text>
-              <text class="fig-line fig-line--you" x="140" y="250">Status: Paired securely!</text>
-              <rect class="fig-caret" x="140" y="275" width="9" height="15"/>
-            </svg>
-          </div>
-          <!-- FIG 3: Micro-billing USDC curve -->
-          <div class="fig-panel" data-caption="Micro-billing sync: automatic background USDC payment settlements.">
-            <svg viewBox="0 0 560 380" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect class="fig-frame" x="8" y="8" width="544" height="364"/>
-              <path class="fig-tick" d="M8 28 V8 H28 M532 8 H552 V28 M552 352 V372 H532 M28 372 H8 V352"/>
-              <text class="fig-label" x="24" y="34">FIG_003 · MICRO-BILLING SYNC</text>
-              <text class="fig-label fig-label--right" x="536" y="34">USDC via x402</text>
-              <line class="fig-grid" x1="150" y1="80" x2="150" y2="320"/>
-              <line class="fig-grid" x1="290" y1="80" x2="290" y2="320"/>
-              <line class="fig-grid" x1="430" y1="80" x2="430" y2="320"/>
-              <line class="fig-axis-line" x1="80" y1="320" x2="504" y2="320"/>
-              <line class="fig-axis-line" x1="80" y1="320" x2="80" y2="68"/>
-              <path class="fig-curve fig-curve--steep" d="M80,320 C200,300 250,150 490,80" pathLength="1"/>
-              <text class="fig-curve-label fig-curve-label--steep" x="250" y="120">Micro-billing settled</text>
-              <rect class="fig-mile" x="200" y="270" width="7" height="7"/>
-              <text class="fig-mile-label" x="215" y="260">0.25 USDC</text>
-              <rect class="fig-mile" x="320" y="180" width="7" height="7"/>
-              <text class="fig-mile-label" x="335" y="170">0.50 USDC</text>
-              <circle class="fig-rider" r="5" style="offset-path: path('M80,320 C200,300 250,150 490,80')"/>
-            </svg>
+        <div class="hero-meta" data-reveal><span>Open source</span><span>No signup to pair</span><span>Free workspace controls</span></div>
+        <div class="demo-card" data-reveal>
+          <div class="demo-bar"><span><i class="status-dot"></i> HELIXBOX / IN ACTION</span><span>YOUR PROJECT, YOUR MACHINE</span></div>
+          <div class="demo-screen">
+            <video muted loop playsinline preload="metadata" poster="/assets/media/demo-poster.webp" aria-label="Preview of HelixBox running on a phone"><source src="/assets/media/helixbox-preview.mp4" type="video/mp4"></video>
+            <div class="demo-controls">
+              <button class="motion-toggle" id="demoMotion" type="button" aria-label="Play demo preview" aria-pressed="false"><span class="play-icon" aria-hidden="true">▶</span><span class="motion-label">Play preview</span></button>
+              <a class="demo-link" href="https://youtu.be/2cmHX_T2Qis" target="_blank" rel="noopener noreferrer" aria-label="Watch the full HelixBox demo on YouTube">Full walkthrough on YouTube ↗</a>
+            </div>
+            <p class="media-status" id="mediaStatus" role="status" aria-live="polite"></p>
           </div>
         </div>
-        <div class="fig-meta">
-          <figcaption class="fig-caption">Low-latency bidirectional PTY stream connecting Mobile client to Laptop CLI.</figcaption>
-          <div class="fig-dots">
-            <span class="fig-dot is-active"></span><span class="fig-dot"></span><span class="fig-dot"></span>
-          </div>
-        </div>
-      </figure>
-      <div class="ascii-rule" style="margin-top:48px;"></div>
-    </section>
-
-    <section class="learners-strip">
-      <div class="learners-eyebrow">Works seamlessly with leading AI agents & tools</div>
-      <div class="logo-marquee-container">
-        <div class="logo-marquee-track">
-          <div class="logo-marquee-group">
-            <span class="logo-item"><img src="/logos/claude.png" alt="Claude" /> Claude</span>
-            <span class="logo-item"><img src="/logos/codex.png" alt="OpenAI Codex" /> Codex</span>
-            <span class="logo-item"><img src="/logos/opencode.png" alt="DeepSeek OpenCode" /> OpenCode</span>
-            <span class="logo-item"><img src="/logos/hermes.png" alt="Nous Hermes" /> Nous Hermes</span>
-          </div>
-          <!-- Repeated group to loop seamlessly -->
-          <div class="logo-marquee-group" aria-hidden="true">
-            <span class="logo-item"><img src="/logos/claude.png" alt="Claude" /> Claude</span>
-            <span class="logo-item"><img src="/logos/codex.png" alt="OpenAI Codex" /> Codex</span>
-            <span class="logo-item"><img src="/logos/opencode.png" alt="DeepSeek OpenCode" /> OpenCode</span>
-            <span class="logo-item"><img src="/logos/hermes.png" alt="Nous Hermes" /> Nous Hermes</span>
-          </div>
-        </div>
-      </div>
-      <p class="learners-quote">&ldquo;Secure remote terminal emulator and AI workspace right inside your pocket.&rdquo; <span class="learners-quote-attr">&mdash; HelixBox Engineering</span></p>
-    </section>
-
-    <section class="preface container" id="how-it-works">
-      <div class="preface-grid">
-        <div class="preface-eyebrow">How this works</div>
-        <div class="preface-body">
-          <p>Pair your laptop with a QR code and keep working in the same project from your phone. HelixBox exposes your real files, terminal, processes, logs, and Git state without moving the project into a separate cloud editor.</p>
-          <p>Workspace controls stay free. When you need an AI agent, start a time-bound session: pay $0.25 USDC for one hour or $2 USDC for seven days with fair-use limits. One payment unlocks the session, not each individual task.</p>
-          <p>Agent availability comes from the connected laptop CLI. Codex, OpenCode, Claude Code, and Hermes appear only when their runtimes are actually installed and reported ready. Review diffs and approve risky changes before they run.</p>
-        </div>
-      </div>
-    </section>
-
-    <section class="colophon container">
-      <div class="colophon-grid">
-        <div class="colophon-eyebrow">Colophon</div>
-        <div>
-          <p>Get started with HelixBox in 2 seconds. Install the command-line client, run the bootstrap pairing command, and open the app on your mobile device to begin coding.</p>
-          <div class="colophon-cmd">
-            <code>git clone https://github.com/devndesigner6/helix-box.git</code>
-            <button class="copy-btn" id="installCopy" data-copy-value="git clone https://github.com/devndesigner6/helix-box.git">
-              <span class="copy-icon-container">
-                <svg class="copy-icon-svg" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M9.6 5.1V3.7A1.7 1.7 0 0 0 7.9 2H3.7A1.7 1.7 0 0 0 2 3.7v4.2a1.7 1.7 0 0 0 1.7 1.7h1.4" />
-                  <rect x="5.1" y="5.1" width="6.9" height="6.9" rx="1.7" />
-                </svg>
-                <svg class="check-icon-svg" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
-                  <path d="M2.9 7.4 5.6 10.1 11.1 4" />
-                </svg>
-              </span>
-              <span>copy</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer class="site-footer">
-    <div class="container footer-inner">
-      <p>© 2026 · HelixBox · Open Source · Free Editor</p>
-      <div class="footer-links">
-        <a href="https://github.com/devndesigner6/helix-box" target="_blank" rel="noopener">GitHub</a>
-        <a href="/about.html">About</a>
-      </div>
+      </section>
     </div>
-  </footer>
 
-  <script type="module" src="/app.js"></script>
+  <div class="product-body">
+    <section class="wrap section" aria-labelledby="use-title">
+      <div class="section-heading" data-reveal><p class="eyebrow">WORK FROM WHERE YOU ARE</p><h2 id="use-title">Your workspace.<br>Your way.</h2><p>Your laptop keeps doing the work. You don’t have to sit next to it.</p></div>
+      <div class="mode-grid">
+        <article class="mode-card" data-reveal><div class="mode-visual connect-visual" aria-hidden="true"><div class="mini-laptop"><div><code>npx helixbox-cli</code><span class="connected-line">workspace connected <i class="status-dot"></i></span></div></div><div class="connection-path"><i></i><i></i><i></i></div><div class="mini-phone"><img src="/assets/images/helixbox-splash.png" alt=""><span>YOUR PROJECT</span></div></div><div class="mode-content"><span class="pill">FREE WORKSPACE CONTROLS</span><h3>Pair your laptop.</h3><p>Scan the CLI’s QR code and open the project you’re already working on. No migration to a new editor or cloud workspace.</p><a class="text-link" href="#how-it-works">See the setup <span>↗</span></a></div></article>
+        <article class="mode-card" data-reveal><div class="mode-visual session-visual" aria-hidden="true"><div class="session-window"><div class="window-label"><span>AGENT SESSION</span><i class="status-dot"></i></div><div class="session-price">0.25 <span>USDC</span></div><div class="session-time">01:00:00 <span>ACCESS PERIOD</span></div><div class="session-track"><span></span></div><div class="session-actions"><span>diagnose</span><span>test</span><span>review</span></div></div></div><div class="mode-content"><span class="pill">PAY WHEN YOU NEED AN AGENT</span><h3>Start a session.</h3><p>Pay once for a defined access period. Ask questions, run tests, and review patches throughout your active agent session.</p><a class="text-link" href="#pricing">See session pricing <span>↗</span></a></div></article>
+      </div>
+    </section>
+
+    <section class="setup-section" id="how-it-works" aria-labelledby="setup-title">
+      <div class="wrap section">
+        <div class="section-heading" data-reveal><p class="eyebrow">FROM DESK TO POCKET</p><h2 id="setup-title">Pair. Open. Keep going.</h2></div>
+        <div class="setup-grid">
+          <article data-reveal><span class="step-number">01</span><h3>Run the CLI.</h3><p>Open a terminal inside your project and run:</p><div class="copy-command"><code>npx helixbox-cli</code><span data-copy-mount><button type="button" data-copy="npx helixbox-cli" aria-label="Copy HelixBox CLI command"><span data-copy-label>Copy ↗</span></button></span></div></article>
+          <article data-reveal><span class="step-number">02</span><h3>Scan the QR.</h3><p>Open HelixBox on Android and scan the QR shown by the CLI. Your phone connects to that laptop workspace.</p></article>
+          <article data-reveal><span class="step-number">03</span><h3>Open your project.</h3><p>Browse files, check logs, or start an agent session. Return through Past Sessions when your saved connection is still valid.</p></article>
+        </div>
+        <p class="setup-note">Keep your laptop running and connected to the internet. Install and sign in to the coding agents you want to use on that laptop.</p>
+      </div>
+    </section>
+
+    <section class="wrap section features-section" id="features" aria-labelledby="features-title">
+      <div class="section-heading" data-reveal><p class="eyebrow">THE TOOLS YOU ALREADY USE</p><h2 id="features-title">Everything you need<br>to keep building.</h2><p>A mobile workspace connected to your real development environment.</p></div>
+      <div class="agent-lineup" aria-label="Supported coding agents" data-reveal><span><img src="/assets/logos/codex.png" alt="" width="28" height="28">Codex</span><span><img src="/assets/logos/opencode.png" alt="" width="28" height="28">OpenCode</span><span><img src="/assets/logos/claude.png" alt="" width="28" height="28">Claude Code</span><span><img src="/assets/logos/hermes.png" alt="" width="28" height="28">Hermes</span></div>
+      <p class="agent-lineup-note">Available when their CLIs are installed and ready on your paired laptop.</p>
+      <div class="feature-grid">
+      <article class="feature-row ">
+  <div class="feature-copy" data-reveal><p class="eyebrow">01 / AGENTS</p><h3>Give your agent the next move.</h3><p>Read a codebase, diagnose a bug, run tests, and review the patch. Keep the conversation going from your phone, including voice input.</p><div class="agent-badges"><span>Codex</span><span>OpenCode</span><span>Claude Code</span><span>Hermes</span></div></div>
+  <figure class="feature-media" data-reveal><img src="/assets/media/agents.png" alt="Codex and OpenCode in the mobile workspace" loading="lazy" decoding="async" width="2560" height="1440"><figcaption>AGENTS / THE MOBILE WORKSPACE</figcaption></figure>
+</article>
+<article class="feature-row feature-row--reverse">
+  <div class="feature-copy" data-reveal><p class="eyebrow">02 / BROWSER</p><h3>See what you’re shipping.</h3><p>Start your development server on the laptop and open its preview on your phone. Check the result without leaving the workspace.</p><span class="feature-note">Your local preview, wherever you are.</span></div>
+  <figure class="feature-media" data-reveal><img src="/assets/media/browser-demo.webp" alt="HelixBox browser showing the running application" loading="lazy" decoding="async" width="2560" height="1440"><figcaption>BROWSER / THE MOBILE WORKSPACE</figcaption></figure>
+</article>
+<article class="feature-row ">
+  <div class="feature-copy" data-reveal><p class="eyebrow">03 / EDITOR</p><h3>A quick fix doesn’t need a desk.</h3><p>Open the file explorer, find the file, and make the change. Your edits stay in the project you already have on your laptop.</p><span class="feature-note">Same files. Same project.</span></div>
+  <figure class="feature-media" data-reveal><img src="/assets/media/editor.png" alt="Mobile code editor and project files" loading="lazy" decoding="async" width="2560" height="1440"><figcaption>EDITOR / THE MOBILE WORKSPACE</figcaption></figure>
+</article>
+<article class="feature-row feature-row--reverse">
+  <div class="feature-copy" data-reveal><p class="eyebrow">04 / TERMINAL</p><h3>Your shell comes with you.</h3><p>Run commands, follow logs, install dependencies, and check a build. The commands execute in your paired laptop’s environment.</p><span class="feature-note">Your dependencies and tools stay on your machine.</span></div>
+  <figure class="feature-media" data-reveal><img src="/assets/media/terminal-demo.webp" alt="Terminal running on the paired laptop through HelixBox" loading="lazy" decoding="async" width="2560" height="1440"><figcaption>TERMINAL / THE MOBILE WORKSPACE</figcaption></figure>
+</article>
+<article class="feature-row ">
+  <div class="feature-copy" data-reveal><p class="eyebrow">05 / GIT</p><h3>Check the diff. Then ship.</h3><p>See changed files, review the diff, stage your work, and commit or push from your phone. Stay in control of what goes into the repository.</p><span class="feature-note">Review before you commit.</span></div>
+  <figure class="feature-media" data-reveal><img src="/assets/media/git-demo.webp" alt="Mobile Git status and change review" loading="lazy" decoding="async" width="1280" height="720"><figcaption>GIT / THE MOBILE WORKSPACE</figcaption></figure>
+</article>
+      </div>
+    </section>
+
+    <section class="wrap section tools-section" aria-labelledby="tools-title">
+      <div class="section-heading" data-reveal><p class="eyebrow">THE LITTLE THINGS, TOO</p><h2 id="tools-title">More than a terminal.</h2></div>
+      <div class="tools-grid">
+        <article class="tool-card" data-reveal><div class="tool-preview explorer-preview" aria-hidden="true"><div class="preview-label">EXPLORER</div><div>▾ <span class="folder">▰</span> components/</div><div class="file-line">◆ Features.tsx <span class="modified">M</span></div><div class="file-line">◆ Hero.tsx</div><div>▸ <span class="folder">▰</span> hooks/</div><div class="file-line">TS useAuth.ts</div></div><h3>File Explorer</h3><p>Browse, create, rename, and organise the files in your project.</p></article>
+        <article class="tool-card" data-reveal><div class="tool-preview process-preview" aria-hidden="true"><div class="preview-label">PROCESS <span>MEMORY / PID</span></div><div><i class="status-dot"></i> vite <span class="process-value">26 MB</span><small>1234</small></div><div><i class="status-dot"></i> node <span>149 MB</span><small>1235</small></div><div><i class="status-dot"></i> tsc --watch <span>29 MB</span><small>1236</small></div><div><i class="status-dot"></i> postgres <span>69 MB</span><small>1237</small></div></div><h3>Process Manager</h3><p>See what’s running on your laptop and manage its processes.</p></article>
+        <article class="tool-card" data-reveal><div class="tool-preview api-preview" aria-hidden="true"><div><b>GET</b> /api/users</div><div class="api-response"><i class="status-dot"></i> <span>200 OK · 38ms</span></div><pre>{<br>  "id": "usr_abc",<br>  "name": "Jane Doe"<br>}</pre></div><h3>API Client</h3><p>Send HTTP requests and inspect responses from your mobile workspace.</p></article>
+        <article class="tool-card" data-reveal><div class="tool-preview ports-preview" aria-hidden="true"><div class="preview-label">PORT <span>PROCESS / PID</span></div><div>:3000 <span>vite</span><small>1234</small></div><div>:8080 <span>node</span><small>1235</small></div><div>:5432 <span>postgres</span><small>1236</small></div><div>:4000 <span>express</span><small>1238</small></div></div><h3>Ports Manager</h3><p>Find open ports and the processes using them.</p></article>
+        <article class="tool-card" data-reveal><div class="tool-preview text-preview" aria-hidden="true"><div class="tool-tabs"><span>Base64</span><span>JWT</span><span>SHA256</span><span>JSON</span></div><div class="preview-label">INPUT</div><code>hello world</code><div class="preview-label">OUTPUT</div><pre>aGVsbG8gd29ybGQ=</pre></div><h3>Text Tools</h3><p>Encode, decode, format, and inspect text without leaving the app.</p></article>
+        <article class="tool-card" data-reveal><div class="tool-preview resource-preview" aria-hidden="true"><div class="preview-label">SYSTEM RESOURCES</div><div class="resource-label">CPU <span>31%</span></div><div class="resource-track"><i style="--usage:31%;--bar-color:#548dff"></i></div><div class="resource-label">Memory <span>21%</span></div><div class="resource-track"><i style="--usage:21%;--bar-color:#ab76ff"></i></div><div class="resource-label">Disk <span>62%</span></div><div class="resource-track"><i style="--usage:62%;--bar-color:#06c993"></i></div></div><h3>Resource Monitor</h3><p>Check CPU, memory, and disk usage while your project is running.</p></article>
+      </div>
+    </section>
+
+    <section class="pricing-section" id="pricing" aria-labelledby="pricing-title">
+      <div class="wrap section">
+        <div class="section-heading" data-reveal><p class="eyebrow">SMALL PAYMENTS. USEFUL WORK.</p><h2 id="pricing-title">Start an agent session.<br>Skip another subscription.</h2><p>Workspace controls are free. Agent access uses x402 payments in USDC on Algorand MainNet.</p></div>
+        <div class="pricing-grid">
+          <article class="price-card" data-reveal><p class="eyebrow">THE WORKSPACE</p><h3>Free</h3><p class="price-period">Pair and explore your project.</p><ul><li>Pair your laptop</li><li>Inspect files, logs, and Git status</li><li>Basic workspace controls</li></ul><a class="button button-outline" href="#download">Get the app ↗</a></article>
+          <article class="price-card featured-price" data-reveal><span class="price-badge">START HERE</span><p class="eyebrow">ONE-HOUR AGENT SESSION</p><h3>$0.25 <span>USDC</span></h3><p class="price-period">One payment. One hour of access.</p><ul><li>Ask agent questions</li><li>Diagnose bugs and run tests</li><li>Generate and review patch proposals</li><li>Renew when your session expires</li></ul><a class="button button-dark" href="#download">Start from the app ↗</a></article>
+          <article class="price-card" data-reveal><p class="eyebrow">SEVEN-DAY DEVELOPER PASS</p><h3>$2 <span>USDC</span></h3><p class="price-period">For returning developers.</p><ul><li>One developer, selected projects</li><li>Agent access with fair-use limits</li><li>Expires after seven days</li><li>Risky actions still need approval</li></ul><a class="button button-outline" href="#download">Get the developer pass ↗</a></article>
+        </div>
+        <div class="payment-flow" data-reveal><span>Start session</span><i>→</i><span>Approve in Pera Wallet</span><i>→</i><span>Settlement verified</span><i>→</i><span>Agent access active</span></div>
+        <p class="pricing-note">Session access does not include unlimited model usage. Your agent provider’s subscription or API charges remain separate. You don’t pay HelixBox again for each prompt inside an active session.</p>
+      </div>
+    </section>
+
+    <section class="wrap section security-section" aria-labelledby="security-title">
+      <div class="section-heading" data-reveal><p class="eyebrow">YOUR CODE STAYS WITH YOU</p><h2 id="security-title">Your machine.<br>Your control.</h2></div>
+      <div class="security-grid">
+        <div class="security-visual" data-reveal aria-hidden="true"><div class="secure-end"><span class="secure-icon">▣</span><span>PHONE</span></div><div class="secure-tunnel"><div class="encrypted-packets"><i></i><i></i><i></i><i></i></div><span>ENCRYPTED TRANSPORT</span></div><div class="secure-end"><span class="secure-icon">⌘</span><span>LAPTOP</span></div></div>
+        <div class="security-copy" data-reveal><h3>The project runs on your laptop.</h3><p>HelixBox gives your phone access to that workspace. It doesn’t move your files into a separate cloud development environment.</p><ul><li>QR pairing connects the phone and laptop.</li><li>The v2 transport uses XChaCha20-Poly1305 payload encryption.</li><li>Review agent changes and approve risky actions.</li><li>USDC settlement is verified before paid access starts.</li></ul><a class="text-link" href="https://github.com/devndesigner6/helix-box" target="_blank" rel="noopener noreferrer">Explore the open-source code ↗</a></div>
+      </div>
+    </section>
+
+    <section class="wrap section faq-section" id="faq" aria-labelledby="faq-title">
+      <div data-reveal><p class="eyebrow">BEFORE YOU START</p><h2 id="faq-title">A few good questions.</h2></div>
+      <div class="faq-list" data-reveal>
+        <details><summary>Does my laptop need to stay on?<img src="/assets/media/chevron.svg" alt=""></summary><p>Yes. HelixBox connects to the workspace running on your laptop. Keep the laptop awake, the CLI running, and the internet connection available.</p></details>
+        <details><summary>What can I use for free?<img src="/assets/media/chevron.svg" alt=""></summary><p>Pairing and basic workspace controls are free. Paid sessions unlock agent access for a defined period: $0.25 USDC for one hour or $2 USDC for seven days with fair-use limits.</p></details>
+        <details><summary>Which coding agents can I use?<img src="/assets/media/chevron.svg" alt=""></summary><p>Codex, OpenCode, Claude Code, and Hermes are supported. Install and authenticate their CLIs on the paired laptop. Availability in the app comes from that laptop’s reported CLI status.</p></details>
+        <details><summary>Does the session price include model or API costs?<img src="/assets/media/chevron.svg" alt=""></summary><p>No. The payment covers HelixBox agent-session access. Your agent provider’s subscription and API billing are separate. The seven-day pass is subject to fair-use limits.</p></details>
+        <details><summary>How do I pay for an agent session?<img src="/assets/media/chevron.svg" alt=""></summary><p>Start a session from the app, open checkout, and approve the USDC payment in Pera Wallet. HelixBox checks settlement on Algorand MainNet before activating your access.</p></details>
+        <details><summary>Can I return to the same workspace?<img src="/assets/media/chevron.svg" alt=""></summary><p>Use the saved connection or Past Sessions when the laptop session is still valid. If the laptop session has ended, run the CLI and use the explicit new-session flow to pair again.</p></details>
+        <details><summary>Is HelixBox available on iOS?<img src="/assets/media/chevron.svg" alt=""></summary><p>The current public build is an Android APK available through GitHub Releases. The source code and setup instructions are available on GitHub.</p></details>
+      </div>
+    </section>
+
+    <section class="download-section" id="download" aria-labelledby="download-title">
+      <div class="wrap download-content" data-reveal><img class="download-logo" src="/assets/images/helixbox-splash.png" alt="" width="90" height="90"><p class="eyebrow">TAKE YOUR WORKSPACE WITH YOU</p><h2 id="download-title">Keep building.<br>Even away from your desk.</h2><p>Download the Android app. Run the CLI. Scan the QR.</p><div class="button-row"><a class="button button-dark" href="https://github.com/devndesigner6/helix-box/releases/latest" target="_blank" rel="noopener noreferrer"><img src="/assets/media/android.svg" alt="" width="19" height="19"> Download Android ↗</a><a class="button button-light" href="https://youtu.be/2cmHX_T2Qis" target="_blank" rel="noopener noreferrer">Watch the walkthrough ▶</a></div><div class="copy-command download-command"><code>npx helixbox-cli</code><button type="button" data-copy="npx helixbox-cli" aria-label="Copy install command">Copy ↗</button></div></div>
+    </section>
+
+    <footer class="product-footer"><div class="wrap footer-grid"><div><a class="brand" href="/index.html"><img src="/assets/images/helixbox-splash.png" alt="" width="38" height="38"><span>helixbox</span></a><p>Your development environment,<br>now in your pocket.</p></div><div><p class="eyebrow">PRODUCT</p><a href="#features">Features</a><a href="#how-it-works">Setup</a><a href="#pricing">Pricing</a><a href="#download">Download</a></div><div><p class="eyebrow">KEEP IN TOUCH</p><a href="https://x.com/helixboxide" target="_blank" rel="noopener noreferrer">X ↗</a><a href="https://github.com/devndesigner6/helix-box" target="_blank" rel="noopener noreferrer">GitHub ↗</a><a href="https://youtu.be/2cmHX_T2Qis" target="_blank" rel="noopener noreferrer">YouTube demo ↗</a><a href="/about.html">About HelixBox</a></div></div><div class="wrap footer-bottom"><span>© 2026 HelixBox · Open source</span><span>Built for the workspace you already have.</span></div></footer>
+  </div>
+  </main>
+  <p class="sr-only" id="copyStatus" role="status" aria-live="polite"></p>
+  <script type="module" src="/product.js"></script>
 </body>
 </html>

@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HelixBox — Glossary</title>
-  <link rel="icon" type="image/png" href="/helixbox.png">
-  <meta name="description" content="AI-powered mobile IDE and interactive PTY terminal emulator paired via E2E encrypted relays and Algorand x402 micro-billing.">
+  <title>HelixBox | Glossary</title>
+  <link rel="icon" type="image/png" href="/assets/images/helixbox-splash.png">
+  <meta name="description" content="Understand HelixBox workspace pairing, coding agents, and time-bound x402 sessions on Algorand MainNet.">
   <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/theme-controls.css">
   <style>
     .checkout-btn {
       background: var(--blueprint);
@@ -36,9 +37,9 @@
         <span class="logo-icon" aria-hidden="true"></span> HELIX / BOX
       </a>
       <nav class="header-nav">
-        <a href="/index.html" >Contents</a>
-        <a href="/catalog.html" >Catalog</a>
-        <a href="/roadmap.html" >Roadmap</a>
+        <a href="/index.html" >Home</a>
+        <a href="/catalog.html" >Setup</a>
+        <a href="/roadmap.html" >How it works</a>
         <a href="/glossary.html" aria-current="page">Glossary</a>
         <a href="/about.html" >About</a>
         <a href="https://github.com/devndesigner6/helix-box" target="_blank" rel="noopener" class="header-github">
@@ -58,7 +59,7 @@
         <span>GLOSSARY &middot; TERMINOLOGY</span>
       </div>
       <h1 class="manual-title">Developer<br>Glossary</h1>
-      <p class="manual-tagline">Precise working definitions for the HelixBox client architecture, proxy layers, and micro-billing protocols.</p>
+      <p class="manual-tagline">The terms you will see when pairing your laptop and starting an agent session.</p>
       <div class="ascii-rule" style="margin-top:48px;"></div>
     </section>
 
@@ -66,10 +67,10 @@
       <div class="preface-grid">
         <div class="preface-eyebrow">Definitions</div>
         <div class="preface-body">
-          <p><strong>x402 Protocol</strong><br>An open framework for micro-billing over Algorand. It enables per-second pay-as-you-go settlement via pre-approved USDC transaction signatures.</p>
+          <p><strong>x402</strong><br>A payment protocol based on HTTP payment requirements. HelixBox uses it with USDC on Algorand MainNet to activate time-bound agent access after settlement is verified.</p>
           <p><strong>PTY (Pseudoterminal)</strong><br>The native OS interface spawned by the laptop CLI. It translates remote keyboard events and renders terminal streams locally.</p>
           <p><strong>WebSocket Relay</strong><br>The mediator gateway that pipes binary shell byte frames between app and host, traversing NAT walls and network boundaries.</p>
-          <p><strong>SQLite pairing store</strong><br>Persistent SQLite database in the control plane manager that caches active pairing sessions, preventing drops on server restarts.</p>
+          <p><strong>Agent session</strong><br>A defined access period: $0.25 USDC for one hour or $2 USDC for a seven-day pass with fair-use limits. Model subscriptions and API charges remain separate.</p>
         </div>
       </div>
     </section>
@@ -81,8 +82,8 @@
       <div class="footer-links">
         <a href="https://github.com/devndesigner6/helix-box" target="_blank" rel="noopener">GitHub</a>
         <a href="/about.html">About</a>
-        <a href="/catalog.html">Catalog</a>
-        <a href="/roadmap.html">Roadmap</a>
+        <a href="/catalog.html">Setup</a>
+        <a href="/roadmap.html">How it works</a>
         <a href="/glossary.html">Glossary</a>
       </div>
     </div>

@@ -1,47 +1,18 @@
 import { inject } from '@vercel/analytics';
+import './theme.js';
 
 inject();
 
 (function () {
-  var root = document.documentElement;
-  var stored = localStorage.getItem('theme');
-  if (stored) {
-    root.setAttribute('data-theme', stored);
-  } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    root.setAttribute('data-theme', 'dark');
-  } else {
-    root.setAttribute('data-theme', 'light');
-  }
-  updateThemeIcon();
-
-  document.addEventListener('DOMContentLoaded', function () {
-    initThemeToggle();
+  function initialize() {
     initMobileNavigation();
     initCopyButtons();
     initStreamingTagline();
     initSmoothScroll();
     initFadeObserver();
-  });
-
-  function updateThemeIcon() {
-    var icon = document.getElementById('themeIcon');
-    if (!icon) return;
-    var theme = root.getAttribute('data-theme');
-    icon.textContent = theme === 'light' ? 'N' : 'D';
   }
-
-  function initThemeToggle() {
-    var btn = document.getElementById('themeToggle');
-    if (!btn) return;
-    btn.addEventListener('click', function () {
-      var current = root.getAttribute('data-theme');
-      var next = current === 'light' ? 'dark' : 'light';
-      root.setAttribute('data-theme', next);
-      localStorage.setItem('theme', next);
-      updateThemeIcon();
-    });
-    updateThemeIcon();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initialize, { once: true });
+  else initialize();
 
   function initMobileNavigation() {
     var nav = document.getElementById('primaryNav');
@@ -366,9 +337,9 @@ inject();
     if (!panels.length) return;
 
     var captions = [
-      "FIG. 001 — Remote execution forward pass: connects the phone to the paired laptop workspace.",
-      "FIG. 002 — Mobile client pairing code validation: Scans QR code or enters credentials to negotiate an encrypted session password.",
-      "FIG. 003 — Micro-billing flow: Settles an approved USDC payment before the selected remote session begins."
+      "FIG. 001 | Remote execution forward pass: connects the phone to the paired laptop workspace.",
+      "FIG. 002 | Mobile client pairing code validation: Scans QR code or enters credentials to negotiate an encrypted session password.",
+      "FIG. 003 | Micro-billing flow: Settles an approved USDC payment before the selected remote session begins."
     ];
 
     var activeIdx = 0;

@@ -1,27 +1,27 @@
 @font-face {
   font-family: 'VT323';
-  src: url('/fonts/VT323-Regular.ttf') format('truetype');
+  src: url('/assets/fonts/VT323-Regular.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: 'JetBrains Mono';
-  src: url('/fonts/JetBrainsMono-Regular.ttf') format('truetype');
+  src: url('/assets/fonts/JetBrainsMono-Regular.ttf') format('truetype');
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: 'Source Serif 4';
-  src: url('/fonts/SourceSerif4-Regular.ttf') format('truetype');
+  src: url('/assets/fonts/SourceSerif4-Regular.ttf') format('truetype');
   font-weight: 200 900;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: 'Source Serif 4';
-  src: url('/fonts/SourceSerif4-Italic.ttf') format('truetype');
+  src: url('/assets/fonts/SourceSerif4-Italic.ttf') format('truetype');
   font-weight: 200 900;
   font-style: italic;
   font-display: swap;
@@ -2245,17 +2245,43 @@ body[data-palette-open] {
     }
 
     .masthead-video-slot {
-      display: none;
-      position: absolute;
-      top: 152px;
-      right: -8px;
-      width: 430px;
-      aspect-ratio: 560 / 380;
-      border: 1px dashed var(--rule-soft);
-      background: var(--bg-soft);
+      position: relative;
+      width: min(100%, 640px);
+      aspect-ratio: 16 / 9;
+      margin: 28px 0 0;
+      border: 1px solid var(--rule-soft);
+      background: #000;
+      overflow: hidden;
     }
 
-    @media (min-width: 1280px) { .masthead-video-slot { display: block; } }
+    .masthead-video-slot iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      pointer-events: none;
+    }
+
+    .masthead-video-slot a {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: end;
+      justify-content: end;
+      padding: 12px;
+      background: linear-gradient(transparent 65%, rgba(0, 0, 0, .65));
+      text-decoration: none;
+    }
+
+    .masthead-video-slot a span {
+      padding: 8px 10px;
+      background: rgba(0, 0, 0, .8);
+      color: #fff;
+      font-size: .75rem;
+    }
+
+    @media (min-width: 1280px) { .masthead-video-slot { position: absolute; top: 152px; right: -8px; width: 430px; margin: 0; } }
     @media (min-width: 1440px) { .masthead-video-slot { right: -80px; width: 520px; } }
     @media (min-width: 1640px) { .masthead-video-slot { right: -150px; width: 600px; } }
 

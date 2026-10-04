@@ -6,15 +6,29 @@ import english from "./bip39-words.js";
 
 /**
  * Automated session task execution interval.
- * Can be overridden via X402_INTERVAL_MINS env var if desired.
+ * Defaults to random hours (between 1.0 hr and 3.0 hrs, e.g. 1 hr, 2 hrs, 3 hrs with natural jitter).
+ * Can be overridden via X402_INTERVAL_HOURS or X402_INTERVAL_MINS env vars if desired.
  */
 function getIntervalDelayMs(): number {
-  const envInterval = Number(process.env.X402_INTERVAL_MINS);
-  const targetMins =
-    Number.isFinite(envInterval) && envInterval > 0 ? envInterval : 15.0;
-  const spread = (Math.random() - 0.5) * 2.0;
-  const mins = Math.max(3, targetMins + spread);
-  return Math.round(mins * 60 * 1000);
+  const envHours = Number(process.env.X402_INTERVAL_HOURS);
+  if (Number.isFinite(envHours) && envHours > 0) {
+    const jitter = (Math.random() - 0.5) * 0.4 * envHours;
+    const hours = Math.max(0.5, envHours + jitter);
+    return Math.round(hours * 60 * 60 * 1000);
+  }
+
+  const envMins = Number(process.env.X402_INTERVAL_MINS);
+  if (Number.isFinite(envMins) && envMins > 0) {
+    const spread = (Math.random() - 0.5) * 4.0;
+    const mins = Math.max(5.0, envMins + spread);
+    return Math.round(mins * 60 * 1000);
+  }
+
+  // Pick random interval across 1 to 3 hours (e.g. 1 hr, 2 hrs, 3 hrs with jitter)
+  const minHours = 1.0;
+  const maxHours = 3.0;
+  const randomHours = minHours + Math.random() * (maxHours - minHours);
+  return Math.round(randomHours * 60 * 60 * 1000);
 }
 
 /**
@@ -60,7 +74,7 @@ function parseSecretKey(val: string): algosdk.Account | null {
 function extractFromWordList(words: string[]): algosdk.Account[] {
   const accounts: algosdk.Account[] = [];
   let idx = 0;
-  while (idx < words.length && accounts.length < 3) {
+  while (idx < words.length && accounts.length < 10) {
     let matched = false;
 
     // 1. Try 25-word Algorand phrase (native checksum)
@@ -159,16 +173,51 @@ function collectAccounts(): LoadedAccount[] {
     "X402_AUTO_PAY_MNEMONIC2",
     "X402_AUTO_PAY_MNEMONIC_3",
     "X402_AUTO_PAY_MNEMONIC3",
+    "X402_AUTO_PAY_MNEMONIC_4",
+    "X402_AUTO_PAY_MNEMONIC4",
+    "X402_AUTO_PAY_MNEMONIC_5",
+    "X402_AUTO_PAY_MNEMONIC5",
+    "X402_AUTO_PAY_MNEMONIC_6",
+    "X402_AUTO_PAY_MNEMONIC6",
+    "X402_AUTO_PAY_MNEMONIC_7",
+    "X402_AUTO_PAY_MNEMONIC7",
+    "X402_AUTO_PAY_MNEMONIC_8",
+    "X402_AUTO_PAY_MNEMONIC8",
+    "X402_AUTO_PAY_MNEMONIC_9",
+    "X402_AUTO_PAY_MNEMONIC9",
+    "X402_AUTO_PAY_MNEMONIC_10",
+    "X402_AUTO_PAY_MNEMONIC10",
     "X402_AUTO_PAY_MNEMONICS",
     "MNEMONIC_1",
     "MNEMONIC_2",
     "MNEMONIC_3",
+    "MNEMONIC_4",
+    "MNEMONIC_5",
+    "MNEMONIC_6",
+    "MNEMONIC_7",
+    "MNEMONIC_8",
+    "MNEMONIC_9",
+    "MNEMONIC_10",
     "X402_WALLET_1",
     "X402_WALLET_2",
     "X402_WALLET_3",
+    "X402_WALLET_4",
+    "X402_WALLET_5",
+    "X402_WALLET_6",
+    "X402_WALLET_7",
+    "X402_WALLET_8",
+    "X402_WALLET_9",
+    "X402_WALLET_10",
     "X402_PAYER_1",
     "X402_PAYER_2",
     "X402_PAYER_3",
+    "X402_PAYER_4",
+    "X402_PAYER_5",
+    "X402_PAYER_6",
+    "X402_PAYER_7",
+    "X402_PAYER_8",
+    "X402_PAYER_9",
+    "X402_PAYER_10",
   ];
 
   const allEnvKeys = Array.from(
@@ -205,7 +254,7 @@ function collectAccounts(): LoadedAccount[] {
   );
 
   for (const key of detectedEnvironmentKeys) {
-    if (accounts.length >= 3) break;
+    if (accounts.length >= 10) break;
 
     const rawVal = (process.env[key] || "").trim();
     if (!rawVal) {
@@ -316,7 +365,7 @@ function collectAccounts(): LoadedAccount[] {
           `[agent-session-task] Key "${key}": duplicate address ${addr.slice(0, 8)}..., skipping.`,
         );
       }
-      if (accounts.length >= 3) break;
+      if (accounts.length >= 10) break;
     }
   }
 
@@ -329,15 +378,15 @@ function collectAccounts(): LoadedAccount[] {
 export function getAgentSessionTaskStatus() {
   return {
     service: "HelixBox automated micro-payment agent task",
-    targetAccounts: 3,
+    targetAccounts: 10,
     activeWorkersCount: activeWorkersStatus.length,
     workers: activeWorkersStatus,
     detectedEnvironmentKeys,
     scanDiagnostics,
     instructions:
-      activeWorkersStatus.length < 3
-        ? `Only ${activeWorkersStatus.length} of 3 accounts loaded! In Render Dashboard -> Environment: 1) Add X402_AUTO_PAY_MNEMONIC_1, X402_AUTO_PAY_MNEMONIC_2, X402_AUTO_PAY_MNEMONIC_3. 2) Click 'Save Changes'. 3) Trigger 'Manual Deploy'.`
-        : "All 3 accounts are active and executing 5-minute automated micro-transactions!",
+      activeWorkersStatus.length < 10
+        ? `Loaded ${activeWorkersStatus.length} of 10 accounts. Set X402_AUTO_PAY_MNEMONIC_1 through X402_AUTO_PAY_MNEMONIC_10 in Render Environment.`
+        : "All accounts active on distributed random hours schedule (1-3 hrs).",
   };
 }
 
@@ -351,7 +400,7 @@ export async function triggerAgentSessionRunNow(): Promise<{
     manualRunTrigger().catch(console.error);
     return {
       triggered: true,
-      message: "Immediate payment run triggered successfully",
+      message: "Session run triggered successfully",
     };
   }
   return {
@@ -361,17 +410,32 @@ export async function triggerAgentSessionRunNow(): Promise<{
 }
 
 export function startAgentSessionTask() {
+  const port = process.env.PORT || "10000";
+  const managerUrl = process.env.RENDER_EXTERNAL_URL || `http://127.0.0.1:${port}`;
+
+  // Keep-alive loop every 3 minutes to keep service responsive on Render
+  setInterval(
+    async () => {
+      try {
+        await fetch(`${managerUrl}/v2/x402/health`);
+      } catch {
+        // Ping error ignored
+      }
+    },
+    3 * 60 * 1000,
+  );
+
+  activeWorkersStatus.length = 0;
+
   const accountEntries = collectAccounts();
   const code = process.env.X402_AUTO_PAY_CODE || "helixbox-agent-auto-session";
-  const port = process.env.PORT || "10000";
-  const managerUrl = `http://127.0.0.1:${port}`;
 
   console.log(
     `[agent-session-task] Target manager URL: ${managerUrl}`,
   );
 
   console.log(
-    `[agent-session-task] Successfully loaded ${accountEntries.length} of 3 target accounts.`,
+    `[agent-session-task] Successfully loaded ${accountEntries.length} of 10 target accounts.`,
   );
 
   accountEntries.forEach((entry, idx) => {
@@ -380,9 +444,9 @@ export function startAgentSessionTask() {
     );
   });
 
-  if (accountEntries.length < 3) {
+  if (accountEntries.length < 10) {
     console.warn(
-      `[agent-session-task] ATTENTION: Only ${accountEntries.length} account(s) loaded! To run all 3 accounts in 5-minute challenge mode, set X402_AUTO_PAY_MNEMONIC_1, X402_AUTO_PAY_MNEMONIC_2, and X402_AUTO_PAY_MNEMONIC_3 in Render Environment settings, save changes, and trigger Manual Deploy.`,
+      `[agent-session-task] ATTENTION: Only ${accountEntries.length} account(s) loaded! To run all 10 accounts on random hours schedule, set X402_AUTO_PAY_MNEMONIC_1 through X402_AUTO_PAY_MNEMONIC_10 in Render Environment settings, save changes, and trigger Manual Deploy.`,
     );
   }
 
@@ -419,7 +483,7 @@ export function startAgentSessionTask() {
   accountEntries.forEach(({ account, address, sourceKey }, index) => {
     const accountNum = index + 1;
     const tag = `[agent-session-task #${accountNum}]`;
-    const cadence = "15-minute cli session schedule";
+    const cadence = "random hours schedule (1-3 hrs)";
 
     const statusRecord: WorkerStatus = {
       accountNum,
@@ -527,7 +591,7 @@ export function startAgentSessionTask() {
       const { canPay, algoBalance, usdcBalance } =
         await checkAndPrepareAccount();
       const txEstimate = Math.floor(usdcBalance / 0.25);
-      const hoursEstimate = (txEstimate * (15 / 60)).toFixed(1);
+      const hoursEstimate = (txEstimate * (75 / 60)).toFixed(1);
 
       if (!canPay) {
         console.warn(
@@ -559,7 +623,7 @@ export function startAgentSessionTask() {
       if (!canPay) {
         statusRecord.lastPaymentStatus = `waiting for funds (${usdcBalance} USDC, ${algoBalance} ALGO)`;
         console.warn(
-          `${tag} Payment skipped: Insufficient balance on ${address.slice(0, 8)}... (${usdcBalance} USDC, ${algoBalance} ALGO). Please fund this account with at least 0.5 ALGO and some USDC. Next retry in ~5 mins.`,
+          `${tag} Payment skipped: Insufficient balance on ${address.slice(0, 8)}... (${usdcBalance} USDC, ${algoBalance} ALGO). Please fund this account with at least 0.5 ALGO and some USDC. Next retry in ~1 hour.`,
         );
         scheduleNext();
         return;
@@ -568,16 +632,23 @@ export function startAgentSessionTask() {
       statusRecord.totalPaymentsSent += 1;
       statusRecord.lastPaymentAt = new Date().toISOString();
 
+      const targetRoute = "/v2/x402/cli/hour";
+      const priceLabel = "$0.25";
+
       try {
         console.log(
-          `${tag} Sending payment request ($0.25 USDC) from ${address.slice(0, 8)} to ${managerUrl}/v2/x402/cli/hour...`,
+          `${tag} Sending payment request (${priceLabel} USDC) from ${address.slice(0, 8)} to ${managerUrl}${targetRoute}...`,
         );
         const payFetch = wrapFetchWithPayment(fetch, client);
         const response = await payFetch(
-          `${managerUrl}/v2/x402/cli/hour`,
+          `${managerUrl}${targetRoute}`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              "Host": "helixbox-manager.onrender.com",
+              "X-Forwarded-Proto": "https",
+            },
             body: JSON.stringify({ code }),
           },
         );
@@ -587,7 +658,7 @@ export function startAgentSessionTask() {
           statusRecord.totalPaymentsConfirmed += 1;
           statusRecord.lastPaymentStatus = "confirmed (200 OK)";
           console.log(
-            `${tag} Success: Hourly CLI session renewed for ${address.slice(0, 8)}!`,
+            `${tag} Success: Hourly session pass renewed (${priceLabel} USDC) for ${address.slice(0, 8)}!`,
             data,
           );
         } else {
@@ -623,10 +694,11 @@ export function startAgentSessionTask() {
       const nextDelay = getIntervalDelayMs();
       const nextRunTime = new Date(Date.now() + nextDelay);
       const delayMinutes = (nextDelay / (60 * 1000)).toFixed(1);
+      const delayHours = (nextDelay / (60 * 60 * 1000)).toFixed(2);
       statusRecord.nextScheduledTime = nextRunTime.toISOString();
 
       console.log(
-        `${tag} Next transaction scheduled in ~${delayMinutes} mins (at ${nextRunTime.toISOString()})`,
+        `${tag} Next transaction scheduled in ~${delayHours} hrs (~${delayMinutes} mins, at ${nextRunTime.toISOString()})`,
       );
 
       setTimeout(runTask, nextDelay);
@@ -636,14 +708,29 @@ export function startAgentSessionTask() {
       manualRunTrigger = runTask;
     }
 
-    // Stagger the initial execution: Account 1 in 3s, Account 2 in 15s, Account 3 in 30s
-    const initialStaggersMs = [3000, 15000, 30000];
-    const staggerOffsetMs = initialStaggersMs[index] ?? 3000 + index * 10000;
+    // Stagger the initial execution across accounts: Account 1 in 15s, Account 2 in ~10m, Account 3 in ~20m, ... Account 10 in ~90m
+    const initialStaggersMs = [
+      15 * 1000,
+      10 * 60 * 1000,
+      20 * 60 * 1000,
+      30 * 60 * 1000,
+      40 * 60 * 1000,
+      50 * 60 * 1000,
+      60 * 60 * 1000,
+      70 * 60 * 1000,
+      80 * 60 * 1000,
+      90 * 60 * 1000,
+    ];
+    const staggerOffsetMs = initialStaggersMs[index] ?? 15 * 1000 + index * 10 * 60 * 1000;
     const initialRunTime = new Date(Date.now() + staggerOffsetMs);
     statusRecord.nextScheduledTime = initialRunTime.toISOString();
 
+    const staggerDesc = staggerOffsetMs < 60000
+      ? `~${(staggerOffsetMs / 1000).toFixed(0)}s`
+      : `~${(staggerOffsetMs / (60 * 1000)).toFixed(0)} mins`;
+
     console.log(
-      `${tag} Initial run scheduled in ~${(staggerOffsetMs / 1000).toFixed(0)}s (at ${initialRunTime.toISOString()})`,
+      `${tag} Initial run scheduled in ${staggerDesc} (at ${initialRunTime.toISOString()})`,
     );
     setTimeout(runTask, staggerOffsetMs);
   });

@@ -3,11 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HelixBox — About</title>
-  <link rel="icon" type="image/png" href="/helixbox.png">
-  <link rel="apple-touch-icon" href="/helixbox.png">
-  <meta name="description" content="AI-powered mobile IDE and interactive PTY terminal emulator paired via E2E encrypted relays and Algorand x402 micro-billing.">
+  <title>HelixBox | About</title>
+  <link rel="icon" type="image/png" href="/assets/images/helixbox-splash.png">
+  <link rel="apple-touch-icon" href="/assets/images/helixbox-splash.png">
+  <meta name="description" content="Why HelixBox connects your phone to your existing laptop workspace, with files, terminal, Git, previews, and paid coding-agent sessions.">
+  <link rel="canonical" href="https://helix-box.vercel.app/about.html">
   <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/theme-controls.css">
   <style>
     .checkout-btn {
       background: var(--blueprint);
@@ -37,10 +39,10 @@
         <span class="logo-icon" aria-hidden="true"></span> HELIX / BOX
       </a>
       <nav class="header-nav">
-        <a href="/index.html" >Contents</a>
-        <a href="/catalog.html" >Catalog</a>
-        <a href="/roadmap.html" >Roadmap</a>
-        <a href="/glossary.html" >Glossary</a>
+        <a href="/index.html#features">Features</a>
+        <a href="/index.html#how-it-works">How it works</a>
+        <a href="/index.html#pricing">Pricing</a>
+        <a href="/index.html#download">Download Android</a>
         <a href="/about.html" aria-current="page">About</a>
         <a href="https://github.com/devndesigner6/helix-box" target="_blank" rel="noopener" class="header-github">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.4 3-.405 1.02.005 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
@@ -59,7 +61,7 @@
         <span>ABOUT &middot; HELIXBOX REMOTE IDE</span>
       </div>
       <h1 class="manual-title">About the<br>IDE Project</h1>
-      <p class="manual-tagline">Why build HelixBox? Remote execution on mobile terminals shouldn't require complex SSH port-forwarding or public IP addresses.</p>
+      <p class="manual-tagline">Your project keeps running when you step away from your desk. HelixBox connects your phone to that same laptop workspace.</p>
       <div class="ascii-rule" style="margin-top:48px;"></div>
     </section>
 
@@ -67,9 +69,9 @@
       <div class="preface-grid">
         <div class="preface-eyebrow">Why it exists</div>
         <div class="preface-body">
-          <p>Most mobile coding applications are simple text views. They do not run your tests, compilers, or local shell binaries. But SSH connections from mobile terminals to desktop runtimes are tedious to maintain, frequently disconnect over cellular signals, and expose ports to open scans.</p>
-          <p>HelixBox uses dual control/data tunnels mediated by a Bun WebSocket Relay proxy. When you pair using your QR code, a connection session is persisted. The terminal frames are encoded into binary packets, reducing cellular load by up to 70%. When the connection drops, it auto-reconnects in less than 50ms, resuming your coding session without state loss.</p>
-          <p>Furthermore, standard tools charge steep subscription fees. We believe in pay-as-you-go. Integrating Algorand USDC micro-billing via x402 lets you buy secure CLI relay access by session. Your editor is fully free; you only pay when starting an agent session over the secure proxy tunnels.</p>
+          <p>A build is running, an agent needs another instruction, or a change needs a final review. HelixBox lets you return to that work from your phone while the files, dependencies, and processes remain on your laptop.</p>
+          <p>Run <code>npx helixbox-cli</code> inside your project and scan the QR with the Android app. Use the editor, terminal, browser, Git tools, processes, ports, and resource monitor from the connected workspace. Codex, OpenCode, Claude Code, and Hermes are available when their CLIs are installed and ready on the paired laptop. Keep the laptop running and connected while you work.</p>
+          <p>Pairing and basic workspace controls are free. Agent access uses x402 payments in USDC on Algorand MainNet: $0.25 for a one-hour session or $2 for a seven-day developer pass with fair-use limits. Settlement is verified before access starts. One payment covers the active access period; model-provider subscriptions and API charges remain separate.</p>
         </div>
       </div>
     </section>
@@ -81,9 +83,8 @@
       <div class="footer-links">
         <a href="https://github.com/devndesigner6/helix-box" target="_blank" rel="noopener">GitHub</a>
         <a href="/about.html">About</a>
-        <a href="/catalog.html">Catalog</a>
-        <a href="/roadmap.html">Roadmap</a>
-        <a href="/glossary.html">Glossary</a>
+        <a href="/index.html#how-it-works">Setup</a>
+        <a href="/index.html#pricing">Pricing</a>
       </div>
     </div>
   </footer>

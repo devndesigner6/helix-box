@@ -41,6 +41,7 @@
 | `proxy/` | Proxy server |
 | `pty/` | Rust PTY binary uses wezterm internal libs for rendering |
 | `landing/` | Current product website, built from Vite source |
+| `docs/` | HelixBox handbook |
 
 <br />
 
@@ -120,7 +121,7 @@ These prices cover HelixBox agent access, not unlimited model tokens. Each codin
 
 Bun-based WebSocket service that connects the CLI and app using session codes. The public manager is deployed at [helixbox-manager.onrender.com](https://helixbox-manager.onrender.com).
 
-- Pairing codes with a configurable seven-day default lifetime, separate from paid agent-access expiry
+- Pairing codes with a seven-day lifetime, separate from paid agent-access expiry
 - Dual-channel architecture (control + data)
 - QR code pairing
 
@@ -146,29 +147,9 @@ HelixBox supports Codex, OpenCode, Claude Code, and Hermes when their CLIs are i
 
 <br />
 
-## Development
+## Handbook
 
-Run these commands from the repository root unless noted otherwise:
-
-| Project | Setup | Run / build |
-|---------|-------|-------------|
-| Landing | `npm --prefix landing ci` | `npm --prefix landing run dev` / `npm --prefix landing run build` |
-| App | `npm --prefix app ci --legacy-peer-deps` | `npm --prefix app start`; see [app build notes](app/README.md) |
-| CLI | `npm --prefix cli ci` | `npm --prefix cli run build` |
-| Manager | In `manager/`: `bun install` | `bun run dev` |
-| Proxy | In `proxy/`: `bun install` | `bun run dev` |
-| PTY | Rust toolchain | `cargo build --release --manifest-path pty/Cargo.toml` |
-
-Repository and landing checks:
-
-```bash
-node --test scripts/repository.test.mjs
-npm --prefix landing test
-node landing/scripts/check-product.mjs
-node cli/scripts/test-ai-backends.mjs
-```
-
-Landing media lives in `landing/public/assets/{images,logos,media,fonts}/`. Native app assets stay in `app/assets/`. Existing root static pages and their referenced assets are retained for compatibility; edit the current website in `landing/`. Preview output and local recovery copies belong in ignored `output/`, not product asset folders.
+Read the [HelixBox handbook](docs/HANDBOOK.md) for setup, workspace tools, agents, payments, development, Android builds and troubleshooting.
 
 <br />
 

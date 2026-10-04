@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -70,11 +71,45 @@ test('Makefile commands only enter local projects that actually exist', () => {
 });
 
 test('README local links and screenshots remain available', () => {
-  for (const file of ['README.md', 'app/README.md', 'cli/README.md']) {
+  for (const file of ['README.md', 'app/README.md', 'cli/README.md', 'docs/HANDBOOK.md']) {
     const source = read(file);
     const paths = [...source.matchAll(/src="([^"#]+)"/g), ...source.matchAll(/\]\(([^)#]+)\)/g)].map(match => match[1]);
     for (const path of paths.filter(path => !/^[a-z]+:/i.test(path))) {
       assert(existsSync(resolve(root, dirname(file), path)), `${file}: missing ${path}`);
     }
+  }
+});
+
+test('archived static site retains every original file byte-for-byte outside the root', () => {
+  const manifest = JSON.parse(read('legacy/landing/manifest.json'));
+  assert.equal(manifest.length, 23);
+  for (const { source, destination, sha256 } of manifest) {
+    assert(!existsSync(resolve(root, source)), `Legacy file still at root: ${source}`);
+    assert(existsSync(resolve(root, destination)), `Missing archive: ${destination}`);
+    assert.equal(createHash('sha256').update(readFileSync(resolve(root, destination))).digest('hex'), sha256, `Archive changed: ${destination}`);
+  }
+});
+
+test('archived HTML resolves its local assets when served from the archive directory', () => {
+  const archive = resolve(root, 'legacy/landing');
+  for (const name of ['index.html', 'checkout.html', 'about.html', 'catalog.html', 'glossary.html', 'roadmap.html']) {
+    assert(existsSync(resolve(archive, name)), `Missing archived page: ${name}`);
+    const html = readFileSync(resolve(archive, name), 'utf8');
+    for (const [, path] of html.matchAll(/(?:src|href)=["'](\/(?:assets|fonts|logos)\/[^"'?#]+)["']/g)) {
+      assert(existsSync(resolve(archive, path.slice(1))), `${name}: missing archived ${path}`);
+    }
+  }
+});
+
+test('obsolete standalone guides are replaced by a usable handbook', () => {
+  assert(existsSync(resolve(root, 'docs/HANDBOOK.md')), 'Missing HelixBox handbook');
+  for (const oldPath of [
+    'HELIXBOX_MAINTENANCE_GUIDE.md', 'X402_GLOBAL_CHALLENGE_PLAYBOOK.md',
+    'docs/guides/HELIXBOX_MAINTENANCE_GUIDE.md',
+    'docs/archive/X402_GLOBAL_CHALLENGE_PLAYBOOK.md',
+    'app/DESIGN.md', 'app/context.md', 'app/extra-design.md',
+    'docs/superpowers/specs/2026-09-09-helixbox-landing-launch-refresh-design.md',
+  ]) {
+    assert(!existsSync(resolve(root, oldPath)), `Guide still at root: ${oldPath}`);
   }
 });

@@ -46,7 +46,5 @@ test-results/
 /landing/assets/reference/git.png
 /landing/scripts/check-pages.mjs
 
-# Legacy generated bundles; referenced tracked bundles remain versioned
-/assets/*.js
-/assets/*.css
-/assets/assets/
+# Historical static bundles are intentionally tracked in legacy/landing/.
+# New build output is covered by dist/ above.

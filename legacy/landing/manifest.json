@@ -1,0 +1,117 @@
+[
+  {
+    "source": "index.html",
+    "destination": "legacy/landing/index.html",
+    "sha256": "47ef34f6a9a086c2ad5cc209caacd536bf9aada0a5d4f7db4c953c656e513450"
+  },
+  {
+    "source": "checkout.html",
+    "destination": "legacy/landing/checkout.html",
+    "sha256": "93548fe4ba4d631a06c3f8c332ab7c7bfbc8b37dd9dd6f437f821df1560d057b"
+  },
+  {
+    "source": "about.html",
+    "destination": "legacy/landing/about.html",
+    "sha256": "da63c6b4a6cddf8c3a9383aea4e40042efa8ee8e02e0f1ab8eedddf2d73fae8b"
+  },
+  {
+    "source": "catalog.html",
+    "destination": "legacy/landing/catalog.html",
+    "sha256": "09d511bbb4dbc7bb1c9249a94004441338b6271a3a97e8c9624e06dc3744bab7"
+  },
+  {
+    "source": "glossary.html",
+    "destination": "legacy/landing/glossary.html",
+    "sha256": "99fff4e51871d795c14cfb6be9810d6a8724d4943a7a8ab83ce52720b3f46744"
+  },
+  {
+    "source": "roadmap.html",
+    "destination": "legacy/landing/roadmap.html",
+    "sha256": "80e562697bdd57582c52537bc7a3db79b8477857e4e8bc07b806a12997a611ad"
+  },
+  {
+    "source": "helixbox.png",
+    "destination": "legacy/landing/helixbox.png",
+    "sha256": "8d8d475ce08f8a24ea15dccd2df65e3915334496a7aebce67328459e2700e67c"
+  },
+  {
+    "source": "vercel.json",
+    "destination": "legacy/landing/vercel.json",
+    "sha256": "0c7b244c8701cb377f4e8e672cd283ef8f413cf3f0e78ba55d8a8f1160e26c5a"
+  },
+  {
+    "source": "assets/App-7d8df221-DlKhI19k.js",
+    "destination": "legacy/landing/assets/App-7d8df221-DlKhI19k.js",
+    "sha256": "52c5c0e3239cffd2813efa67cf41e71325016c364e71bc6603ddeeed40aff8b0"
+  },
+  {
+    "source": "assets/app-kBwBQZaX.js",
+    "destination": "legacy/landing/assets/app-kBwBQZaX.js",
+    "sha256": "9c1568f16c8e1cdf269e0ac1cede9cfc2b9ad94777ee3bd7ff1b22534ed1d151"
+  },
+  {
+    "source": "assets/checkout-Bh1Vp2Na.js",
+    "destination": "legacy/landing/assets/checkout-Bh1Vp2Na.js",
+    "sha256": "cb71022d489357dd86923e06d6ec94093dad4105b802c4e850ee12aea933316f"
+  },
+  {
+    "source": "assets/helixbox.png",
+    "destination": "legacy/landing/assets/helixbox.png",
+    "sha256": "548d7d915e5a5805142db84d7039e7f8ae4b5d3c6bfdfea4ab39ceeff65a6efe"
+  },
+  {
+    "source": "assets/style-521PBnnO.js",
+    "destination": "legacy/landing/assets/style-521PBnnO.js",
+    "sha256": "d2a32840421496e872ade591618d2fa5c33797605d1aec04301717e5a90757d0"
+  },
+  {
+    "source": "assets/style-qNtmlc1i.css",
+    "destination": "legacy/landing/assets/style-qNtmlc1i.css",
+    "sha256": "1720cf1a79fa279d29499ce592795e931445de230cef90ac5e358f48c5a0d6d3"
+  },
+  {
+    "source": "fonts/JetBrainsMono-Regular.ttf",
+    "destination": "legacy/landing/fonts/JetBrainsMono-Regular.ttf",
+    "sha256": "48715a42ec242c21e9f02692891e147d022299a52e48d5e413e1a942193ffeda"
+  },
+  {
+    "source": "fonts/SourceSerif4-Italic.ttf",
+    "destination": "legacy/landing/fonts/SourceSerif4-Italic.ttf",
+    "sha256": "15fbc7e4679489a501998c3669272637a6646388ef7e4bd77eebb5bf967a1f42"
+  },
+  {
+    "source": "fonts/SourceSerif4-Regular.ttf",
+    "destination": "legacy/landing/fonts/SourceSerif4-Regular.ttf",
+    "sha256": "97b2d4da6e3cb494b5a1e66ae176914d852ccabef49e0c02c0df25f3e39aca0b"
+  },
+  {
+    "source": "fonts/VT323-Regular.ttf",
+    "destination": "legacy/landing/fonts/VT323-Regular.ttf",
+    "sha256": "cf4de751ada78ceac033dbe16a687742939995b77bc2a052ae17a4957958594d"
+  },
+  {
+    "source": "logos/claude.png",
+    "destination": "legacy/landing/logos/claude.png",
+    "sha256": "41411653318bcb1607cc1da7cf79f2916129402fb6660499953d3b2cb09333a9"
+  },
+  {
+    "source": "logos/codex.png",
+    "destination": "legacy/landing/logos/codex.png",
+    "sha256": "8a33312f6bb17c1edddf8f9d7fbac09ce1d1d697d6601f37227afa879e94c52e"
+  },
+  {
+    "source": "logos/hermes.png",
+    "destination": "legacy/landing/logos/hermes.png",
+    "sha256": "a4eacd7022af9551688a573cb2cccc5baa3ceb5fcb22728658ce444ef7449567"
+  },
+  {
+    "source": "logos/openclaw.png",
+    "destination": "legacy/landing/logos/openclaw.png",
+    "sha256": "f997fa71f585f5703567001883618015fa87660651d101d9b1b4bb39de218aca"
+  },
+  {
+    "source": "logos/opencode.png",
+    "destination": "legacy/landing/logos/opencode.png",
+    "sha256": "8e0fd5830630f21d38bd57a277008149c3d73c77f3c41afe6cd102239b3ee2e7"
+  }
+]

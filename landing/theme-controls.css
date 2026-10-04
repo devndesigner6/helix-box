@@ -6,5 +6,8 @@
 .theme-controls button:focus-visible{outline:2px solid var(--blue,var(--blueprint));outline-offset:3px}
 .theme-controls svg{display:block;width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .theme-controls button:active svg{transform:scale(.88)}
-[data-theme='dark'] body:not(.product-page){background-image:radial-gradient(ellipse at 90% 0%,#3553ff12,transparent 60%),radial-gradient(var(--paper-rule) 1px,transparent 1px);background-size:100% 100%,16px 16px}
+/* One viewport-sized landscape keeps every dark route aligned without tiling. */
+[data-theme='dark'] body{isolation:isolate;background-image:none}
+[data-theme='dark'] body::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,#080b14a8,#080b14d9),url('/media/dark-landscape.png') center center/cover no-repeat}
+[data-theme='dark'] .checkout-page{background-color:#0a0d1a99}
 @media(prefers-reduced-motion:reduce){.theme-controls button{transition:none}.theme-controls button:active svg{transform:none}}

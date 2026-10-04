@@ -16,15 +16,14 @@
   --glass-muted: #b5b5ca;
 }
 [data-theme='dark'] .hero-shell, [data-theme='dark'] .download-section {
-  background-image: radial-gradient(ellipse at 75% 15%, #3553ff30, transparent 55%), radial-gradient(ellipse at 10% 85%, #6c39db1c, transparent 50%), linear-gradient(150deg, #080b14, #11182d);
+  background: transparent;
 }
 [data-theme='dark'] .hero-shell::before, [data-theme='dark'] .download-section::before {
-  background: linear-gradient(#8aa5ff05 1px, transparent 1px), linear-gradient(90deg, #8aa5ff05 1px, transparent 1px);
-  background-size: 64px 64px;
+  background: linear-gradient(180deg, #080b141a, #080b1470);
 }
-[data-theme='dark'] .product-body { background: radial-gradient(ellipse at 100% 30%, #3553ff09, transparent 45%), var(--bg); }
+[data-theme='dark'] .product-body { background: #0a0d1a66; }
 [data-theme='dark'] .mode-visual, [data-theme='dark'] .tool-preview { background-image: radial-gradient(ellipse at 70% 20%, #3553ff25, transparent 65%), linear-gradient(145deg, #101628, #080c17); }
-[data-theme='dark'] .setup-section, [data-theme='dark'] .pricing-section { background: linear-gradient(135deg, #8aa5ff04, transparent 65%), var(--surface); }
+[data-theme='dark'] .setup-section, [data-theme='dark'] .pricing-section { background: #131830de; }
 [data-theme='dark'] .security-visual { background: radial-gradient(ellipse at center, #3553ff15, transparent 70%), var(--surface); }
 [data-theme='dark'] .api-preview b { background: #063f36; color: #79efc3; }
 [data-theme='dark'] .mode-card, [data-theme='dark'] .price-card, [data-theme='dark'] .product-tool-grid li { box-shadow: inset 0 1px 0 #ffffff05, var(--shadow); }

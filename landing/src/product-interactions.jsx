@@ -125,8 +125,9 @@ function Tools({ items }) {
     window.addEventListener('resize', resize);
     return () => window.removeEventListener('resize', resize);
   }, []);
-  const columns = width < 560 ? 1 : width < 900 ? 2 : 3;
-  return <FilterGrid items={items} filters={filters} getKey={item => item.id} label="Explore HelixBox tools" columns={columns} rowHeight={420} maxRows={6} gap={20} className="product-tool-grid" renderItem={item => <article className="tool-card" dangerouslySetInnerHTML={{ __html: item.html }} />} />;
+  const columns = width < 360 ? 1 : width < 900 ? 2 : 3;
+  const rowHeight = width < 560 ? 285 : 330;
+  return <FilterGrid items={items} filters={filters} getKey={item => item.id} label="Explore HelixBox tools" columns={columns} rowHeight={rowHeight} maxRows={6} gap={16} className="product-tool-grid" renderItem={item => <article className="tool-card" dangerouslySetInnerHTML={{ __html: item.html }} />} />;
 }
 if (toolGrid) {
   const categories = ['workspace', 'runtime', 'debug', 'runtime', 'workspace', 'runtime'];

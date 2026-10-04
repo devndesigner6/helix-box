@@ -11,3 +11,10 @@
 [data-theme='dark'] body::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,#080b14a8,#080b14d9),url('/media/dark-landscape.png') center center/cover no-repeat}
 [data-theme='dark'] .checkout-page{background-color:#0a0d1a99}
 @media(prefers-reduced-motion:reduce){.theme-controls button{transition:none}.theme-controls button:active svg{transform:none}}
+/* Match the supporting pages to the product page's medium scale. */
+body:not(.product-page) .manual-masthead{padding-block:44px 20px}
+body:not(.product-page) .manual-title{font-size:clamp(38px,5vw,60px)}
+body:not(.product-page) .manual-tagline{font-size:17px;max-width:680px}
+body:not(.product-page) .preface{padding-block:36px}
+body:not(.product-page) .preface-body p{font-size:16px;line-height:1.65;margin-bottom:18px}
+@media(max-width:760px){body:not(.product-page) .manual-masthead{padding-top:28px}body:not(.product-page) .manual-title{font-size:38px}body:not(.product-page) .preface-grid{grid-template-columns:1fr;gap:14px}body:not(.product-page) .preface-body p{font-size:15px}}

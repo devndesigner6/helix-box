@@ -4,12 +4,14 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "test": "node --test scripts/*.test.mjs",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
     "@perawallet/connect": "^1.6.0",
+    "@shikijs/transformers": "^4.5.0",
     "@vercel/analytics": "^2.0.1",
     "@x402/avm": "^2.21.0",
     "@x402/fetch": "^2.21.0",
@@ -19,8 +21,10 @@
     "framer-motion": "^11.18.2",
     "lucide-react": "^0.354.0",
     "motion": "^13.0.0",
+    "next-themes": "^0.4.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "shiki": "^4.5.0",
     "tailwind-merge": "^2.6.1"
   },
   "devDependencies": {

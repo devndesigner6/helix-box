@@ -118,7 +118,7 @@ root.innerHTML = `
     transform: none;
   }
   .checkout-btn-secondary {
-    background: #fafaf5;
+    background: var(--bg);
     color: var(--ink-soft);
   }
   .checkout-btn-secondary:hover {

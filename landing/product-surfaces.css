@@ -1,0 +1,67 @@
+/* Extend the product palette without changing HelixBox fonts. */
+:root {
+  --hero-base: #7273ff;
+  --hero-overlay: linear-gradient(120deg, #3d45c86b, transparent 70%);
+  --visual-overlay: linear-gradient(transparent, transparent);
+  --glass: #ffffffe0;
+  --glass-ink: #35364d;
+  --glass-muted: #64667d;
+}
+[data-theme='dark'] {
+  --hero-base: #10172e;
+  --hero-overlay: linear-gradient(120deg, #0a0d1adb, #11172ec9);
+  --visual-overlay: linear-gradient(#0a0d1a99, #131830ad);
+  --glass: #111728eb;
+  --glass-ink: #e8e6dc;
+  --glass-muted: #b5b5ca;
+}
+.hero-shell { background-color: var(--hero-base); }
+.hero-shell::before { background: var(--hero-overlay); }
+.download-section { position: relative; isolation: isolate; background-color: var(--hero-base); }
+.download-section::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--hero-overlay); }
+.mode-visual, .tool-preview { background-image: var(--visual-overlay), url('/media/gradient.webp'); background-color: var(--hero-base); }
+.session-window { background: var(--glass); color: var(--glass-ink); border-color: var(--line); }
+.download-command { background: var(--glass); color: var(--glass-ink); border-color: var(--line); }
+.window-label, .session-price span, .session-time span, .session-actions { color: var(--glass-muted); }
+.tool-preview { color: var(--glass-ink); border-color: var(--line); }
+.tool-preview::before { background: var(--glass); }
+.preview-label, .process-preview small, .ports-preview small { color: var(--glass-muted); }
+.tool-tabs span, .text-preview code { background: var(--card); color: var(--ink); }
+.resource-track, .session-track { background: var(--line); }
+.feature-media { background: var(--surface); }
+.brand img, .download-logo, .mini-phone img { border-radius: 22%; }
+.hero h1 > span { color: inherit; }
+.hero h1 > .hero-subtitle { color: #ffffffd9; }
+.hero h1 [data-heading-reveal] .interior-heading { color: inherit; }
+.demo-screen { padding-bottom: 54px; aspect-ratio: auto; }
+.demo-screen video { position: relative; display: block; aspect-ratio: 16/9; height: auto; }
+.motion-toggle { display: flex; align-items: center; gap: 9px; left: 16px; right: auto; bottom: 10px; min-height: 34px; font-size: 10px; }
+.motion-toggle .play-icon { width: 20px; height: 20px; padding: 0; border: 0; border-radius: 0; background: none; backdrop-filter: none; }
+.demo-link { inset: auto 16px 18px auto; display: inline-flex; background: none; color: #e8e6dc; font: 10px/1.5 var(--font-mono); }
+.demo-link:hover { text-decoration: underline; text-underline-offset: 4px; }
+.media-status:empty { display: none; }
+.media-status { padding: 12px 16px; color: #f4cfa2; font: 10px/1.5 var(--font-mono); }
+.interior-copy { font-family: var(--font-mono); }
+.faq-list.interior-faq { font-family: var(--font-body); color: var(--ink); }
+.interior-faq button { color: var(--ink); font-family: var(--font-body); font-size: 17px; }
+.interior-faq p { color: var(--muted); font: 16px/1.75 var(--font-body); }
+.shot-trigger { display: block; width: 100%; cursor: zoom-in; border: 0; padding: 0; background: none; }
+.feature-media:focus-within { outline: 3px solid var(--blue); outline-offset: 5px; }
+.product-accordion { background: var(--card); border-color: var(--line); }
+.product-accordion button { padding: 22px 20px; }
+.product-accordion button > span:first-child { white-space: normal; font: 17px/1.5 var(--font-body); color: var(--ink); }
+.product-accordion [role='region'] { background: var(--surface); border-color: var(--line); }
+.product-tool-grid ul { list-style: none; margin: 0; padding: 0; }
+.product-tool-grid li { background: var(--card); border-color: var(--line); padding: 20px; border-radius: 18px; }
+.product-tool-grid [role='radiogroup'] { gap: 8px; margin-bottom: 24px; font-family: var(--font-mono); }
+.product-tool-grid .tool-preview { height: 175px; }
+.product-tool-grid .tool-card h3 { font-size: 31px; }
+.product-lightbox { font-family: var(--font-mono); }
+.product-lightbox img { width: auto; height: auto; }
+.interior-copy { max-width: 145px; }
+@media (max-width: 560px) {
+  .hero h1 [data-heading-reveal] span { display: inline; }
+  .hero h1 [data-heading-reveal] .sr-only { display: block; }
+  .demo-link { font-size: 7px; right: 10px; bottom: 22px; }
+  .motion-toggle { font-size: 8px; left: 9px; }
+}

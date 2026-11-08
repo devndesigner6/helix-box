@@ -19,7 +19,7 @@ for (const [, path] of css.matchAll(/url\('(\/[^']+)'\)/g)) {
 }
 for (const agent of ['Codex', 'OpenCode', 'Claude Code', 'Hermes']) assert(html.includes(agent));
 for (const font of ['VT323', 'Source Serif 4', 'JetBrains Mono']) assert(css.includes(font));
-assert(html.includes('$0.25') && html.includes('$2') && html.includes('fair-use limits'));
+assert(html.includes('0.001') && html.includes('per-call') && html.includes('Stellar'));
 assert(!html.includes('/assets/media/git.png'), 'Use HelixBox Git footage, not the branded reference');
 assert(css.includes('#top.hero-shell{overflow:visible;z-index:20}'), 'Mobile dropdown must not be clipped');
 assert(css.includes('prefers-reduced-motion:reduce'));

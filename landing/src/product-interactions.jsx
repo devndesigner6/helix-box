@@ -14,6 +14,7 @@ import { BorderBeam } from './components/magicui/border-beam';
 import { BlurFade } from './components/magicui/blur-fade';
 import { useReducedMotion } from 'motion/react';
 import { togglePreview } from './preview-controls';
+import { ModelShowcase } from './model-showcase.jsx';
 import '../interior.css';
 import '../enhancements.css';
 
@@ -150,11 +151,14 @@ if (agentLineup) {
   createRoot(agentLineup).render(<Agents items={items} />);
 }
 
+const modelShowcase = document.getElementById('modelShowcase');
+if (modelShowcase) createRoot(modelShowcase).render(<ModelShowcase />);
+
 document.querySelectorAll('.price-card:not(:first-child)').forEach((card, index) => {
   const slot = document.createElement('div');
   slot.className = 'pricing-info-slot';
   card.querySelector('.price-period').after(slot);
-  createRoot(slot).render(<Popover trigger="What’s included?" label={index === 0 ? 'One-hour session details' : 'Seven-day pass details'} side="bottom" align="start" triggerClassName="pricing-info-trigger" className="product-pricing-popover"><p>{index === 0 ? 'Pay once for one hour of agent access. Questions, diagnosis, tests and patch reviews are included during the active session. Renew after expiry.' : 'One developer and selected projects, for seven days. Agent access has fair-use limits; this is not unlimited usage.'}</p><p>Model subscriptions and API costs stay separate. Risky actions still need your approval.</p></Popover>);
+  createRoot(slot).render(<Popover trigger="What’s included?" label={index === 0 ? 'Pay-per-call model details' : 'Agent spending mandate details'} side="bottom" align="start" triggerClassName="pricing-info-trigger" className="product-pricing-popover"><p>{index === 0 ? 'Get a fixed quote for one chat, image or speech request. x402 requests payment for the quoted call and returns the result after payment verification. Your workspace and installed coding agents stay free.' : 'Choose allowed models, per-call and total spending caps, a maximum call count and an expiry. Approve model spending with a compatible Stellar wallet. Purchases outside those limits require new approval.'}</p><p>Your coding agents’ own subscriptions remain separate. An in-progress purchase is checked using its original ID, not purchased again.</p></Popover>);
 });
 
 function PairingBeam({ container, laptop, phone }) {

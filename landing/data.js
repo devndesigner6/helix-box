@@ -43,12 +43,12 @@ const PHASES = [
   },
   {
     id: 5,
-    name: "USDC Micro-Billing (x402)",
-    status: "complete",
+    name: "Agentic x402 Payments on Stellar",
+    status: "in progress",
     lessons: [
-      { id: "15", name: "Pera Wallet Connection & SDK Bridging", status: "complete", type: "Build", lang: "React" },
-      { id: "16", name: "x402 Protocol Smart-Contract Payments", status: "complete", type: "Build", lang: "Algorand" },
-      { id: "17", name: "Auto-Pay Sync Daemon & Account Watcher", status: "complete", type: "Build", lang: "TypeScript" }
+      { id: "15", name: "Stellar Wallet Authorization", status: "in progress", type: "Build", lang: "React" },
+      { id: "16", name: "Per-Request x402 USDC Settlement", status: "in progress", type: "Build", lang: "Stellar" },
+      { id: "17", name: "Model Catalog & Spending Mandates", status: "in progress", type: "Build", lang: "TypeScript" }
     ]
   },
   {
@@ -66,7 +66,7 @@ const PHASES = [
 const GLOSSARY = [
   {
     term: "x402 Protocol",
-    definition: "Algorand micro-payment framework providing pay-as-you-go billing for API executions and session durations.",
+    definition: "An HTTP payment protocol for paid resources. Stellar x402 authorizations are verified and settled by a facilitator before the requested resource is returned.",
     area: "Micro-Payments"
   },
   {
@@ -85,8 +85,8 @@ const GLOSSARY = [
     area: "Pairing"
   },
   {
-    term: "USDC Auto-Pay",
-    definition: "A payment flow in the HelixBox manager that settles USDC micro-payment fees after Pera Wallet approval.",
+    term: "Spending Mandate",
+    definition: "The approved model allowlist, per-call cap, total USDC budget, maximum calls and expiry that constrain agent-requested purchases.",
     area: "Micro-Payments"
   },
   {

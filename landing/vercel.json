@@ -5,6 +5,7 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
+    { "source": "/api/models", "destination": "https://helixbox-manager.onrender.com/v2/models" },
     { "source": "/checkout", "destination": "/checkout.html" },
     { "source": "/media/:path*", "destination": "/assets/media/:path*" },
     { "source": "/logos/:path*", "destination": "/assets/logos/:path*" },

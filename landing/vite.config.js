@@ -4,6 +4,15 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
+  server: {
+    proxy: {
+      '/api/models': {
+        target: 'https://helixbox-manager.onrender.com',
+        changeOrigin: true,
+        rewrite: () => '/v2/models',
+      },
+    },
+  },
   build: {
     rollupOptions: {
       input: {

@@ -4,19 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HelixBox | Your development environment, in your pocket</title>
-  <meta name="description" content="Build, run, and ship from your phone. Pair your laptop with HelixBox for files, terminal, Git, previews, and coding agents. Free workspace controls; x402 agent sessions from $0.25 USDC.">
-  <link rel="canonical" href="https://helix-box.vercel.app/">
+  <meta name="description" content="Build, run, and ship from your phone. Free workspace access and your installed coding agents, with optional x402 model calls paid in Stellar USDC.">
+  <link rel="canonical" href="https://helixboxide.xyz/">
   <link rel="icon" type="image/png" href="/assets/images/helixbox-splash.png">
   <link rel="apple-touch-icon" href="/assets/images/helixbox-splash.png">
   <meta property="og:site_name" content="HelixBox">
   <meta property="og:title" content="HelixBox | Your development environment, in your pocket">
-  <meta property="og:description" content="Your laptop does the work. Keep building from your phone. Coding agents, editor, browser, terminal, and Git in one app.">
-  <meta property="og:image" content="https://helix-box.vercel.app/assets/images/helixbox-splash.png">
+  <meta property="og:description" content="Your laptop does the work. Use your mobile workspace for free, and let coding agents buy model calls within your approved Stellar USDC budget.">
+  <meta property="og:url" content="https://helixboxide.xyz/">
+  <meta property="og:image" content="https://helixboxide.xyz/assets/images/helixbox-splash.png">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:site" content="@helixboxide">
   <meta name="twitter:title" content="HelixBox | Build, run, and ship from your phone">
-  <meta name="twitter:description" content="Pair your laptop. Open your workspace. Start a coding agent session from $0.25 USDC.">
-  <meta name="twitter:image" content="https://helix-box.vercel.app/assets/images/helixbox-splash.png">
+  <meta name="twitter:description" content="Pair your laptop. Keep working for free. Approve a budget for optional x402 model calls in Stellar USDC.">
+  <meta name="twitter:image" content="https://helixboxide.xyz/assets/images/helixbox-splash.png">
   <link rel="preload" href="/assets/fonts/VT323-Regular.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="stylesheet" href="/product.css">
   <link rel="stylesheet" href="/product-surfaces.css">
@@ -41,7 +41,7 @@
       <section class="hero wrap" aria-labelledby="hero-title">
         <p class="eyebrow hero-eyebrow" data-reveal>YOUR LAPTOP. NOW WITH YOU.</p>
         <h1 id="hero-title"><span data-heading-reveal>Build, run, and ship</span><br><span class="hero-subtitle" data-heading-reveal>from your phone.</span></h1>
-        <p class="hero-description" data-reveal>HelixBox connects your phone to the development environment on your laptop. Your files, terminal, Git, previews, and coding agents, all in one mobile app.</p>
+        <p class="hero-description" data-reveal>Your laptop’s files, terminal, Git, previews, and coding agents, on your phone. Keep working for free. Give your agent a budget for model calls, paid through x402 in Stellar USDC.</p>
         <div class="button-row" data-reveal>
           <a class="button button-dark" href="https://github.com/devndesigner6/helix-box/releases/latest" target="_blank" rel="noopener noreferrer"><img src="/assets/media/android.svg" alt="" width="19" height="19"> Download Android ↗</a>
           <a class="button button-light" href="https://youtu.be/2cmHX_T2Qis" target="_blank" rel="noopener noreferrer">Watch the demo <span aria-hidden="true">▶</span></a>
@@ -66,7 +66,7 @@
       <div class="section-heading" data-reveal><p class="eyebrow">WORK FROM WHERE YOU ARE</p><h2 id="use-title">Your workspace.<br>Your way.</h2><p>Your laptop keeps doing the work. You don’t have to sit next to it.</p></div>
       <div class="mode-grid">
         <article class="mode-card" data-reveal><div class="mode-visual connect-visual" aria-hidden="true"><div class="mini-laptop"><div><code>npx helixbox-cli</code><span class="connected-line">workspace connected <i class="status-dot"></i></span></div></div><div class="connection-path"><i></i><i></i><i></i></div><div class="mini-phone"><img src="/assets/images/helixbox-splash.png" alt=""><span>YOUR PROJECT</span></div></div><div class="mode-content"><span class="pill">FREE WORKSPACE CONTROLS</span><h3>Pair your laptop.</h3><p>Scan the CLI’s QR code and open the project you’re already working on. No migration to a new editor or cloud workspace.</p><a class="text-link" href="#how-it-works">See the setup <span>↗</span></a></div></article>
-        <article class="mode-card" data-reveal><div class="mode-visual session-visual" aria-hidden="true"><div class="session-window"><div class="window-label"><span>AGENT SESSION</span><i class="status-dot"></i></div><div class="session-price">0.25 <span>USDC</span></div><div class="session-time">01:00:00 <span>ACCESS PERIOD</span></div><div class="session-track"><span></span></div><div class="session-actions"><span>diagnose</span><span>test</span><span>review</span></div></div></div><div class="mode-content"><span class="pill">PAY WHEN YOU NEED AN AGENT</span><h3>Start a session.</h3><p>Pay once for a defined access period. Ask questions, run tests, and review patches throughout your active agent session.</p><a class="text-link" href="#pricing">See session pricing <span>↗</span></a></div></article>
+        <article class="mode-card" data-reveal><div class="mode-visual session-visual" aria-hidden="true"><div class="session-window"><div class="window-label"><span>MODEL CALL</span><i class="status-dot"></i></div><div class="session-price">0.001 <span>USDC MINIMUM</span></div><div class="session-time">PER REQUEST <span>QUOTED BEFORE PAYMENT</span></div><div class="session-track"><span></span></div><div class="session-actions"><span>chat</span><span>image</span><span>speech</span></div></div></div><div class="mode-content"><span class="pill">PAY FOR THE MODEL CALL</span><h3>Give agents a budget.</h3><p>Choose allowed models, a per-call cap, and a total budget. Give your agent spending permission without handing over your wallet’s private key.</p><a class="text-link" href="#pricing">See model pricing <span>↗</span></a></div></article>
       </div>
     </section>
 
@@ -76,19 +76,19 @@
         <div class="setup-grid">
           <article data-reveal><span class="step-number">01</span><h3>Run the CLI.</h3><p>Open a terminal inside your project and run:</p><div class="copy-command"><code>npx helixbox-cli</code><span data-copy-mount><button type="button" data-copy="npx helixbox-cli" aria-label="Copy HelixBox CLI command"><span data-copy-label>Copy ↗</span></button></span></div></article>
           <article data-reveal><span class="step-number">02</span><h3>Scan the QR.</h3><p>Open HelixBox on Android and scan the QR shown by the CLI. Your phone connects to that laptop workspace.</p></article>
-          <article data-reveal><span class="step-number">03</span><h3>Open your project.</h3><p>Browse files, check logs, or start an agent session. Return through Past Sessions when your saved connection is still valid.</p></article>
+          <article data-reveal><span class="step-number">03</span><h3>Open your project.</h3><p>Browse files, check logs, or use your installed coding agents for free. Optional model calls use a separate approved budget.</p></article>
         </div>
-        <p class="setup-note">Keep your laptop running and connected to the internet. Install and sign in to the coding agents you want to use on that laptop.</p>
+        <p class="setup-note">Keep your laptop running and sign in to your coding agents there. Use the app’s model tools to choose allowed models and approve a spending budget.</p>
       </div>
     </section>
 
     <section class="wrap section features-section" id="features" aria-labelledby="features-title">
       <div class="section-heading" data-reveal><p class="eyebrow">THE TOOLS YOU ALREADY USE</p><h2 id="features-title">Everything you need<br>to keep building.</h2><p>A mobile workspace connected to your real development environment.</p></div>
       <div class="agent-lineup" aria-label="Supported coding agents" data-reveal><span><img src="/assets/logos/codex.png" alt="" width="28" height="28">Codex</span><span><img src="/assets/logos/opencode.png" alt="" width="28" height="28">OpenCode</span><span><img src="/assets/logos/claude.png" alt="" width="28" height="28">Claude Code</span><span><img src="/assets/logos/hermes.png" alt="" width="28" height="28">Hermes</span></div>
-      <p class="agent-lineup-note">Available when their CLIs are installed and ready on your paired laptop.</p>
+      <p class="agent-lineup-note">Bring your installed CLIs and their subscriptions. Codex and Claude Code can also discover and buy optional model calls through HelixBox tools.</p>
       <div class="feature-grid">
       <article class="feature-row ">
-  <div class="feature-copy" data-reveal><p class="eyebrow">01 / AGENTS</p><h3>Give your agent the next move.</h3><p>Read a codebase, diagnose a bug, run tests, and review the patch. Keep the conversation going from your phone, including voice input.</p><div class="agent-badges"><span>Codex</span><span>OpenCode</span><span>Claude Code</span><span>Hermes</span></div></div>
+  <div class="feature-copy" data-reveal><p class="eyebrow">01 / AGENTS</p><h3>Give your agent the next move.</h3><p>Ask Codex to build a feature, buy an independent model review within your limits, then fix the findings. Follow the code, tests, and result from your phone, including voice input.</p><div class="agent-badges"><span>Codex</span><span>OpenCode</span><span>Claude Code</span><span>Hermes</span></div></div>
   <figure class="feature-media" data-reveal><img src="/assets/media/agents.png" alt="Codex and OpenCode in the mobile workspace" loading="lazy" decoding="async" width="2560" height="1440"><figcaption>AGENTS / THE MOBILE WORKSPACE</figcaption></figure>
 </article>
 <article class="feature-row feature-row--reverse">
@@ -124,14 +124,15 @@
 
     <section class="pricing-section" id="pricing" aria-labelledby="pricing-title">
       <div class="wrap section">
-        <div class="section-heading" data-reveal><p class="eyebrow">SMALL PAYMENTS. USEFUL WORK.</p><h2 id="pricing-title">Start an agent session.<br>Skip another subscription.</h2><p>Workspace controls are free. Agent access uses x402 payments in USDC on Algorand MainNet.</p></div>
+        <div class="section-heading" data-reveal><p class="eyebrow">SMALL PAYMENTS. USEFUL WORK.</p><h2 id="pricing-title">A free workspace.<br>Models when you need them.</h2><p>Let your coding agent discover a model, get a quote, and buy a useful result. You choose the limits. x402 handles the payment in Stellar USDC.</p></div>
+        <div id="modelShowcase"><p class="model-catalog-status" role="status">Live model names and example prices load here. Final quotes are verified in the app.</p></div>
         <div class="pricing-grid">
-          <article class="price-card" data-reveal><p class="eyebrow">THE WORKSPACE</p><h3>Free</h3><p class="price-period">Pair and explore your project.</p><ul><li>Pair your laptop</li><li>Inspect files, logs, and Git status</li><li>Basic workspace controls</li></ul><a class="button button-outline" href="#download">Get the app ↗</a></article>
-          <article class="price-card featured-price" data-reveal><span class="price-badge">START HERE</span><p class="eyebrow">ONE-HOUR AGENT SESSION</p><h3>$0.25 <span>USDC</span></h3><p class="price-period">One payment. One hour of access.</p><ul><li>Ask agent questions</li><li>Diagnose bugs and run tests</li><li>Generate and review patch proposals</li><li>Renew when your session expires</li></ul><a class="button button-dark" href="#download">Start from the app ↗</a></article>
-          <article class="price-card" data-reveal><p class="eyebrow">SEVEN-DAY DEVELOPER PASS</p><h3>$2 <span>USDC</span></h3><p class="price-period">For returning developers.</p><ul><li>One developer, selected projects</li><li>Agent access with fair-use limits</li><li>Expires after seven days</li><li>Risky actions still need approval</li></ul><a class="button button-outline" href="#download">Get the developer pass ↗</a></article>
+          <article class="price-card" data-reveal><p class="eyebrow">THE WORKSPACE</p><h3>Free</h3><p class="price-period">Pair and keep working.</p><ul><li>Editor, terminal, browser, and Git</li><li>Use your installed coding agents</li><li>No hourly access pass</li></ul><a class="button button-outline" href="#download">Get the app ↗</a></article>
+          <article class="price-card featured-price" data-reveal><span class="price-badge">PAY PER CALL</span><p class="eyebrow">OPTIONAL MODEL TOOLS</p><h3>0.001 <span>USDC MINIMUM</span></h3><p class="price-period">A fixed quote for each bounded request.</p><ul><li>Discover chat, image, and speech models</li><li>Verify availability and price before paying</li><li>Complete result prepared before charging</li><li>Check the same receipt without paying again</li></ul><a class="button button-dark" href="#download">Explore model tools ↗</a></article>
+          <article class="price-card" data-reveal><p class="eyebrow">AGENT SPENDING MANDATES</p><h3>Your cap</h3><p class="price-period">Approve limits before agents spend.</p><ul><li>Choose allowed models</li><li>Set per-call and total limits</li><li>Limit calls and set an expiry</li><li>Stop new purchases at any time</li></ul><a class="button button-outline" href="#download">Set limits in the app ↗</a></article>
         </div>
-        <div class="payment-flow" data-reveal><span>Start session</span><i>→</i><span>Approve in Pera Wallet</span><i>→</i><span>Settlement verified</span><i>→</i><span>Agent access active</span></div>
-        <p class="pricing-note">Session access does not include unlimited model usage. Your agent provider’s subscription or API charges remain separate. You don’t pay HelixBox again for each prompt inside an active session.</p>
+        <div class="payment-flow" data-reveal><span>Choose models + limits</span><i>→</i><span>Approve with a Stellar wallet</span><i>→</i><span>Agent quotes + buys</span><i>→</i><span>x402 settles in Stellar USDC</span></div>
+        <p class="pricing-note">Each model call has a fixed quote before payment. Quotes include a service margin and depend on the model and request limits. Your coding agents’ own subscriptions remain separate. Approve only a budget you’re comfortable spending.</p>
       </div>
     </section>
 
@@ -139,7 +140,7 @@
       <div class="section-heading" data-reveal><p class="eyebrow">YOUR CODE STAYS WITH YOU</p><h2 id="security-title">Your machine.<br>Your control.</h2></div>
       <div class="security-grid">
         <div class="security-visual" data-reveal aria-hidden="true"><div class="secure-end"><span class="secure-icon">▣</span><span>PHONE</span></div><div class="secure-tunnel"><div class="encrypted-packets"><i></i><i></i><i></i><i></i></div><span>ENCRYPTED TRANSPORT</span></div><div class="secure-end"><span class="secure-icon">⌘</span><span>LAPTOP</span></div></div>
-        <div class="security-copy" data-reveal><h3>The project runs on your laptop.</h3><p>HelixBox gives your phone access to that workspace. It doesn’t move your files into a separate cloud development environment.</p><ul><li>QR pairing connects the phone and laptop.</li><li>The v2 transport uses XChaCha20-Poly1305 payload encryption.</li><li>Review agent changes and approve risky actions.</li><li>USDC settlement is verified before paid access starts.</li></ul><a class="text-link" href="https://github.com/devndesigner6/helix-box" target="_blank" rel="noopener noreferrer">Explore the open-source code ↗</a></div>
+        <div class="security-copy" data-reveal><h3>The project runs on your laptop.</h3><p>HelixBox gives your phone access to that workspace. It doesn’t move your files into a separate cloud development environment. Prompts sent to model tools are processed by those external models.</p><ul><li>QR pairing connects the phone and laptop.</li><li>The v2 transport uses XChaCha20-Poly1305 payload encryption.</li><li>Agents never receive your wallet’s private key.</li><li>Model payments stay within your approved limits.</li></ul><a class="text-link" href="https://github.com/devndesigner6/helix-box" target="_blank" rel="noopener noreferrer">Explore the open-source code ↗</a></div>
       </div>
     </section>
 
@@ -147,12 +148,12 @@
       <div data-reveal><p class="eyebrow">BEFORE YOU START</p><h2 id="faq-title">A few good questions.</h2></div>
       <div class="faq-list" data-reveal>
         <details><summary>Does my laptop need to stay on?<img src="/assets/media/chevron.svg" alt=""></summary><p>Yes. HelixBox connects to the workspace running on your laptop. Keep the laptop awake, the CLI running, and the internet connection available.</p></details>
-        <details><summary>What can I use for free?<img src="/assets/media/chevron.svg" alt=""></summary><p>Pairing and basic workspace controls are free. Paid sessions unlock agent access for a defined period: $0.25 USDC for one hour or $2 USDC for seven days with fair-use limits.</p></details>
+        <details><summary>What can I use for free?<img src="/assets/media/chevron.svg" alt=""></summary><p>Pairing, workspace controls and access to coding agents already installed on your laptop are free. Their provider subscriptions remain separate. Only optional model calls through HelixBox are paid.</p></details>
         <details><summary>Which coding agents can I use?<img src="/assets/media/chevron.svg" alt=""></summary><p>Codex, OpenCode, Claude Code, and Hermes are supported. Install and authenticate their CLIs on the paired laptop. Availability in the app comes from that laptop’s reported CLI status.</p></details>
-        <details><summary>Does the session price include model or API costs?<img src="/assets/media/chevron.svg" alt=""></summary><p>No. The payment covers HelixBox agent-session access. Your agent provider’s subscription and API billing are separate. The seven-day pass is subject to fair-use limits.</p></details>
-        <details><summary>How do I pay for an agent session?<img src="/assets/media/chevron.svg" alt=""></summary><p>Start a session from the app, open checkout, and approve the USDC payment in Pera Wallet. HelixBox checks settlement on Algorand MainNet before activating your access.</p></details>
+        <details><summary>What does a model-call quote cover?<img src="/assets/media/chevron.svg" alt=""></summary><p>One bounded chat, image or speech request to the quoted model. Availability and price are checked before purchase; a catalog listing alone does not guarantee a payable call. A failed generation is not charged. The complete result is released after the x402 payment is accepted. This does not buy unlimited coding-agent usage.</p></details>
+        <details><summary>How do agents pay without my wallet key?<img src="/assets/media/chevron.svg" alt=""></summary><p>You approve the allowed models, per-call cap, total budget, call count, and expiry. The agent discovers a model and requests a quote. Spending must fit your approved policy; otherwise it needs new approval. Stellar x402 uses Soroban authorization signing with a compatible wallet, and a facilitator verifies and settles the USDC payment. x402 itself does not grant an agent unrestricted access to your funds.</p></details>
         <details><summary>Can I return to the same workspace?<img src="/assets/media/chevron.svg" alt=""></summary><p>Use the saved connection or Past Sessions when the laptop session is still valid. If the laptop session has ended, run the CLI and use the explicit new-session flow to pair again.</p></details>
-        <details><summary>Is HelixBox available on iOS?<img src="/assets/media/chevron.svg" alt=""></summary><p>The current public build is an Android APK available through GitHub Releases. The source code and setup instructions are available on GitHub.</p></details>
+        <details><summary>Is HelixBox available on iOS?<img src="/assets/media/chevron.svg" alt=""></summary><p>This version targets Android. Use this repository’s Releases page for APK downloads and its build instructions to build from source. An iOS release is not available yet.</p></details>
       </div>
     </section>
 
